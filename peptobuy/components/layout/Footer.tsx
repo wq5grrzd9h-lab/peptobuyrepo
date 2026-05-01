@@ -1,22 +1,24 @@
 import Link from "next/link";
 import NewsletterForm from "@/components/layout/NewsletterForm";
+import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
 
 const COLUMNS = [
   {
     heading: "Shop",
     links: [
       { label: "All Products", href: "/shop" },
-      { label: "Supplements", href: "/shop/supplements" },
-      { label: "Recovery", href: "/shop/recovery" },
-      { label: "Bundles", href: "/shop/bundles" },
-      { label: "Essentials", href: "/shop/essentials" },
+      { label: "Weight Loss", href: "/shop?category=Weight+Loss" },
+      { label: "Recovery & Healing", href: "/shop?category=Recovery+%26+Healing" },
+      { label: "Muscle Growth", href: "/shop?category=Muscle+Growth" },
+      { label: "Combos", href: "/shop?category=Combos" },
+      { label: "Essentials", href: "/shop?category=Essentials" },
     ],
   },
   {
     heading: "Support",
     links: [
       { label: "FAQ", href: "/faq" },
-      { label: "Shipping & Returns", href: "/shipping" },
+      { label: "Shipping Policy", href: "/shipping" },
       { label: "Track Order", href: "/track" },
       { label: "Contact Us", href: "/contact" },
     ],
@@ -45,19 +47,7 @@ function VisaIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-7 w-auto" aria-label="Visa">
       <rect width="48" height="32" rx="4" fill="#1A1F71" />
-      <text
-        x="50%"
-        y="55%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill="white"
-        fontSize="13"
-        fontWeight="bold"
-        fontFamily="Arial, sans-serif"
-        letterSpacing="1"
-      >
-        VISA
-      </text>
+      <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="13" fontWeight="bold" fontFamily="Arial, sans-serif" letterSpacing="1">VISA</text>
     </svg>
   );
 }
@@ -65,13 +55,10 @@ function VisaIcon() {
 function MastercardIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-7 w-auto" aria-label="Mastercard">
-      <rect width="48" height="32" rx="4" fill="#252525" />
+      <rect width="48" height="32" rx="4" fill="#f5f5f5" stroke="#e5e5e5" strokeWidth="1" />
       <circle cx="18" cy="16" r="9" fill="#EB001B" />
       <circle cx="30" cy="16" r="9" fill="#F79E1B" />
-      <path
-        d="M24 9.1a9 9 0 0 1 0 13.8A9 9 0 0 1 24 9.1z"
-        fill="#FF5F00"
-      />
+      <path d="M24 9.1a9 9 0 0 1 0 13.8A9 9 0 0 1 24 9.1z" fill="#FF5F00" />
     </svg>
   );
 }
@@ -79,19 +66,8 @@ function MastercardIcon() {
 function CryptoIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-7 w-auto" aria-label="Crypto">
-      <rect width="48" height="32" rx="4" fill="#1a1a1a" stroke="#2a2a2a" strokeWidth="1" />
-      <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill="#ff2d78"
-        fontSize="18"
-        fontWeight="bold"
-        fontFamily="Arial, sans-serif"
-      >
-        ₿
-      </text>
+      <rect width="48" height="32" rx="4" fill="#f5f5f5" stroke="#e5e5e5" strokeWidth="1" />
+      <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="#ff2d78" fontSize="18" fontWeight="bold" fontFamily="Arial, sans-serif">₿</text>
     </svg>
   );
 }
@@ -99,29 +75,8 @@ function CryptoIcon() {
 function ApplePayIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-7 w-auto" aria-label="Apple Pay">
-      <rect width="48" height="32" rx="4" fill="#1a1a1a" stroke="#2a2a2a" strokeWidth="1" />
-      <text
-        x="50%"
-        y="52%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill="white"
-        fontSize="10"
-        fontWeight="500"
-        fontFamily="-apple-system, sans-serif"
-      >
-        Pay
-      </text>
-      <text
-        x="14"
-        y="52%"
-        dominantBaseline="middle"
-        fill="white"
-        fontSize="13"
-        fontFamily="-apple-system, sans-serif"
-      >
-
-      </text>
+      <rect width="48" height="32" rx="4" fill="#f5f5f5" stroke="#e5e5e5" strokeWidth="1" />
+      <text x="50%" y="52%" dominantBaseline="middle" textAnchor="middle" fill="#0a0a0a" fontSize="10" fontWeight="500" fontFamily="-apple-system, sans-serif">Pay</text>
     </svg>
   );
 }
@@ -131,35 +86,20 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-border bg-surface-1">
-      {/* Main grid */}
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        {/* Brand + tagline */}
         <div className="mb-12">
-          <span className="text-xl font-bold tracking-tight">
-            <span className="text-white">Pepto</span>
-            <span className="text-accent">Buy</span>
-          </span>
-          <p className="mt-2 max-w-xs text-sm text-white/40">
-            Premium supplements for serious athletes. No fluff, no fillers — just results.
-          </p>
+          <Link href="/"><PeptoBuyLogo layout="horizontal" flaskH={32} /></Link>
+          <p className="mt-3 max-w-xs text-sm text-zinc-500">Precision research compounds for qualified scientists and laboratories.</p>
         </div>
 
-        {/* Columns */}
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
           {COLUMNS.map((col) => (
             <div key={col.heading}>
-              <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-white/40">
-                {col.heading}
-              </h3>
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-400">{col.heading}</h3>
               <ul className="flex flex-col gap-3">
                 {col.links.map((link) => (
                   <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-white/60 transition-colors hover:text-white"
-                    >
-                      {link.label}
-                    </Link>
+                    <Link href={link.href} className="text-sm text-zinc-500 transition-colors hover:text-zinc-900">{link.label}</Link>
                   </li>
                 ))}
               </ul>
@@ -167,28 +107,24 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Newsletter strip */}
-        <div className="mt-14 rounded-xl border border-border bg-surface-2 px-6 py-6 sm:flex sm:items-center sm:justify-between">
+        <div className="mt-14 rounded-xl border border-border bg-white px-6 py-6 sm:flex sm:items-center sm:justify-between">
           <div className="mb-4 sm:mb-0">
-            <p className="text-sm font-semibold text-white">
-              Get 10% off your first order
-            </p>
-            <p className="mt-0.5 text-xs text-white/40">
-              Join 12,000+ athletes. No spam, ever.
-            </p>
+            <p className="text-sm font-semibold text-zinc-900">Get 10% off your first order</p>
+            <p className="mt-0.5 text-xs text-zinc-500">Stay updated on new compounds and batch releases.</p>
           </div>
           <NewsletterForm />
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-5 sm:flex-row sm:px-6 lg:px-8">
-          <p className="text-xs text-white/30">
-            © {year} PeptoBuy. All rights reserved.
+        {/* Research disclaimer */}
+        <div className="mx-auto max-w-7xl px-4 pb-4 pt-6 sm:px-6 lg:px-8">
+          <p className="text-[11px] leading-relaxed text-zinc-400">
+            <span className="font-semibold text-zinc-500">Research Use Only Disclaimer:</span> All products sold by PeptoBuy are strictly intended for in vitro laboratory and scientific research purposes. They are not approved by the FDA, are not intended for human consumption, diagnosis, or treatment, and must not be used on humans or animals. By purchasing from PeptoBuy, you confirm that you are a qualified researcher acting in full compliance with all applicable local, state, and federal laws.
           </p>
-
-          {/* Payment icons */}
+        </div>
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-5 sm:flex-row sm:px-6 lg:px-8">
+          <p className="text-xs text-zinc-400">© {year} PeptoBuy. All rights reserved.</p>
           <div className="flex items-center gap-2" aria-label="Accepted payment methods">
             <VisaIcon />
             <MastercardIcon />

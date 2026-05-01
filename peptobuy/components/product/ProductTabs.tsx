@@ -2,380 +2,324 @@
 
 import { useState } from "react";
 import { Product } from "@/lib/products";
-import { Star, BadgeCheck } from "lucide-react";
+import { FlaskConical, Thermometer, Beaker } from "lucide-react";
 
-// ─── Per-product copy ─────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface CompoundRow { label: string; value: string }
 
 interface ProductDetail {
-  description: string[];
-  servingSize: string;
-  servingsPerContainer: number;
-  ingredients: { label: string; amount: string; dv?: string }[];
-  otherIngredients: string;
+  overview: string[];           // 2–3 research-framed paragraphs
+  compoundData: CompoundRow[];  // analytical / molecular data table
 }
 
+// ─── Shared base rows ─────────────────────────────────────────────────────────
+
+const PEPTIDE_BASE: CompoundRow[] = [
+  { label: "Form",            value: "Lyophilized Powder" },
+  { label: "Purity",         value: "≥98% (HPLC)" },
+  { label: "Storage",        value: "-20 °C — desiccate, protect from light" },
+  { label: "Reconstitution", value: "Sterile or bacteriostatic water" },
+];
+
+const BLEND_BASE: CompoundRow[] = [
+  { label: "Classification",    value: "Proprietary Peptide Blend" },
+  { label: "Individual Purity", value: "≥98% per component (HPLC)" },
+  { label: "Form",              value: "Lyophilized Powder (co-lyophilized)" },
+  { label: "Storage",           value: "-20 °C — desiccate" },
+  { label: "Reconstitution",    value: "Sterile or bacteriostatic water" },
+];
+
+const DISCLAIMER =
+  "For research use only. Not for human or animal consumption. Handle in accordance with applicable laboratory safety regulations.";
+
+// ─── Per-product detail records ───────────────────────────────────────────────
+
 const PRODUCT_DETAILS: Record<string, ProductDetail> = {
-  p1: {
-    description: [
-      "Our Whey Protein Isolate undergoes cross-flow microfiltration to produce a near-pure protein source — stripped of excess lactose, fat, and carbohydrates that slow recovery and cause bloating.",
-      "Each scoop delivers 27g of complete protein with a fully intact essential amino acid profile, including elevated leucine levels to trigger muscle protein synthesis faster than whole-food sources alone.",
-      "Unlike concentrate-based formulas that sit at ~70% protein by weight, this isolate maintains over 90% protein density per serving. It mixes instantly in a shaker cup or a glass of water — no blender, no clumping.",
+
+  // ── Weight Loss ─────────────────────────────────────────────────────────────
+  "rtglp3": {
+    overview: [
+      "RTGLP3 is a synthetic triple GLP receptor agonist peptide studied for its role in metabolic signaling research. It demonstrates binding affinity at GLP-1, GLP-2, and GLP-3 receptor subtypes in in vitro assay models.",
+      "Research applications include studies on incretin axis modulation, glucose-dependent insulin secretion models, and gastric motility pathway investigations. Supplied as lyophilized powder with ≥98% purity by HPLC.",
+      "All experimental protocols should be conducted under appropriate laboratory conditions with applicable biosafety measures. For research use only.",
     ],
-    servingSize: "1 Scoop (33g)",
-    servingsPerContainer: 30,
-    ingredients: [
-      { label: "Calories", amount: "130" },
-      { label: "Protein", amount: "27g", dv: "54%" },
-      { label: "Total Carbohydrate", amount: "3g", dv: "1%" },
-      { label: "Total Fat", amount: "1.5g", dv: "2%" },
-      { label: "Cholesterol", amount: "20mg", dv: "7%" },
-      { label: "Sodium", amount: "125mg", dv: "5%" },
-      { label: "Calcium", amount: "120mg", dv: "10%" },
+    compoundData: [
+      { label: "Compound Type",   value: "Synthetic Peptide" },
+      { label: "Receptor Targets", value: "GLP-1R, GLP-2R, GLP-3R" },
+      ...PEPTIDE_BASE,
     ],
-    otherIngredients: "Whey Protein Isolate, Sunflower Lecithin, Natural Flavors, Sea Salt.",
   },
-  p2: {
-    description: [
-      "Creatine monohydrate is the most researched performance supplement in sports science. After 40+ years of peer-reviewed study, the verdict is clear: it works, and it's safe.",
-      "Our pharmaceutical-grade creatine is sourced from Creapure® — the gold standard of purity, manufactured in Germany under ISO-certified conditions. It's micronized for faster dissolution and absorption.",
-      "5g per day saturates your muscle creatine stores within 3–4 weeks, increasing phosphocreatine availability for ATP resynthesis during explosive, high-intensity efforts. Take it daily, with or without food. No loading phase required.",
+
+  // ── Recovery & Healing ───────────────────────────────────────────────────────
+  "bpc-157": {
+    overview: [
+      "BPC-157 (Body Protection Compound 157) is a 15-amino acid synthetic pentadecapeptide derived from a partial sequence of the human gastric Body Protection Compound. It is studied extensively in models of gastrointestinal mucosal integrity and wound repair signaling.",
+      "Preclinical research has examined its effects in joint and tendon tissue repair models, angiogenesis assay systems, and nitric oxide pathway studies. The compound shows high stability and activity in standard in vitro assay conditions.",
+      "Supplied as lyophilized powder. Reconstitute in sterile or bacteriostatic water. For research use only.",
     ],
-    servingSize: "1 Teaspoon (5g)",
-    servingsPerContainer: 60,
-    ingredients: [
-      { label: "Creatine Monohydrate (Creapure®)", amount: "5000mg" },
+    compoundData: [
+      { label: "Sequence",          value: "Gly-Glu-Pro-Pro-Pro-Gly-Lys-Pro-Ala-Asp-Asp-Ala-Gly-Leu-Val" },
+      { label: "Molecular Weight",  value: "1,419.53 Da" },
+      { label: "CAS Number",        value: "137525-51-0" },
+      { label: "Amino Acids",       value: "15" },
+      ...PEPTIDE_BASE,
     ],
-    otherIngredients: "Pure Creatine Monohydrate (Creapure®). No fillers, no additives, no flow agents.",
   },
-  p3: {
-    description: [
-      "Magnesium deficiency affects an estimated 50% of the population — and athletes, who lose magnesium through sweat, are even more susceptible. Low levels impair sleep quality, recovery, and neuromuscular function.",
-      "We chose the glycinate form because glycine acts as a chelating agent, dramatically improving absorption over cheaper oxide or citrate forms. Glycinate also doesn't cause the laxative effect associated with magnesium oxide.",
-      "Take 2 capsules 30–60 minutes before bed. Most users report noticeably deeper sleep within the first week of consistent use.",
+  "tb-500": {
+    overview: [
+      "TB-500 is a synthetic analogue derived from the active region of Thymosin Beta-4 — a 43-amino acid ubiquitous actin-sequestering protein. The compound retains the core Ac-LKKTETQ motif central to actin-binding activity.",
+      "Research applications include in vitro studies on cellular migration, angiogenic signaling, inflammation pathway modulation, and skeletal muscle repair models. TB-500 has been investigated in a range of preclinical tissue recovery research.",
+      "Reconstitute in sterile water or BAC Water for laboratory assay use. For research use only.",
     ],
-    servingSize: "2 Capsules",
-    servingsPerContainer: 60,
-    ingredients: [
-      { label: "Magnesium (as Bisglycinate Chelate)", amount: "400mg", dv: "95%" },
-      { label: "Glycine", amount: "320mg" },
+    compoundData: [
+      { label: "Based On",         value: "Thymosin Beta-4 (fragment 17–23)" },
+      { label: "Molecular Weight", value: "~2,187.5 Da" },
+      { label: "CAS Number",       value: "107761-42-2" },
+      ...PEPTIDE_BASE,
     ],
-    otherIngredients: "Vegetable Cellulose (capsule), Magnesium Stearate (vegetable source). Vegan.",
   },
-  p4: {
-    description: [
-      "The Recovery Pro Bundle combines three clinically validated supplements into one complete post-training stack: Magnesium Glycinate, Omega-3 Fish Oil, and Zinc-B6 Complex.",
-      "Magnesium supports deep sleep and reduces muscle cramping. Omega-3s reduce systemic inflammation and joint soreness. Zinc-B6 boosts testosterone production and immune function — all of which drop significantly after intense training sessions.",
-      "Taken together nightly, this stack addresses the primary recovery bottlenecks for serious athletes. You save 25% versus purchasing each product individually.",
+  "ghk-cu": {
+    overview: [
+      "GHK-Cu (Glycyl-L-histidyl-L-lysine copper chelate) is a naturally occurring tripeptide-copper complex found in human plasma, saliva, and urine. Its copper-complexing capability gives it unique activity profiles of interest in extracellular matrix research.",
+      "In vitro research has examined GHK-Cu in contexts of collagen and glycosaminoglycan synthesis models, antioxidant response assays, wound-healing signaling cascades, and anti-inflammatory gene expression studies.",
+      "Supplied as lyophilized powder. Protect from light during storage and handling. For research use only.",
     ],
-    servingSize: "As directed per product",
-    servingsPerContainer: 30,
-    ingredients: [
-      { label: "Magnesium (as Bisglycinate Chelate)", amount: "400mg", dv: "95%" },
-      { label: "EPA (Eicosapentaenoic Acid)", amount: "600mg" },
-      { label: "DHA (Docosahexaenoic Acid)", amount: "400mg" },
-      { label: "Zinc (as Zinc Gluconate)", amount: "15mg", dv: "136%" },
-      { label: "Vitamin B6 (as Pyridoxine HCl)", amount: "10mg", dv: "588%" },
+    compoundData: [
+      { label: "Sequence",         value: "Gly-His-Lys (copper(II) chelate)" },
+      { label: "Molecular Weight", value: "340.38 Da (free peptide)" },
+      { label: "CAS Number",       value: "49557-75-7" },
+      { label: "Form",             value: "Lyophilized Powder (blue-green)" },
+      { label: "Purity",           value: "≥98% (HPLC)" },
+      { label: "Storage",          value: "-20 °C — protect from light" },
+      { label: "Reconstitution",   value: "Sterile or bacteriostatic water" },
     ],
-    otherIngredients: "Fish Gelatin (softgel), Vegetable Cellulose (capsule), Purified Fish Oil.",
   },
-  p5: {
-    description: [
-      "Not all fish oil is equal. Ours is sourced exclusively from wild-caught anchovies and sardines — small, short-lived species with minimal heavy metal accumulation — then molecularly distilled to remove any trace contaminants.",
-      "Each serving provides 1,400mg of total omega-3 fatty acids, including 600mg EPA and 400mg DHA. EPA reduces inflammation; DHA supports brain structure and cardiovascular function. Every batch is third-party verified through Labdoor.",
-      "Enteric-coated softgels prevent oxidation and eliminate fish burp entirely. Refrigerate after opening for maximum freshness and potency.",
+
+  // ── Muscle Growth ────────────────────────────────────────────────────────────
+  "cjc-1295": {
+    overview: [
+      "CJC-1295 is a synthetic analogue of Growth Hormone-Releasing Hormone (GHRH 1-29) incorporating Drug Affinity Complex (DAC) technology — a lysine residue modified with a maleimidopropionic acid linker enabling covalent binding to serum albumin and dramatically extending plasma half-life in research models.",
+      "The compound is studied for its role in GH secretagogue research, pulsatile growth hormone release kinetics, IGF-1 axis modulation, and body composition signaling pathway investigations.",
+      "Supplied as lyophilized powder. Reconstitute in BAC Water or sterile water. For research use only.",
     ],
-    servingSize: "2 Softgels",
-    servingsPerContainer: 60,
-    ingredients: [
-      { label: "Total Omega-3 Fatty Acids", amount: "1400mg" },
-      { label: "EPA (Eicosapentaenoic Acid)", amount: "600mg" },
-      { label: "DHA (Docosahexaenoic Acid)", amount: "400mg" },
-      { label: "Other Omega-3s", amount: "400mg" },
+    compoundData: [
+      { label: "Modification",     value: "GHRH (1-29) + Drug Affinity Complex (DAC)" },
+      { label: "Molecular Weight", value: "~3,647.28 Da" },
+      { label: "CAS Number",       value: "863288-34-0" },
+      { label: "Half-life",        value: "Extended via albumin binding (research)" },
+      ...PEPTIDE_BASE,
     ],
-    otherIngredients: "Fish Gelatin, Glycerin, Water, Natural Lemon Flavor. Contains fish (anchovy, sardine).",
   },
-  p6: {
-    description: [
-      "Most pre-workouts are caffeine with proprietary blends that tell you nothing about actual dosing. Ours is fully transparent: every ingredient, every dose, listed on the label. No hiding behind blends.",
-      "200mg caffeine anhydrous for clean, sustained energy without the jitter-crash of higher doses. 6g citrulline malate for maximal blood flow and pump. 3.2g beta-alanine for muscular endurance — yes, the tingle (paresthesia) is normal and completely harmless.",
-      "No artificial dyes, no sucralose, no proprietary blends. Mix one scoop in 12oz of cold water 20–30 minutes before training.",
+  "tesamorelin": {
+    overview: [
+      "Tesamorelin (TESA) is a synthetic analogue of endogenous Growth Hormone-Releasing Factor (GHRF 1-44) stabilized with a trans-3-hexenoic acid modification at the N-terminus that improves resistance to dipeptidyl peptidase IV degradation in research models.",
+      "Research applications include GH axis modulation studies, visceral adipose tissue signaling assays, lipid metabolism pathway research, and pituitary receptor binding kinetics investigations.",
+      "Supplied as lyophilized powder. For research use only — not for human consumption.",
     ],
-    servingSize: "1 Scoop (12g)",
-    servingsPerContainer: 30,
-    ingredients: [
-      { label: "L-Citrulline Malate (2:1)", amount: "6000mg" },
-      { label: "Beta-Alanine (CarnoSyn®)", amount: "3200mg" },
-      { label: "L-Tyrosine", amount: "1000mg" },
-      { label: "Alpha-GPC (50%)", amount: "300mg" },
-      { label: "Caffeine Anhydrous", amount: "200mg" },
+    compoundData: [
+      { label: "Modification",     value: "GHRF (1-44) + trans-3-hexenoic acid" },
+      { label: "Molecular Weight", value: "5,135.9 Da" },
+      { label: "CAS Number",       value: "901758-09-6" },
+      { label: "Amino Acids",      value: "44" },
+      ...PEPTIDE_BASE,
     ],
-    otherIngredients: "Citric Acid, Natural Flavors, Silicon Dioxide, Malic Acid. No artificial colors.",
   },
-  p7: {
-    description: [
-      "New to supplementation? The Starter Stack eliminates decision fatigue. Three products, proven by decades of research, covering the three most impactful areas for beginners: protein synthesis, cellular energy, and daily micronutrition.",
-      "Whey Protein Isolate (27g per scoop) rebuilds muscle after training. Creatine Monohydrate increases strength output and training volume. The Daily Multivitamin fills micronutrient gaps that most people don't know they have.",
-      "Follow the included Quick-Start Protocol: creatine and multivitamin with breakfast in the morning, whey immediately post-workout. That's the whole protocol. Simple, evidence-backed, effective.",
+  "ipamorelin": {
+    overview: [
+      "Ipamorelin is a selective, high-potency Ghrelin receptor (GHS-R1a) agonist and growth hormone secretagogue pentapeptide. It is notable in research for its high GH-release selectivity with minimal effect on cortisol, prolactin, or ACTH levels in in vitro assay systems.",
+      "Studies have characterized its binding affinity, receptor selectivity profiles, and dose-response relationships in GH secretion models. Its clean selectivity profile makes it a valuable tool compound for GH axis research.",
+      "Supplied as lyophilized powder. Reconstitute in sterile or bacteriostatic water. For research use only.",
     ],
-    servingSize: "As directed per product",
-    servingsPerContainer: 30,
-    ingredients: [
-      { label: "Whey Protein Isolate (per scoop)", amount: "27g" },
-      { label: "Creatine Monohydrate (per serving)", amount: "5000mg" },
-      { label: "Vitamin D3", amount: "1000 IU", dv: "125%" },
-      { label: "Vitamin C", amount: "90mg", dv: "100%" },
-      { label: "Zinc", amount: "11mg", dv: "100%" },
-      { label: "Magnesium", amount: "100mg", dv: "24%" },
+    compoundData: [
+      { label: "Sequence",         value: "Aib-His-D-2-Nal-D-Phe-Lys-NH₂" },
+      { label: "Molecular Weight", value: "711.85 Da" },
+      { label: "CAS Number",       value: "170851-70-4" },
+      { label: "Receptor Target",  value: "GHS-R1a (Ghrelin receptor)" },
+      { label: "Amino Acids",      value: "5 (pentapeptide)" },
+      ...PEPTIDE_BASE,
     ],
-    otherIngredients: "Varies by individual product. All products free from artificial dyes and gluten.",
   },
-  p8: {
-    description: [
-      "Unless you live near the equator and spend significant time outdoors without sunscreen, you're almost certainly deficient in Vitamin D. Deficiency is linked to impaired immunity, low mood, poor sleep quality, and reduced testosterone production.",
-      "We pair 5,000 IU of D3 (cholecalciferol — the same form your skin produces) with 100mcg of K2 as MK-7, the most bioavailable K2 isomer. K2 is essential here: it directs calcium into bones and away from arterial walls, preventing the calcification risk associated with high-dose D3 supplementation alone.",
-      "Take one softgel daily with a fat-containing meal. D3 is fat-soluble — absorption increases significantly alongside dietary fat. One bottle covers 90 days.",
+
+  // ── Combos ───────────────────────────────────────────────────────────────────
+  "glow-blend": {
+    overview: [
+      "GLOW Blend is a proprietary multi-peptide research formulation for studies investigating complementary peptide interactions in skin health signaling — including collagen synthesis pathway assays, photoprotection biomarker analysis, and barrier function research models.",
+      "Each component is independently validated for purity (≥98% HPLC) prior to co-lyophilization. The lyophilized format preserves individual peptide integrity during storage and shipping.",
+      "Reconstitute in sterile or bacteriostatic water per your laboratory protocol. For research use only.",
     ],
-    servingSize: "1 Softgel",
-    servingsPerContainer: 90,
-    ingredients: [
-      { label: "Vitamin D3 (as Cholecalciferol)", amount: "5000 IU (125mcg)", dv: "625%" },
-      { label: "Vitamin K2 (as MK-7, Menaquinone-7)", amount: "100mcg", dv: "83%" },
+    compoundData: [
+      ...BLEND_BASE,
+      { label: "Research Focus", value: "Skin signaling, collagen synthesis, photoprotection" },
     ],
-    otherIngredients: "Extra Virgin Olive Oil, Gelatin (bovine), Glycerin, Water.",
+  },
+  "klow-blend": {
+    overview: [
+      "KLOW Blend is a proprietary research formulation combining peptides investigated for synergistic activity in metabolic signaling, cellular homeostasis assays, and adipokine pathway modulation studies in vitro.",
+      "The blend is formulated via co-lyophilization to ensure uniform distribution of components per dosage unit. Each batch is HPLC-verified for individual component purity before release.",
+      "For research use only. Not intended for human or animal consumption.",
+    ],
+    compoundData: [
+      ...BLEND_BASE,
+      { label: "Research Focus", value: "Metabolic signaling, cellular homeostasis" },
+    ],
+  },
+  "wolverine-blend": {
+    overview: [
+      "Wolverine Blend is a multi-peptide research formulation studied in models of accelerated tissue repair biomarkers, anti-inflammatory signaling cascades, and cellular recovery pathway characterization.",
+      "The formulation targets multiple repair-associated receptor systems simultaneously — useful for researchers studying pathway crosstalk in tissue regeneration models. Components are co-lyophilized for stability.",
+      "Reconstitute in BAC Water or sterile water. Store at -20 °C. For research use only.",
+    ],
+    compoundData: [
+      ...BLEND_BASE,
+      { label: "Research Focus", value: "Tissue repair, anti-inflammatory signaling" },
+    ],
+  },
+  "cjc-ipa-blend": {
+    overview: [
+      "CJC/IPA Blend combines CJC-1295 (DAC-modified GHRH analogue) and Ipamorelin (GHS-R1a agonist) in a single lyophilized research formulation. The combination is studied for additive or synergistic effects on the GH secretagogue axis.",
+      "Published research has characterized the complementary receptor mechanisms of GHRH analogues and ghrelin receptor agonists when co-administered in GH release models. This blend facilitates such research without requiring independent reconstitution of each compound.",
+      "Reconstitute in bacteriostatic water. Store at -20 °C. For research use only.",
+    ],
+    compoundData: [
+      { label: "Compounds",         value: "CJC-1295 (DAC) + Ipamorelin" },
+      { label: "Ratio",             value: "Equimolar blend" },
+      { label: "Individual Purity", value: "≥98% per component (HPLC)" },
+      { label: "Form",              value: "Lyophilized Powder (co-lyophilized)" },
+      { label: "Storage",           value: "-20 °C — desiccate" },
+      { label: "Reconstitution",    value: "Bacteriostatic water recommended" },
+    ],
+  },
+
+  // ── Essentials ───────────────────────────────────────────────────────────────
+  "bac-water": {
+    overview: [
+      "Bacteriostatic Water is a 0.9% benzyl alcohol solution in sterile water for injection (WFI grade). The benzyl alcohol preservative allows multi-dose use from a single vial without microbial contamination risk — making it the standard solvent for peptide reconstitution in laboratory settings.",
+      "It maintains compatibility with the majority of research-grade lyophilized peptides at physiological pH ranges, and is supplied in sealed multi-dose vials with rubber stoppers for use with standard laboratory syringes.",
+      "For research and laboratory use only. Not for human or animal injection. Use under appropriate aseptic technique.",
+    ],
+    compoundData: [
+      { label: "Composition",  value: "Sterile Water for Injection USP + 0.9% Benzyl Alcohol" },
+      { label: "Grade",        value: "Research / WFI-grade" },
+      { label: "pH",           value: "4.5 – 7.0 (approx.)" },
+      { label: "Preservative", value: "0.9% Benzyl Alcohol (bacteriostatic)" },
+      { label: "Container",    value: "Multi-dose vial with rubber stopper" },
+      { label: "Storage",      value: "Room temperature — keep sealed until use" },
+    ],
   },
 };
 
 const FALLBACK_DETAIL: ProductDetail = {
-  description: [
-    "Premium quality formulated with only the most bioavailable ingredients, sourced from certified suppliers and manufactured in a GMP-certified facility.",
-    "Every batch is third-party tested for purity, potency, and the absence of heavy metals, pesticides, and microbiological contaminants.",
+  overview: [
+    "Research-grade compound formulated for in vitro and preclinical laboratory research applications. Supplied as lyophilized powder unless otherwise specified.",
+    "Each batch is verified for identity and purity prior to release. Certificates of Analysis are available on request.",
   ],
-  servingSize: "As directed",
-  servingsPerContainer: 30,
-  ingredients: [{ label: "Proprietary Blend", amount: "As labeled" }],
-  otherIngredients: "See label for full ingredient list.",
+  compoundData: [
+    { label: "Form",            value: "Lyophilized Powder" },
+    { label: "Purity",         value: "≥98% (HPLC)" },
+    { label: "Storage",        value: "-20 °C — desiccate" },
+    { label: "Reconstitution", value: "Sterile or bacteriostatic water" },
+  ],
 };
-
-// ─── Mock reviews ─────────────────────────────────────────────────────────────
-
-const REVIEWS = [
-  {
-    author: "Marcus J.",
-    date: "March 15, 2025",
-    rating: 5,
-    title: "Exactly what I needed",
-    body: "Been using this consistently for about 3 months now and the results have been solid. Quality is noticeably higher than the big-box brands I was buying before. Ships fast, no issues with the packaging. Already on my third order.",
-    verified: true,
-  },
-  {
-    author: "Priya S.",
-    date: "February 28, 2025",
-    rating: 4,
-    title: "Solid product, fast shipping",
-    body: "Genuinely impressed. The lab reports are available on request — most brands don't offer that level of transparency. Mixing is clean, no aftertaste. Docking one star only because I wish they offered larger size options.",
-    verified: true,
-  },
-];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Stars({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          size={13}
-          className={i < rating ? "fill-accent text-accent" : "fill-transparent text-white/20"}
-        />
-      ))}
-    </div>
-  );
-}
-
-function DescriptionTab({ detail }: { detail: ProductDetail }) {
+function OverviewTab({ detail }: { detail: ProductDetail }) {
   return (
     <div className="max-w-2xl space-y-5">
-      {detail.description.map((p, i) => (
-        <p key={i} className="text-sm leading-relaxed text-white/60">
-          {p}
-        </p>
+      {detail.overview.map((p, i) => (
+        <p key={i} className="text-sm leading-relaxed text-zinc-600">{p}</p>
       ))}
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <p className="text-xs font-semibold leading-relaxed text-amber-700">
+          ⚠ {DISCLAIMER}
+        </p>
+      </div>
     </div>
   );
 }
 
-function DetailsTab({ detail }: { detail: ProductDetail }) {
+function CompoundTab({ detail }: { detail: ProductDetail }) {
   return (
     <div className="max-w-lg">
-      {/* Supplement facts card */}
-      <div className="rounded-2xl border-2 border-border bg-surface-1 p-5">
-        <h3 className="mb-1 text-base font-black tracking-tight text-white">
-          Supplement Facts
-        </h3>
-        <p className="mb-4 text-xs text-white/40">
-          Serving Size: {detail.servingSize} &nbsp;|&nbsp; Servings Per Container:{" "}
-          {detail.servingsPerContainer}
-        </p>
-
-        {/* Header row */}
-        <div className="mb-2 flex justify-between border-b-2 border-white/15 pb-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
-            Amount Per Serving
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
-            %DV
-          </span>
+      <div className="overflow-hidden rounded-2xl border-2 border-zinc-200 bg-zinc-50">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-zinc-200 bg-white px-5 py-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/8">
+            <FlaskConical size={16} className="text-accent" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-zinc-900">Compound Data</h3>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              Research Grade · For Laboratory Use Only
+            </p>
+          </div>
         </div>
 
-        {/* Ingredient rows */}
-        <ul className="divide-y divide-border">
-          {detail.ingredients.map((ing, i) => (
-            <li key={i} className="flex items-center justify-between py-2.5">
-              <span className="text-sm text-white/80">{ing.label}</span>
-              <div className="text-right">
-                <span className="text-sm font-semibold text-white">
-                  {ing.amount}
-                </span>
-                {ing.dv && (
-                  <span className="ml-3 text-xs text-white/35">{ing.dv}</span>
-                )}
-                {!ing.dv && (
-                  <span className="ml-3 text-xs text-white/20">†</span>
-                )}
-              </div>
+        {/* Data rows */}
+        <ul className="divide-y divide-zinc-200">
+          {detail.compoundData.map((row, i) => (
+            <li key={i} className="flex items-start justify-between gap-6 px-5 py-3">
+              <span className="shrink-0 text-sm text-zinc-500">{row.label}</span>
+              <span className="text-right text-sm font-semibold text-zinc-900">{row.value}</span>
             </li>
           ))}
         </ul>
 
-        {/* Footer note */}
-        <p className="mt-4 border-t border-border pt-3 text-[11px] leading-relaxed text-white/30">
-          † Daily Value not established.
-          <br />
-          <span className="mt-1.5 block">
-            <strong className="text-white/40">Other Ingredients:</strong>{" "}
-            {detail.otherIngredients}
-          </span>
-        </p>
+        {/* Footer */}
+        <div className="border-t border-zinc-200 bg-white px-5 py-3">
+          <p className="text-[11px] leading-relaxed text-zinc-400">
+            All specifications verified per lot. Certificate of Analysis available on request.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
 function ShippingTab() {
-  const rows = [
-    { method: "Standard (3–5 days)", price: "Free over $75, else $6.99" },
-    { method: "Expedited (2 days)", price: "$12.99" },
+  const rates = [
+    { method: "Standard (3–5 days)",         price: "Free over $200, else $9.99" },
+    { method: "Expedited (2 days)",           price: "$12.99" },
     { method: "Overnight (next business day)", price: "$24.99" },
-    { method: "International", price: "Calculated at checkout" },
+    { method: "International",               price: "Calculated at checkout" },
   ];
-
   return (
     <div className="max-w-xl space-y-8">
       <div>
-        <h3 className="mb-4 text-sm font-bold text-white">Shipping Rates</h3>
-        <div className="overflow-hidden rounded-xl border border-border">
-          {rows.map((r, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between border-b border-border px-4 py-3.5 last:border-b-0"
-            >
-              <span className="text-sm text-white/70">{r.method}</span>
-              <span className="text-sm font-semibold text-white">{r.price}</span>
+        <h3 className="mb-4 text-sm font-bold text-zinc-900">Shipping Rates</h3>
+        <div className="overflow-hidden rounded-xl border border-zinc-200">
+          {rates.map((r, i) => (
+            <div key={i} className="flex items-center justify-between border-b border-zinc-100 px-4 py-3.5 last:border-b-0">
+              <span className="text-sm text-zinc-600">{r.method}</span>
+              <span className="text-sm font-semibold text-zinc-900">{r.price}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-sm font-bold text-white">Returns & Exchanges</h3>
-        <p className="text-sm leading-relaxed text-white/55">
-          We stand behind every product we sell. If you&apos;re not satisfied for any
-          reason, return within 30 days of delivery for a full refund — even on
-          opened products. No restocking fees. Email{" "}
-          <a
-            href="mailto:support@peptobuy.com"
-            className="text-accent underline underline-offset-2 hover:no-underline"
-          >
+      <div className="space-y-3">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-zinc-900">
+          <Thermometer size={14} className="text-accent" /> Packaging
+        </h3>
+        <p className="text-sm leading-relaxed text-zinc-600">
+          All lyophilized peptides ship with a desiccant pack inside an insulated mailer to maintain
+          compound integrity in transit. Tracking is emailed within 1 hour of dispatch.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-zinc-900">
+          <Beaker size={14} className="text-accent" /> Sales Policy
+        </h3>
+        <p className="text-sm leading-relaxed text-zinc-600">
+          All sales are final. We do not accept returns or exchanges. If you received a damaged or
+          incorrect item, contact{" "}
+          <a href="mailto:support@peptobuy.com" className="text-accent underline underline-offset-2 hover:no-underline">
             support@peptobuy.com
           </a>{" "}
-          to start a return.
+          within 48 hours of delivery with photos of the issue.
         </p>
-        <p className="text-sm leading-relaxed text-white/55">
-          Orders are processed and shipped from our fulfillment center in
-          Austin, TX. Orders placed before 3 PM CST ship the same business day.
-          You&apos;ll receive a tracking number via email within 1 hour of shipment.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ReviewsTab() {
-  const avgRating = (
-    REVIEWS.reduce((s, r) => s + r.rating, 0) / REVIEWS.length
-  ).toFixed(1);
-
-  return (
-    <div className="max-w-2xl">
-      {/* Summary bar */}
-      <div className="mb-8 flex items-center gap-5 rounded-2xl border border-border bg-surface-1 p-5">
-        <div className="text-center">
-          <p className="text-4xl font-black text-white">{avgRating}</p>
-          <Stars rating={Math.round(Number(avgRating))} />
-          <p className="mt-1 text-xs text-white/30">{REVIEWS.length} reviews</p>
-        </div>
-        <div className="h-12 w-px bg-border" />
-        <div className="flex-1 space-y-1.5">
-          {[5, 4, 3, 2, 1].map((star) => {
-            const count = REVIEWS.filter((r) => r.rating === star).length;
-            const pct = (count / REVIEWS.length) * 100;
-            return (
-              <div key={star} className="flex items-center gap-2.5">
-                <span className="w-2 text-right text-[11px] text-white/30">
-                  {star}
-                </span>
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
-                  <div
-                    className="h-full rounded-full bg-accent"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <span className="w-4 text-[11px] text-white/30">{count}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Individual reviews */}
-      <div className="space-y-5">
-        {REVIEWS.map((review, i) => (
-          <div
-            key={i}
-            className="rounded-2xl border border-border bg-surface-1 p-5"
-          >
-            <div className="mb-3 flex items-start justify-between gap-4">
-              <div>
-                <div className="mb-1.5 flex items-center gap-2">
-                  <Stars rating={review.rating} />
-                  {review.verified && (
-                    <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-400/70">
-                      <BadgeCheck size={11} />
-                      Verified
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm font-bold text-white">{review.title}</p>
-              </div>
-              <div className="text-right text-xs text-white/30 whitespace-nowrap">
-                <p>{review.author}</p>
-                <p>{review.date}</p>
-              </div>
-            </div>
-            <p className="text-sm leading-relaxed text-white/55">{review.body}</p>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -383,23 +327,22 @@ function ReviewsTab() {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-type TabId = "description" | "details" | "shipping" | "reviews";
+type TabId = "overview" | "compound" | "shipping";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "description", label: "Description" },
-  { id: "details", label: "Ingredients & Details" },
-  { id: "shipping", label: "Shipping & Returns" },
-  { id: "reviews", label: `Reviews (${REVIEWS.length})` },
+  { id: "overview", label: "Overview" },
+  { id: "compound", label: "Compound Data" },
+  { id: "shipping", label: "Shipping & Policy" },
 ];
 
 export default function ProductTabs({ product }: { product: Product }) {
-  const [activeTab, setActiveTab] = useState<TabId>("description");
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
   const detail = PRODUCT_DETAILS[product.id] ?? FALLBACK_DETAIL;
 
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex overflow-x-auto border-b border-border">
+      <div className="flex overflow-x-auto border-b border-zinc-200">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -407,8 +350,8 @@ export default function ProductTabs({ product }: { product: Product }) {
             className={[
               "shrink-0 border-b-2 px-5 py-3.5 text-sm font-semibold transition-colors",
               activeTab === tab.id
-                ? "border-accent text-white"
-                : "border-transparent text-white/40 hover:text-white/70",
+                ? "border-accent text-zinc-900"
+                : "border-transparent text-zinc-400 hover:text-zinc-600",
             ].join(" ")}
           >
             {tab.label}
@@ -418,10 +361,9 @@ export default function ProductTabs({ product }: { product: Product }) {
 
       {/* Tab content */}
       <div className="mt-8">
-        {activeTab === "description" && <DescriptionTab detail={detail} />}
-        {activeTab === "details" && <DetailsTab detail={detail} />}
-        {activeTab === "shipping" && <ShippingTab />}
-        {activeTab === "reviews" && <ReviewsTab />}
+        {activeTab === "overview"  && <OverviewTab detail={detail} />}
+        {activeTab === "compound"  && <CompoundTab detail={detail} />}
+        {activeTab === "shipping"  && <ShippingTab />}
       </div>
     </div>
   );

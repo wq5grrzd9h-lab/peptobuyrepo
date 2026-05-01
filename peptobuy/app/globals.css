@@ -19,13 +19,13 @@
   }
 
   :root {
-    --background: #0a0a0a;
-    --foreground: #ffffff;
+    --background: #ffffff;
+    --foreground: #0a0a0a;
     --accent: #ff2d78;
     --accent-hover: #e8235f;
-    --surface-1: #141414;
-    --surface-2: #1e1e1e;
-    --border: #2a2a2a;
+    --surface-1: #f4f4f5;
+    --surface-2: #ebebec;
+    --border: #e2e2e4;
   }
 
   body {
@@ -57,7 +57,6 @@
     border-radius: 6px;
   }
 
-  /* Remove focus ring for mouse users */
   :focus:not(:focus-visible) {
     outline: none;
   }
@@ -72,13 +71,12 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #0a0a0a;
+    background: #f4f4f5;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #2a2a2a;
+    background: #d4d4d8;
     border-radius: 3px;
-    transition: background 0.2s;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -119,18 +117,45 @@
   to   { opacity: 1; }
 }
 
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.4; }
-  50%       { opacity: 0.7; }
+/* ── Age-gate blob animations ───────────────────────── */
+
+@keyframes age-blob-1 {
+  0%, 100% { transform: translate(0px,   0px)   scale(1);    }
+  30%       { transform: translate(70px, -50px)  scale(1.12); }
+  65%       { transform: translate(-40px, 80px)  scale(0.93); }
 }
 
-/* ── Skeleton shimmer utility ────────────────────────── */
+@keyframes age-blob-2 {
+  0%, 100% { transform: translate(0px,   0px)   scale(1);    }
+  35%       { transform: translate(-90px, 55px)  scale(1.08); }
+  70%       { transform: translate(60px, -80px)  scale(0.88); }
+}
+
+@keyframes age-blob-3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.6; }
+  50%       { transform: translate(-50%, -50%) scale(1.25); opacity: 0.9; }
+}
+
+@keyframes age-card-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Product detail vial rock animation ─────────────── */
+
+@keyframes vial-rock {
+  0%, 100% { transform: rotate(0deg);   }
+  25%       { transform: rotate(-3deg);  }
+  75%       { transform: rotate(3deg);   }
+}
+
+/* ── Skeleton shimmer (light theme) ─────────────────── */
 .skeleton {
   background: linear-gradient(
     90deg,
-    #1e1e1e 25%,
-    #2a2a2a 50%,
-    #1e1e1e 75%
+    #f0f0f2 25%,
+    #e4e4e6 50%,
+    #f0f0f2 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;

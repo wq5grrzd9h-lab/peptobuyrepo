@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Nunito } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
@@ -9,17 +9,15 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Toaster from "@/components/ui/Toaster";
 import SearchOverlay from "@/components/search/SearchOverlay";
+import AgeVerification from "@/components/AgeVerification";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", weight: ["700", "800"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "PeptoBuy — Performance Supplements",
+  title: "PeptoBuy — Research Peptides",
   description:
-    "Premium supplements for serious athletes. No fluff, no fillers — just results.",
+    "Research-grade peptides for qualified scientists. Every batch third-party tested.",
 };
 
 export default function RootLayout({
@@ -28,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${nunito.variable}`}>
       <body className="bg-background text-foreground font-sans antialiased">
         <AuthProvider>
           <CartProvider>
@@ -39,6 +37,7 @@ export default function RootLayout({
                 <Footer />
                 <SearchOverlay />
                 <Toaster />
+                <AgeVerification />
               </SearchProvider>
             </ToastProvider>
           </CartProvider>

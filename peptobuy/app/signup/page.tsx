@@ -3,7 +3,7 @@ import SignupClient from "@/components/auth/SignupClient";
 
 export const metadata: Metadata = {
   title: "Create Account — PeptoBuy",
-  description: "Join PeptoBuy and get access to premium performance supplements.",
+  description: "Create your researcher account on PeptoBuy.",
 };
 
 export default function SignupPage() {

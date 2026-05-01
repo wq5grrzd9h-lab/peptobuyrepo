@@ -5,14 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-
-// ─── Shared sub-components ────────────────────────────────────────────────────
+import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
 
 function Logo() {
   return (
-    <Link href="/" className="inline-flex items-center text-2xl font-black tracking-tight">
-      <span className="text-white">Pepto</span>
-      <span className="text-accent">Buy</span>
+    <Link href="/">
+      <PeptoBuyLogo flaskH={52} layout="stacked" />
     </Link>
   );
 }
@@ -30,99 +28,39 @@ function GoogleIcon() {
 
 type Errors = Record<string, string>;
 
-function Field({
-  label,
-  name,
-  type = "text",
-  value,
-  error,
-  placeholder,
-  autoComplete,
-  onChange,
-  rightElement,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  value: string;
-  error?: string;
-  placeholder?: string;
-  autoComplete?: string;
-  onChange: (v: string) => void;
-  rightElement?: React.ReactNode;
+function Field({ label, name, type = "text", value, error, placeholder, autoComplete, onChange, rightElement }: {
+  label: string; name: string; type?: string; value: string; error?: string;
+  placeholder?: string; autoComplete?: string; onChange: (v: string) => void; rightElement?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={name} className="text-[11px] font-bold uppercase tracking-widest text-white/40">
-        {label}
-      </label>
+      <label htmlFor={name} className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{label}</label>
       <div className="relative">
-        <input
-          id={name}
-          name={name}
-          type={type}
-          value={value}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          onChange={(e) => onChange(e.target.value)}
-          className={[
-            "w-full rounded-xl border bg-surface-2 px-4 py-3 text-sm text-white placeholder:text-white/18 transition-all focus:outline-none focus:ring-1",
-            rightElement ? "pr-11" : "",
-            error
-              ? "border-red-500/60 focus:border-red-500 focus:ring-red-500/20"
-              : "border-border focus:border-accent focus:ring-accent/20",
-          ].join(" ")}
-        />
-        {rightElement && (
-          <div className="absolute inset-y-0 right-3 flex items-center">
-            {rightElement}
-          </div>
-        )}
+        <input id={name} name={name} type={type} value={value} placeholder={placeholder} autoComplete={autoComplete} onChange={(e) => onChange(e.target.value)}
+          className={["w-full rounded-xl border bg-white px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 transition-all focus:outline-none focus:ring-1", rightElement ? "pr-11" : "",
+            error ? "border-red-300 focus:border-red-400 focus:ring-red-200" : "border-zinc-200 focus:border-accent focus:ring-accent/20"].join(" ")} />
+        {rightElement && <div className="absolute inset-y-0 right-3 flex items-center">{rightElement}</div>}
       </div>
-      {error && (
-        <p className="text-[11px] text-red-400">↑ {error}</p>
-      )}
+      {error && <p className="text-[11px] text-red-500">↑ {error}</p>}
     </div>
   );
 }
 
-function Checkbox({
-  checked,
-  onChange,
-  children,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  children: React.ReactNode;
-}) {
+function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return (
     <label className="flex cursor-pointer items-center gap-2.5">
-      <div
-        onClick={() => onChange(!checked)}
-        className={[
-          "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all",
-          checked ? "border-accent bg-accent" : "border-border bg-surface-2 hover:border-white/30",
-        ].join(" ")}
-      >
+      <div onClick={() => onChange(!checked)} className={["flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all", checked ? "border-accent bg-accent" : "border-zinc-300 bg-white hover:border-zinc-400"].join(" ")}>
         {checked && <Check size={10} className="text-white" />}
       </div>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={() => onChange(!checked)}
-        className="sr-only"
-      />
-      <span className="text-sm text-white/55">{children}</span>
+      <input type="checkbox" checked={checked} onChange={() => onChange(!checked)} className="sr-only" />
+      <span className="text-sm text-zinc-600">{children}</span>
     </label>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export default function LoginClient() {
   const { login } = useAuth();
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -130,17 +68,14 @@ export default function LoginClient() {
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
 
-  const clearError = (field: string) =>
-    setErrors((e) => { const n = { ...e }; delete n[field]; return n; });
+  const clearError = (field: string) => setErrors((e) => { const n = { ...e }; delete n[field]; return n; });
 
   function validate(): Errors {
     const e: Errors = {};
     if (!email.trim()) e.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      e.email = "Please enter a valid email address";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Please enter a valid email address";
     if (!password) e.password = "Password is required";
-    else if (password.length < 6)
-      e.password = "Password must be at least 6 characters";
+    else if (password.length < 6) e.password = "Password must be at least 6 characters";
     return e;
   }
 
@@ -149,142 +84,50 @@ export default function LoginClient() {
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setLoading(true);
-    try {
-      await login(email, password, rememberMe);
-      router.push("/");
-    } catch {
-      setErrors({ _form: "Something went wrong. Please try again." });
-      setLoading(false);
-    }
+    try { await login(email, password, rememberMe); router.push("/"); }
+    catch { setErrors({ _form: "Something went wrong. Please try again." }); setLoading(false); }
   };
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-      {/* Background glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(ellipse 60% 50% at 50% 20%, rgba(255,45,120,0.1) 0%, transparent 70%)",
-        }}
-      />
-
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10" style={{ background: "radial-gradient(ellipse 60% 50% at 50% 20%, rgba(255,45,120,0.05) 0%, transparent 70%)" }} />
       <div className="w-full max-w-[400px]">
-        {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
           <Logo />
-          <h1 className="mt-3 text-2xl font-black tracking-tight text-white">
-            Welcome back
-          </h1>
-          <p className="text-sm text-white/40">
-            Sign in to your PeptoBuy account
-          </p>
+          <h1 className="mt-3 text-2xl font-black tracking-tight text-zinc-900">Welcome back</h1>
+          <p className="text-sm text-zinc-500">Sign in to your PeptoBuy account</p>
         </div>
 
-        {/* Card */}
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-surface-1 p-7 shadow-[0_0_60px_rgba(0,0,0,0.5)]">
-          {/* Top accent line */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+        <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-7 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
 
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-            {/* Google button */}
-            <button
-              type="button"
-              onClick={() => {}} // UI-only
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm font-semibold text-white/80 transition-colors hover:bg-white/5 hover:text-white"
-            >
-              <GoogleIcon />
-              Continue with Google
+            <button type="button" className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100">
+              <GoogleIcon /> Continue with Google
             </button>
-
-            {/* Divider */}
             <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-[11px] font-medium text-white/25">
-                or continue with email
-              </span>
-              <div className="h-px flex-1 bg-border" />
+              <div className="h-px flex-1 bg-zinc-200" />
+              <span className="text-[11px] font-medium text-zinc-400">or continue with email</span>
+              <div className="h-px flex-1 bg-zinc-200" />
             </div>
-
-            {/* Global error */}
-            {errors._form && (
-              <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                {errors._form}
-              </p>
-            )}
-
-            {/* Email */}
-            <Field
-              label="Email address"
-              name="email"
-              type="email"
-              value={email}
-              error={errors.email}
-              placeholder="you@example.com"
-              autoComplete="email"
-              onChange={(v) => { setEmail(v); clearError("email"); }}
-            />
-
-            {/* Password */}
-            <Field
-              label="Password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              error={errors.password}
-              placeholder="••••••••"
-              autoComplete="current-password"
+            {errors._form && <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{errors._form}</p>}
+            <Field label="Email address" name="email" type="email" value={email} error={errors.email} placeholder="you@example.com" autoComplete="email" onChange={(v) => { setEmail(v); clearError("email"); }} />
+            <Field label="Password" name="password" type={showPassword ? "text" : "password"} value={password} error={errors.password} placeholder="••••••••" autoComplete="current-password"
               onChange={(v) => { setPassword(v); clearError("password"); }}
-              rightElement={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  className="text-white/30 hover:text-white/60 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              }
-            />
-
-            {/* Remember me + forgot password */}
+              rightElement={<button type="button" onClick={() => setShowPassword((s) => !s)} className="text-zinc-400 hover:text-zinc-600 transition-colors" tabIndex={-1}>{showPassword ? <EyeOff size={15} /> : <Eye size={15} />}</button>} />
             <div className="flex items-center justify-between">
-              <Checkbox checked={rememberMe} onChange={setRememberMe}>
-                Remember me
-              </Checkbox>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-accent transition-colors hover:text-accent-hover"
-              >
-                Forgot password?
-              </Link>
+              <Checkbox checked={rememberMe} onChange={setRememberMe}>Remember me</Checkbox>
+              <Link href="/forgot-password" className="text-sm text-accent transition-colors hover:text-accent-hover">Forgot password?</Link>
             </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.25)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.4)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={15} className="animate-spin" />
-                  Signing in…
-                </>
-              ) : (
-                "Sign In"
-              )}
+            <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.3)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60">
+              {loading ? <><Loader2 size={15} className="animate-spin" />Signing in…</> : "Sign In"}
             </button>
           </form>
         </div>
 
-        {/* Sign up link */}
-        <p className="mt-6 text-center text-sm text-white/40">
+        <p className="mt-6 text-center text-sm text-zinc-500">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-semibold text-white transition-colors hover:text-accent">
-            Create one →
-          </Link>
+          <Link href="/signup" className="font-semibold text-zinc-900 transition-colors hover:text-accent">Create one →</Link>
         </p>
       </div>
     </div>
