@@ -88,11 +88,11 @@ export default function PriceRangeSlider({
 
       {/* Value labels */}
       <div className="flex items-center justify-between">
-        <span className="rounded-md border border-border bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-white/80">
+        <span className="rounded-md border border-border bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-zinc-700">
           ${value[0]}
         </span>
-        <span className="text-xs text-white/20">—</span>
-        <span className="rounded-md border border-border bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-white/80">
+        <span className="text-xs text-zinc-300">—</span>
+        <span className="rounded-md border border-border bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-zinc-700">
           ${value[1]}
         </span>
       </div>

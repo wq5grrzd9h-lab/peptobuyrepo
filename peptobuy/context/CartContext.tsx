@@ -10,18 +10,28 @@ import {
   useRef,
 } from "react";
 import { products as allProducts } from "@/lib/products";
-import type { Product } from "@/lib/products";
+import type { Product, DoseOption } from "@/lib/products";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+export const RECONSTITUTION_PRICE = 19.99;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CartItem {
+  /** Unique key: "${productId}::${doseSize}::${r|n}" */
+  itemKey: string;
   product: Product;
   quantity: number;
+  selectedDose: DoseOption;
+  reconstitution: boolean;
 }
 
 interface StoredItem {
   productId: string;
+  doseSize: string;
   quantity: number;
+  reconstitution: boolean;
 }
 
 export interface CartContextValue {
@@ -29,25 +39,46 @@ export interface CartContextValue {
   totalCount: number;
   subtotal: number;
   hydrated: boolean;
-  addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addItem: (
+    product: Product,
+    dose: DoseOption,
+    quantity?: number,
+    reconstitution?: boolean
+  ) => void;
+  removeItem: (itemKey: string) => void;
+  updateQuantity: (itemKey: string, quantity: number) => void;
   clearCart: () => void;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+export function makeItemKey(
+  productId: string,
+  doseSize: string,
+  recon: boolean
+): string {
+  return `${productId}::${doseSize}::${recon ? "r" : "n"}`;
+}
+
+/** Unit price for a single cart item (dose price + optional reconstitution fee). */
+export function lineUnitPrice(item: CartItem): number {
+  return item.selectedDose.price + (item.reconstitution ? RECONSTITUTION_PRICE : 0);
 }
 
 // ─── Reducer ─────────────────────────────────────────────────────────────────
 
 type CartAction =
-  | { type: "ADD"; product: Product; qty: number }
-  | { type: "REMOVE"; id: string }
-  | { type: "UPDATE"; id: string; qty: number }
+  | { type: "ADD"; product: Product; dose: DoseOption; recon: boolean; qty: number }
+  | { type: "REMOVE"; itemKey: string }
+  | { type: "UPDATE"; itemKey: string; qty: number }
   | { type: "CLEAR" }
   | { type: "HYDRATE"; items: CartItem[] };
 
 function reducer(state: CartItem[], action: CartAction): CartItem[] {
   switch (action.type) {
     case "ADD": {
-      const idx = state.findIndex((i) => i.product.id === action.product.id);
+      const key = makeItemKey(action.product.id, action.dose.size, action.recon);
+      const idx = state.findIndex((i) => i.itemKey === key);
       if (idx !== -1) {
         return state.map((item, i) =>
           i === idx
@@ -55,15 +86,23 @@ function reducer(state: CartItem[], action: CartAction): CartItem[] {
             : item
         );
       }
-      return [...state, { product: action.product, quantity: action.qty }];
+      return [
+        ...state,
+        {
+          itemKey: key,
+          product: action.product,
+          quantity: action.qty,
+          selectedDose: action.dose,
+          reconstitution: action.recon,
+        },
+      ];
     }
     case "REMOVE":
-      return state.filter((i) => i.product.id !== action.id);
+      return state.filter((i) => i.itemKey !== action.itemKey);
     case "UPDATE":
-      if (action.qty <= 0)
-        return state.filter((i) => i.product.id !== action.id);
+      if (action.qty <= 0) return state.filter((i) => i.itemKey !== action.itemKey);
       return state.map((i) =>
-        i.product.id === action.id
+        i.itemKey === action.itemKey
           ? { ...i, quantity: Math.min(99, action.qty) }
           : i
       );
@@ -80,60 +119,75 @@ function reducer(state: CartItem[], action: CartAction): CartItem[] {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const STORAGE_KEY = "peptobuy-cart-v1";
+// Bumped to v2: stored format now includes doseSize + reconstitution
+const STORAGE_KEY = "peptobuy-cart-v2";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, dispatch] = useReducer(reducer, []);
   const [hydrated, setHydrated] = useState(false);
   const isMounted = useRef(false);
 
-  // Hydrate from localStorage once on mount
+  // Hydrate from localStorage on mount
   useEffect(() => {
     isMounted.current = true;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const stored: StoredItem[] = JSON.parse(raw);
-        const hydrated: CartItem[] = stored
-          .map(({ productId, quantity }) => {
+        const hydratedItems: CartItem[] = stored
+          .map(({ productId, doseSize, quantity, reconstitution }) => {
             const product = allProducts.find((p) => p.id === productId);
-            return product ? { product, quantity } : null;
+            if (!product) return null;
+            const dose = product.doses.find((d) => d.size === doseSize);
+            if (!dose) return null;
+            return {
+              itemKey: makeItemKey(productId, doseSize, reconstitution),
+              product,
+              quantity,
+              selectedDose: dose,
+              reconstitution,
+            } as CartItem;
           })
           .filter(Boolean) as CartItem[];
-        if (hydrated.length > 0) {
-          dispatch({ type: "HYDRATE", items: hydrated });
+        if (hydratedItems.length > 0) {
+          dispatch({ type: "HYDRATE", items: hydratedItems });
         }
       }
     } catch {
-      // corrupted storage — ignore and start fresh
+      /* corrupted storage — start fresh */
     }
     setHydrated(true);
   }, []);
 
-  // Persist to localStorage whenever items change (but not before hydration)
+  // Persist on change (not before hydration)
   useEffect(() => {
     if (!hydrated) return;
     const stored: StoredItem[] = items.map((i) => ({
       productId: i.product.id,
+      doseSize: i.selectedDose.size,
       quantity: i.quantity,
+      reconstitution: i.reconstitution,
     }));
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
     } catch {
-      // storage full or unavailable — ignore
+      /* storage full — ignore */
     }
   }, [items, hydrated]);
 
-  const addItem = useCallback((product: Product, qty = 1) => {
-    dispatch({ type: "ADD", product, qty });
+  const addItem = useCallback(
+    (product: Product, dose: DoseOption, qty = 1, recon = false) => {
+      dispatch({ type: "ADD", product, dose, recon, qty });
+    },
+    []
+  );
+
+  const removeItem = useCallback((itemKey: string) => {
+    dispatch({ type: "REMOVE", itemKey });
   }, []);
 
-  const removeItem = useCallback((id: string) => {
-    dispatch({ type: "REMOVE", id });
-  }, []);
-
-  const updateQuantity = useCallback((id: string, qty: number) => {
-    dispatch({ type: "UPDATE", id, qty });
+  const updateQuantity = useCallback((itemKey: string, qty: number) => {
+    dispatch({ type: "UPDATE", itemKey, qty });
   }, []);
 
   const clearCart = useCallback(() => {
@@ -141,10 +195,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const totalCount = items.reduce((sum, i) => sum + i.quantity, 0);
-  const subtotal = items.reduce(
-    (sum, i) => sum + i.product.price * i.quantity,
-    0
-  );
+
+  // Subtotal uses the actual unit price per item (dose price + reconstitution)
+  const subtotal = items.reduce((sum, i) => sum + lineUnitPrice(i) * i.quantity, 0);
 
   return (
     <CartContext.Provider

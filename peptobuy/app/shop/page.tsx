@@ -4,9 +4,9 @@ import ShopClient from "@/components/shop/ShopClient";
 export const metadata: Metadata = {
   title: "Shop — PeptoBuy",
   description:
-    "Browse our full catalog of performance supplements, recovery essentials, and curated bundles.",
+    "Browse our full catalog of research-grade peptides, lyophilized compounds, blends, and reconstitution essentials.",
 };
 
-export default function ShopPage() {
-  return <ShopClient />;
+export default function ShopPage({ searchParams }: { searchParams: { category?: string } }) {
+  return <ShopClient initialCategory={searchParams.category} />;
 }

@@ -1,4 +1,4 @@
-import { FlaskConical, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { FlaskConical, Truck, ShieldCheck } from "lucide-react";
 
 const FEATURES = [
   {
@@ -9,12 +9,12 @@ const FEATURES = [
   {
     icon: Truck,
     heading: "Ships in 24hrs",
-    body: "Orders placed before 3 PM EST ship same business day. Free on orders over $75.",
+    body: "Orders placed before 3 PM EST dispatched same business day. Free on orders over $200.",
   },
   {
-    icon: RotateCcw,
-    heading: "Money Back Guarantee",
-    body: "Not happy? Return within 30 days for a full refund — no questions, no hassle.",
+    icon: ShieldCheck,
+    heading: "All Sales Final",
+    body: "All purchases are final. We do not accept returns or issue refunds. Please review your order carefully before completing checkout.",
   },
   {
     icon: ShieldCheck,
@@ -31,20 +31,14 @@ export default function TrustBar() {
           {FEATURES.map(({ icon: Icon, heading, body }, i) => (
             <div
               key={heading}
-              className={[
-                "flex flex-col gap-4 px-8 py-10",
-                i > 0 && i % 2 === 0 ? "sm:border-t sm:border-border lg:border-t-0" : "",
-              ].join(" ")}
+              className={["flex flex-col gap-4 px-8 py-10", i > 0 && i % 2 === 0 ? "sm:border-t sm:border-border lg:border-t-0" : ""].join(" ")}
             >
-              {/* Icon */}
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/8">
                 <Icon size={22} className="text-accent" />
               </div>
-
-              {/* Text */}
               <div>
-                <h3 className="mb-2 text-base font-bold text-white">{heading}</h3>
-                <p className="text-sm leading-relaxed text-white/45">{body}</p>
+                <h3 className="mb-2 text-base font-bold text-zinc-900">{heading}</h3>
+                <p className="text-sm leading-relaxed text-zinc-500">{body}</p>
               </div>
             </div>
           ))}
