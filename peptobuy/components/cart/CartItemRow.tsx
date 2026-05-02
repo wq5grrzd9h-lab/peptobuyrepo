@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Minus, Plus, Trash2, FlaskConical } from "lucide-react";
 import { useCart, lineUnitPrice, type CartItem } from "@/context/CartContext";
-import ProductVial from "@/components/product/ProductVial";
+import Image from "next/image";
 
 export default function CartItemRow({ item }: { item: CartItem }) {
   const { updateQuantity, removeItem } = useCart();
@@ -19,12 +19,7 @@ export default function CartItemRow({ item }: { item: CartItem }) {
         href={`/shop/${product.id}`}
         className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-24"
       >
-        <ProductVial
-          name={product.name}
-          dose={selectedDose.size}
-          category={product.category}
-          className="h-full w-full"
-        />
+        <Image src={product.image} alt={product.name} fill sizes="96px" className="object-contain" />
       </Link>
 
       {/* Details */}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ShieldCheck, Lock, FlaskConical } from "lucide-react";
-import ProductVial from "@/components/product/ProductVial";
+import Image from "next/image";
 import { useCart, lineUnitPrice } from "@/context/CartContext";
 
 interface CheckoutSummaryProps { shippingCost: number; discount?: number }
@@ -40,12 +40,7 @@ export default function CheckoutSummary({ shippingCost, discount = 0 }: Checkout
               {/* Image + qty badge */}
               <div className="relative shrink-0">
                 <div className="relative h-14 w-14 overflow-hidden rounded-xl">
-                  <ProductVial
-                    name={item.product.name}
-                    dose={item.selectedDose.size}
-                    category={item.product.category}
-                    className="h-full w-full"
-                  />
+                  <Image src={item.product.image} alt={item.product.name} fill sizes="56px" className="object-contain" />
                 </div>
                 <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white">
                   {item.quantity}

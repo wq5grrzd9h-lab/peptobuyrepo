@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
-import ProductVial from "@/components/product/ProductVial";
+import Image from "next/image";
 import { Search, X, ArrowRight, TrendingUp } from "lucide-react";
 import { products, categories } from "@/lib/products";
 import { useSearch } from "@/context/SearchContext";
@@ -70,7 +70,7 @@ export default function SearchOverlay() {
               {results.map((product) => (
                 <Link key={product.id} href={`/shop/${product.id}`} onClick={close} className="group flex items-center gap-4 rounded-xl p-3 transition-colors hover:bg-zinc-50">
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
-                    <ProductVial name={product.name} dose={product.doses[0].size} category={product.category} className="h-full w-full" />
+                    <Image src={product.image} alt={product.name} fill sizes="56px" className="object-contain transition-transform duration-300 group-hover:scale-105" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-zinc-900">{highlight(product.name, query)}</p>

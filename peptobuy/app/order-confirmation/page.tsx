@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import ProductVial from "@/components/product/ProductVial";
-import type { Category } from "@/lib/products";
+import Image from "next/image";
 import { CheckCircle2, Package, MapPin, Truck, ArrowRight, Home } from "lucide-react";
 
 interface OrderItem { productId: string; name: string; price: number; quantity: number; image: string; category: string; selectedDose?: string; reconstitution?: boolean }
@@ -62,12 +61,7 @@ export default function OrderConfirmationPage() {
             {order.items.map((item) => (
               <div key={item.productId} className="flex items-center gap-3">
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl">
-                  <ProductVial
-                    name={item.name}
-                    dose={item.selectedDose ?? ""}
-                    category={item.category as Category}
-                    className="h-full w-full"
-                  />
+                  <Image src={item.image} alt={item.name} fill sizes="48px" className="object-contain" />
                   <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">{item.quantity}</span>
                 </div>
                 <div className="min-w-0 flex-1">

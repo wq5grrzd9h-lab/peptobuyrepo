@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import ProductVial from "@/components/product/ProductVial";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ChevronLeft, CheckCircle2, XCircle, FlaskConical, Truck, ShieldCheck, ArrowRight } from "lucide-react";
 import { products } from "@/lib/products";
@@ -60,7 +60,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           {/* Image */}
           <div className="lg:sticky lg:top-24">
             <div className="relative aspect-square overflow-hidden rounded-2xl border border-zinc-200 shadow-sm">
-              <ProductVial name={product.name} dose={product.doses[0].size} category={product.category} className="h-full w-full" variant="featured" />
+              <Image src={product.image} alt={product.name} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="object-contain" />
               {product.badge && <div className="absolute left-4 top-4"><Badge label={product.badge} variant={resolveBadgeVariant(product.badge)} /></div>}
             </div>
           </div>
