@@ -125,22 +125,6 @@ const PRODUCT_DETAILS: Record<string, ProductDetail> = {
       ...PEPTIDE_BASE,
     ],
   },
-  "ipamorelin": {
-    overview: [
-      "Ipamorelin is a selective, high-potency Ghrelin receptor (GHS-R1a) agonist and growth hormone secretagogue pentapeptide. It is notable in research for its high GH-release selectivity with minimal effect on cortisol, prolactin, or ACTH levels in in vitro assay systems.",
-      "Studies have characterized its binding affinity, receptor selectivity profiles, and dose-response relationships in GH secretion models. Its clean selectivity profile makes it a valuable tool compound for GH axis research.",
-      "Supplied as lyophilized powder. Reconstitute in sterile or bacteriostatic water. For research use only.",
-    ],
-    compoundData: [
-      { label: "Sequence",         value: "Aib-His-D-2-Nal-D-Phe-Lys-NH₂" },
-      { label: "Molecular Weight", value: "711.85 Da" },
-      { label: "CAS Number",       value: "170851-70-4" },
-      { label: "Receptor Target",  value: "GHS-R1a (Ghrelin receptor)" },
-      { label: "Amino Acids",      value: "5 (pentapeptide)" },
-      ...PEPTIDE_BASE,
-    ],
-  },
-
   // ── Combos ───────────────────────────────────────────────────────────────────
   "glow-blend": {
     overview: [
@@ -175,22 +159,6 @@ const PRODUCT_DETAILS: Record<string, ProductDetail> = {
       { label: "Research Focus", value: "Tissue repair, anti-inflammatory signaling" },
     ],
   },
-  "cjc-ipa-blend": {
-    overview: [
-      "CJC/IPA Blend combines CJC-1295 (DAC-modified GHRH analogue) and Ipamorelin (GHS-R1a agonist) in a single lyophilized research formulation. The combination is studied for additive or synergistic effects on the GH secretagogue axis.",
-      "Published research has characterized the complementary receptor mechanisms of GHRH analogues and ghrelin receptor agonists when co-administered in GH release models. This blend facilitates such research without requiring independent reconstitution of each compound.",
-      "Reconstitute in bacteriostatic water. Store at -20 °C. For research use only.",
-    ],
-    compoundData: [
-      { label: "Compounds",         value: "CJC-1295 (DAC) + Ipamorelin" },
-      { label: "Ratio",             value: "Equimolar blend" },
-      { label: "Individual Purity", value: "≥98% per component (HPLC)" },
-      { label: "Form",              value: "Lyophilized Powder (co-lyophilized)" },
-      { label: "Storage",           value: "-20 °C — desiccate" },
-      { label: "Reconstitution",    value: "Bacteriostatic water recommended" },
-    ],
-  },
-
   // ── Essentials ───────────────────────────────────────────────────────────────
   "bac-water": {
     overview: [

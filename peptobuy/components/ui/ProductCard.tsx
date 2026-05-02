@@ -7,7 +7,7 @@ import { Product } from "@/lib/products";
 import Badge, { resolveBadgeVariant } from "@/components/ui/Badge";
 import { useCart, RECONSTITUTION_PRICE } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
-import ProductVial from "@/components/product/ProductVial";
+import Image from "next/image";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -37,11 +37,12 @@ export default function ProductCard({ product }: { product: Product }) {
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:border-accent/40 hover:shadow-[0_4px_24px_rgba(255,45,120,0.10)]">
       {/* Image */}
       <Link href={`/shop/${product.id}`} className="relative block aspect-square overflow-hidden">
-        <ProductVial
-          name={product.name}
-          dose={selectedDose.size}
-          category={product.category}
-          className="h-full w-full transition-all duration-300 group-hover:scale-105 group-hover:[filter:drop-shadow(0_0_14px_rgba(255,45,120,0.22))]"
+        <Image
+          src={product.image}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-contain transition-all duration-300 group-hover:scale-105 group-hover:[filter:drop-shadow(0_0_14px_rgba(255,45,120,0.22))]"
         />
         {product.badge && (
           <div className="absolute left-3 top-3">
