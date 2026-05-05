@@ -18,7 +18,7 @@ const FAQS = [
   },
   {
     q: "What is your return policy?",
-    a: "All sales are final. We do not accept returns or exchanges, and no refunds will be issued after purchase. Please review product details carefully before ordering. If you received a damaged or incorrect item, contact us at support@peptobuy.com within 48 hours of delivery.",
+    a: "All sales are final. We do not accept returns or exchanges, and no refunds will be issued after purchase. Please review product details carefully before ordering. If you received a damaged or incorrect item, contact us at peptobuy@gmail.com within 48 hours of delivery.",
   },
 ];
 
@@ -44,14 +44,14 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="bg-white py-20">
+    <section id="faq" className="bg-white py-20">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">Got Questions?</p>
           <h2 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">Frequently Asked</h2>
           <p className="mt-3 text-sm text-zinc-500">
             Can&apos;t find an answer?{" "}
-            <a href="mailto:support@peptobuy.com" className="text-accent underline underline-offset-2 hover:no-underline">
+            <a href="mailto:peptobuy@gmail.com" className="text-accent underline underline-offset-2 hover:no-underline">
               Email our team
             </a>
           </p>

@@ -149,7 +149,7 @@ export default function AboutPage() {
               <p>
                 All sales are final. We stand behind the quality of every product we
                 dispatch. If you receive a batch that does not match its published COA,
-                contact us within 48 hours and we will resolve it without exception.
+                <a href="mailto:peptobuy@gmail.com" className="text-accent underline underline-offset-2 hover:no-underline">contact us</a> within 48 hours and we will resolve it without exception.
               </p>
             </div>
           </div>

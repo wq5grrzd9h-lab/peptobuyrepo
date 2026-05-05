@@ -17,28 +17,9 @@ const COLUMNS = [
   {
     heading: "Support",
     links: [
-      { label: "FAQ", href: "/faq" },
-      { label: "Shipping Policy", href: "/shipping" },
-      { label: "Track Order", href: "/track" },
-      { label: "Contact Us", href: "/contact" },
-    ],
-  },
-  {
-    heading: "Company",
-    links: [
+      { label: "FAQ", href: "/#faq" },
       { label: "About Us", href: "/about" },
-      { label: "Blog", href: "/blog" },
-      { label: "Careers", href: "/careers" },
-      { label: "Press", href: "/press" },
-    ],
-  },
-  {
-    heading: "Legal",
-    links: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "/cookies" },
-      { label: "Accessibility", href: "/accessibility" },
+      { label: "Contact Us", href: "mailto:peptobuy@gmail.com" },
     ],
   },
 ];
@@ -92,7 +73,7 @@ export default function Footer() {
           <p className="mt-3 max-w-xs text-sm text-zinc-500">Precision research compounds for qualified scientists and laboratories.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-2 lg:grid-cols-2 lg:max-w-md">
           {COLUMNS.map((col) => (
             <div key={col.heading}>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-400">{col.heading}</h3>
