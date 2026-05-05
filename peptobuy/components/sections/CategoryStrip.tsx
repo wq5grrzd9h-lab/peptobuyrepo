@@ -13,7 +13,7 @@ const CATEGORY_META: Record<Category, { icon: React.ElementType; description: st
   },
   "Muscle Growth": {
     icon: Dumbbell,
-    description: "CJC-1295, Tesamorelin",
+    description: "CJC-1295/IPA, Tesamorelin",
   },
   Combos: {
     icon: Package,

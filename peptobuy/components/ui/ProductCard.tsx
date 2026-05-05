@@ -71,24 +71,30 @@ export default function ProductCard({ product }: { product: Product }) {
         </Link>
 
         {/* ── Dose selector ───────────────────────────────── */}
-        <div className="relative">
-          <select
-            value={doseIdx}
-            onChange={(e) => setDoseIdx(Number(e.target.value))}
-            onClick={(e) => e.preventDefault()} // prevent link navigation from parent
-            className="w-full appearance-none rounded-lg border border-zinc-200 bg-white py-1.5 pl-3 pr-7 text-xs font-semibold text-zinc-900 transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
-          >
-            {product.doses.map((dose, i) => (
-              <option key={dose.size} value={i}>
-                {dose.size} — ${dose.price.toFixed(2)}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={12}
-            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400"
-          />
-        </div>
+        {product.doses.length > 1 ? (
+          <div className="relative">
+            <select
+              value={doseIdx}
+              onChange={(e) => setDoseIdx(Number(e.target.value))}
+              onClick={(e) => e.preventDefault()}
+              className="w-full appearance-none rounded-lg border border-zinc-200 bg-white py-1.5 pl-3 pr-7 text-xs font-semibold text-zinc-900 transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
+            >
+              {product.doses.map((dose, i) => (
+                <option key={dose.size} value={i}>
+                  {dose.size} — ${dose.price.toFixed(2)}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={12}
+              className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400"
+            />
+          </div>
+        ) : (
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 py-1.5 pl-3 text-xs font-semibold text-zinc-700">
+            {product.doses[0].size}
+          </div>
+        )}
 
         {/* ── Reconstitution toggle (hidden for BAC Water / Essentials) ── */}
         {!isEssentials && (

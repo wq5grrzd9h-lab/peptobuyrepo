@@ -99,15 +99,16 @@ const PRODUCT_DETAILS: Record<string, ProductDetail> = {
   // ── Muscle Growth ────────────────────────────────────────────────────────────
   "cjc-1295": {
     overview: [
-      "CJC-1295 is a synthetic analogue of Growth Hormone-Releasing Hormone (GHRH 1-29) incorporating Drug Affinity Complex (DAC) technology — a lysine residue modified with a maleimidopropionic acid linker enabling covalent binding to serum albumin and dramatically extending plasma half-life in research models.",
-      "The compound is studied for its role in GH secretagogue research, pulsatile growth hormone release kinetics, IGF-1 axis modulation, and body composition signaling pathway investigations.",
+      "CJC-1295 / IPA is a research blend combining CJC-1295 (a GHRH analogue with Drug Affinity Complex technology) and Ipamorelin (a selective GH secretagogue). Together they are studied for synergistic effects on pulsatile GH release kinetics in preclinical models.",
+      "CJC-1295 provides extended half-life via albumin binding, while Ipamorelin selectively stimulates GH release without significant cortisol or prolactin elevation in research assays. The combination is used in IGF-1 axis modulation and body composition signaling studies.",
       "Supplied as lyophilized powder. Reconstitute in BAC Water or sterile water. For research use only.",
     ],
     compoundData: [
-      { label: "Modification",     value: "GHRH (1-29) + Drug Affinity Complex (DAC)" },
-      { label: "Molecular Weight", value: "~3,647.28 Da" },
-      { label: "CAS Number",       value: "863288-34-0" },
-      { label: "Half-life",        value: "Extended via albumin binding (research)" },
+      { label: "Components",        value: "CJC-1295 (DAC) + Ipamorelin" },
+      { label: "CJC-1295 MW",       value: "~3,647.28 Da" },
+      { label: "Ipamorelin MW",     value: "~711.86 Da" },
+      { label: "CJC-1295 CAS",      value: "863288-34-0" },
+      { label: "Ipamorelin CAS",    value: "170851-70-4" },
       ...PEPTIDE_BASE,
     ],
   },
@@ -160,6 +161,23 @@ const PRODUCT_DETAILS: Record<string, ProductDetail> = {
     ],
   },
   // ── Essentials ───────────────────────────────────────────────────────────────
+  "nad-plus": {
+    overview: [
+      "NAD+ (Nicotinamide Adenine Dinucleotide) is a critical coenzyme found in all living cells, functioning as an electron carrier in metabolic redox reactions and as a substrate for enzymes involved in cellular signaling and DNA repair.",
+      "Research applications include studies on sirtuin (SIRT1–SIRT7) activation pathways, PARP-1 dependent DNA repair assays, mitochondrial biogenesis pathway investigations, and NAD+-dependent metabolism in aging models.",
+      "Supplied as lyophilized powder. Store at -20 °C protected from light. For research use only.",
+    ],
+    compoundData: [
+      { label: "Full Name",         value: "Nicotinamide Adenine Dinucleotide (oxidized)" },
+      { label: "Molecular Formula", value: "C21H27N7O14P2" },
+      { label: "Molecular Weight",  value: "663.43 Da" },
+      { label: "CAS Number",        value: "53-84-9" },
+      { label: "Form",              value: "Lyophilized Powder" },
+      { label: "Purity",            value: "≥98% (HPLC)" },
+      { label: "Storage",           value: "-20 °C — protect from light, desiccate" },
+      { label: "Reconstitution",    value: "Sterile water or PBS" },
+    ],
+  },
   "bac-water": {
     overview: [
       "Bacteriostatic Water is a 0.9% benzyl alcohol solution in sterile water for injection (WFI grade). The benzyl alcohol preservative allows multi-dose use from a single vial without microbial contamination risk — making it the standard solvent for peptide reconstitution in laboratory settings.",
@@ -283,8 +301,8 @@ function ShippingTab() {
         <p className="text-sm leading-relaxed text-zinc-600">
           All sales are final. We do not accept returns or exchanges. If you received a damaged or
           incorrect item, contact{" "}
-          <a href="mailto:support@peptobuy.com" className="text-accent underline underline-offset-2 hover:no-underline">
-            support@peptobuy.com
+          <a href="mailto:peptobuy@gmail.com" className="text-accent underline underline-offset-2 hover:no-underline">
+            peptobuy@gmail.com
           </a>{" "}
           within 48 hours of delivery with photos of the issue.
         </p>

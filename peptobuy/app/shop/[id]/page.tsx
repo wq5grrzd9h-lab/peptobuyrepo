@@ -70,7 +70,9 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent">{product.category}</p>
             <h1 className="text-3xl font-black leading-tight tracking-tight text-zinc-900 lg:text-[2.5rem]">{product.name}</h1>
             <div className="flex flex-wrap items-baseline gap-3">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">from</span>
+              {product.doses.length > 1 && (
+                <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">from</span>
+              )}
               <span className="text-3xl font-black text-zinc-900">${product.doses[0].price.toFixed(2)}</span>
               <span className="text-sm text-zinc-400">/ {product.doses[0].size}</span>
             </div>
@@ -110,7 +112,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
         {/* COA */}
         <div className="border-t border-zinc-200 pt-4">
-          <COASection product={product} />
+          <COASection />
         </div>
 
         {/* Related */}
