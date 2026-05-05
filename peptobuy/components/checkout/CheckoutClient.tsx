@@ -3,13 +3,18 @@
 import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronDown, Truck, Zap, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
+import {
+  Check, ChevronLeft, ChevronDown, Truck, Zap, ShoppingBag,
+  ArrowRight, Loader2, CreditCard, Bitcoin,
+} from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart, lineUnitPrice } from "@/context/CartContext";
 import CheckoutSummary from "./CheckoutSummary";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+type PaymentMethod = "card" | "crypto";
 
 interface ContactForm { email: string; phone: string }
 interface ShippingForm { firstName: string; lastName: string; address: string; city: string; state: string; zip: string; country: string }
@@ -23,8 +28,32 @@ const COUNTRIES = [
   { code: "DE", name: "Germany" }, { code: "FR", name: "France" }, { code: "JP", name: "Japan" },
 ];
 
+const CRYPTO_COINS = ["BTC", "ETH", "USDT", "LTC", "BNB", "XMR"] as const;
+
 function generateOrderNumber(): string {
   return Array.from({ length: 8 }, () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[Math.floor(Math.random() * 36)]).join("");
+}
+
+// ─── Shared research-confirm checkbox ────────────────────────────────────────
+
+function ResearchConfirm({ confirmed, error, onChange }: {
+  confirmed: boolean; error: boolean; onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+      <label className="flex cursor-pointer items-start gap-3">
+        <div className={["mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all",
+          confirmed ? "border-amber-600 bg-amber-600" : error ? "border-red-400 bg-white" : "border-amber-400 bg-white"].join(" ")}>
+          {confirmed && <Check size={10} className="text-white" strokeWidth={3} />}
+        </div>
+        <input type="checkbox" className="sr-only" checked={confirmed} onChange={(e) => onChange(e.target.checked)} />
+        <span className="text-xs leading-relaxed text-amber-800">
+          I confirm these products are for research use only and I am a qualified researcher.
+        </span>
+      </label>
+      {error && <p className="mt-2 text-[11px] text-red-500">↑ You must confirm research use to place your order.</p>}
+    </div>
+  );
 }
 
 // ─── Shared field components ──────────────────────────────────────────────────
@@ -89,7 +118,7 @@ function StepIndicator({ current }: { current: number }) {
   );
 }
 
-// ─── Steps 0-2 ───────────────────────────────────────────────────────────────
+// ─── Steps 0–2 ───────────────────────────────────────────────────────────────
 
 function ContactStep({ data, errors, onChange }: { data: ContactForm; errors: Errors; onChange: (f: string, v: string) => void }) {
   return (
@@ -154,23 +183,62 @@ function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; s
   );
 }
 
+// ─── Payment method toggle ────────────────────────────────────────────────────
+
+function PaymentMethodToggle({ active, onChange }: { active: PaymentMethod; onChange: (m: PaymentMethod) => void }) {
+  return (
+    <div className="mb-6 flex gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 p-1.5">
+      {/* Card tab */}
+      <button
+        type="button"
+        onClick={() => onChange("card")}
+        className={["flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200",
+          active === "card" ? "bg-accent text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700"].join(" ")}
+      >
+        <CreditCard size={15} />
+        Pay with Card
+      </button>
+
+      {/* Crypto tab */}
+      <button
+        type="button"
+        onClick={() => onChange("crypto")}
+        className={["flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200",
+          active === "crypto" ? "bg-accent text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700"].join(" ")}
+      >
+        <span className="flex items-center gap-2">
+          <Bitcoin size={15} />
+          Pay with Crypto
+        </span>
+        <span className="flex gap-1">
+          {CRYPTO_COINS.map((coin) => (
+            <span
+              key={coin}
+              className={["rounded-full px-1.5 py-0.5 text-[9px] font-bold transition-colors",
+                active === "crypto" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-500"].join(" ")}
+            >
+              {coin}
+            </span>
+          ))}
+        </span>
+      </button>
+    </div>
+  );
+}
+
 // ─── Stripe payment form (must be inside <Elements>) ─────────────────────────
 
-function StripePaymentForm({ onBack, onSuccess }: {
-  onBack: () => void;
-  onSuccess: () => void;
-}) {
+function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSuccess: () => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
-  const [researchConfirmed, setResearchConfirmed] = useState(false);
-  const [researchError, setResearchError] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [confirmError, setConfirmError] = useState(false);
 
   const handlePlaceOrder = async () => {
     if (!stripe || !elements) return;
-    if (!researchConfirmed) { setResearchError(true); return; }
-
+    if (!confirmed) { setConfirmError(true); return; }
     setSubmitting(true);
     setStripeError(null);
 
@@ -185,41 +253,20 @@ function StripePaymentForm({ onBack, onSuccess }: {
       setSubmitting(false);
       return;
     }
-
     onSuccess();
   };
 
   return (
     <div>
-      {/* Stripe card input */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <PaymentElement options={{ layout: "tabs" }} />
       </div>
-
-      {/* Stripe error */}
       {stripeError && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {stripeError}
         </div>
       )}
-
-      {/* Research confirm */}
-      <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
-        <label className="flex cursor-pointer items-start gap-3">
-          <div className={["mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all",
-            researchConfirmed ? "border-amber-600 bg-amber-600" : researchError ? "border-red-400 bg-white" : "border-amber-400 bg-white"].join(" ")}>
-            {researchConfirmed && <Check size={10} className="text-white" strokeWidth={3} />}
-          </div>
-          <input type="checkbox" className="sr-only" checked={researchConfirmed}
-            onChange={(e) => { setResearchConfirmed(e.target.checked); setResearchError(false); }} />
-          <span className="text-xs leading-relaxed text-amber-800">
-            I confirm these products are for research use only and I am a qualified researcher.
-          </span>
-        </label>
-        {researchError && <p className="mt-2 text-[11px] text-red-500">↑ You must confirm research use to place your order.</p>}
-      </div>
-
-      {/* Navigation */}
+      <ResearchConfirm confirmed={confirmed} error={confirmError} onChange={(v) => { setConfirmed(v); setConfirmError(false); }} />
       <div className="mt-5 flex items-center justify-between gap-3">
         <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
           <ChevronLeft size={15} /> Back
@@ -227,6 +274,77 @@ function StripePaymentForm({ onBack, onSuccess }: {
         <button onClick={handlePlaceOrder} disabled={submitting || !stripe} type="button"
           className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
           {submitting ? <><Loader2 size={16} className="animate-spin" />Processing…</> : <>Place Order <ChevronLeft size={15} className="rotate-180" /></>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Crypto payment form ──────────────────────────────────────────────────────
+
+function CryptoPaymentForm({ onBack, onPay, submitting, error }: {
+  onBack: () => void;
+  onPay: () => void;
+  submitting: boolean;
+  error: string | null;
+}) {
+  const [confirmed, setConfirmed] = useState(false);
+  const [confirmError, setConfirmError] = useState(false);
+
+  const handlePay = () => {
+    if (!confirmed) { setConfirmError(true); return; }
+    onPay();
+  };
+
+  return (
+    <div>
+      {/* Info card */}
+      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50">
+            <Bitcoin size={20} className="text-orange-500" />
+          </div>
+          <div>
+            <p className="mb-1 font-semibold text-zinc-900">Pay with Cryptocurrency</p>
+            <p className="text-sm leading-relaxed text-zinc-500">
+              You&apos;ll be redirected to a secure Plisio checkout page to complete
+              your payment with your preferred cryptocurrency.
+            </p>
+          </div>
+        </div>
+
+        {/* Accepted coins */}
+        <div>
+          <p className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Accepted Currencies</p>
+          <div className="flex flex-wrap gap-2">
+            {CRYPTO_COINS.map((coin) => (
+              <span
+                key={coin}
+                className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-700"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                {coin}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      <ResearchConfirm confirmed={confirmed} error={confirmError} onChange={(v) => { setConfirmed(v); setConfirmError(false); }} />
+
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
+          <ChevronLeft size={15} /> Back
+        </button>
+        <button onClick={handlePay} disabled={submitting} type="button"
+          className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
+          {submitting ? <><Loader2 size={16} className="animate-spin" />Creating Invoice…</> : <>Pay with Crypto <ArrowRight size={15} /></>}
         </button>
       </div>
     </div>
@@ -243,16 +361,23 @@ export default function CheckoutClient() {
   const [contact, setContact] = useState<ContactForm>({ email: "", phone: "" });
   const [shipping, setShipping] = useState<ShippingForm>({ firstName: "", lastName: "", address: "", city: "", state: "", zip: "", country: "US" });
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+
+  // Stripe
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [intentLoading, setIntentLoading] = useState(false);
   const [intentError, setIntentError] = useState<string | null>(null);
 
+  // Crypto
+  const [cryptoSubmitting, setCryptoSubmitting] = useState(false);
+  const [cryptoError, setCryptoError] = useState<string | null>(null);
+
   const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 200 ? 0 : 9.99;
   const total = subtotal + shippingCost;
 
-  // Fetch payment intent when entering step 3
+  // Fetch Stripe intent when entering step 3 with card method
   useEffect(() => {
-    if (step !== 3 || clientSecret || intentLoading || total <= 0) return;
+    if (step !== 3 || paymentMethod !== "card" || clientSecret || intentLoading || total <= 0) return;
     setIntentLoading(true);
     setIntentError(null);
     fetch("/api/create-payment-intent", {
@@ -267,11 +392,11 @@ export default function CheckoutClient() {
       })
       .catch((err: Error) => setIntentError(err.message))
       .finally(() => setIntentLoading(false));
-  }, [step, clientSecret, intentLoading, total]);
+  }, [step, paymentMethod, clientSecret, intentLoading, total]);
 
   const clearFieldError = (field: string) => setErrors((e) => { const n = { ...e }; delete n[field]; return n; });
-  const updateContact = (field: string, value: string) => { setContact((p) => ({ ...p, [field]: value } as ContactForm)); clearFieldError(field); };
-  const updateShipping = (field: string, value: string) => { setShipping((p) => ({ ...p, [field]: value } as ShippingForm)); clearFieldError(field); };
+  const updateContact = (f: string, v: string) => { setContact((p) => ({ ...p, [f]: v } as ContactForm)); clearFieldError(f); };
+  const updateShipping = (f: string, v: string) => { setShipping((p) => ({ ...p, [f]: v } as ShippingForm)); clearFieldError(f); };
 
   function validateContact(): Errors {
     const e: Errors = {};
@@ -301,17 +426,51 @@ export default function CheckoutClient() {
   };
   const handleBack = () => { setErrors({}); setStep((s) => s - 1); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-  const handleOrderSuccess = () => {
+  // Called by StripePaymentForm on successful payment
+  const handleStripeSuccess = () => {
     const orderNumber = generateOrderNumber();
     try {
       localStorage.setItem("peptobuy-last-order", JSON.stringify({
         orderNumber, email: contact.email, placedAt: new Date().toISOString(),
+        paymentMethod: "card",
         items: items.map((i) => ({ productId: i.product.id, name: i.product.name, price: lineUnitPrice(i), quantity: i.quantity, image: i.product.image, category: i.product.category, selectedDose: i.selectedDose.size, reconstitution: i.reconstitution })),
         subtotal, shippingCost, total, shippingAddress: shipping, shippingMethod,
       }));
     } catch { /* ignore */ }
     clearCart();
     router.push("/order-confirmation");
+  };
+
+  // Called by CryptoPaymentForm — creates Plisio invoice and redirects
+  const handleCryptoPay = async () => {
+    setCryptoSubmitting(true);
+    setCryptoError(null);
+
+    const orderNumber = generateOrderNumber();
+    try {
+      localStorage.setItem("peptobuy-last-order", JSON.stringify({
+        orderNumber, email: contact.email, placedAt: new Date().toISOString(),
+        paymentMethod: "crypto", paymentStatus: "pending",
+        items: items.map((i) => ({ productId: i.product.id, name: i.product.name, price: lineUnitPrice(i), quantity: i.quantity, image: i.product.image, category: i.product.category, selectedDose: i.selectedDose.size, reconstitution: i.reconstitution })),
+        subtotal, shippingCost, total, shippingAddress: shipping, shippingMethod,
+      }));
+    } catch { /* ignore */ }
+
+    try {
+      const res = await fetch("/api/create-plisio-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: total, email: contact.email, orderId: orderNumber }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      clearCart();
+      window.location.href = data.invoiceUrl;
+    } catch (err: unknown) {
+      setCryptoError(err instanceof Error ? err.message : "Failed to create invoice. Please try again.");
+      setCryptoSubmitting(false);
+    }
   };
 
   if (hydrated && items.length === 0) {
@@ -357,7 +516,7 @@ export default function CheckoutClient() {
             <h1 className="text-2xl font-black tracking-tight text-zinc-900 sm:text-3xl">{stepTitles[step]}</h1>
           </div>
 
-          {/* Steps 0-2: standard form */}
+          {/* Steps 0–2 */}
           {step < 3 && (
             <>
               <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -378,24 +537,41 @@ export default function CheckoutClient() {
             </>
           )}
 
-          {/* Step 3: Stripe payment */}
+          {/* Step 3: Payment */}
           {step === 3 && (
             <>
-              {intentLoading && (
-                <div className="flex h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                  <Loader2 size={24} className="animate-spin text-accent" />
-                </div>
+              <PaymentMethodToggle active={paymentMethod} onChange={setPaymentMethod} />
+
+              {/* ── Card / Stripe ── */}
+              {paymentMethod === "card" && (
+                <>
+                  {intentLoading && (
+                    <div className="flex h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                      <Loader2 size={24} className="animate-spin text-accent" />
+                    </div>
+                  )}
+                  {intentError && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+                      Failed to initialize payment: {intentError}
+                      <button onClick={() => setIntentError(null)} className="ml-2 underline">Retry</button>
+                    </div>
+                  )}
+                  {clientSecret && !intentLoading && (
+                    <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+                      <StripePaymentForm onBack={handleBack} onSuccess={handleStripeSuccess} />
+                    </Elements>
+                  )}
+                </>
               )}
-              {intentError && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
-                  Failed to initialize payment: {intentError}
-                  <button onClick={() => { setIntentError(null); }} className="ml-2 underline">Retry</button>
-                </div>
-              )}
-              {clientSecret && !intentLoading && (
-                <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-                  <StripePaymentForm onBack={handleBack} onSuccess={handleOrderSuccess} />
-                </Elements>
+
+              {/* ── Crypto / Plisio ── */}
+              {paymentMethod === "crypto" && (
+                <CryptoPaymentForm
+                  onBack={handleBack}
+                  onPay={handleCryptoPay}
+                  submitting={cryptoSubmitting}
+                  error={cryptoError}
+                />
               )}
             </>
           )}
