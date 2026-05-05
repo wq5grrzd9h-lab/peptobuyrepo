@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronDown, Truck, Zap, ShoppingBag, ArrowRight, Loader2, CreditCard, Bitcoin, Building2, Eye, EyeOff } from "lucide-react";
+import { Check, ChevronLeft, ChevronDown, Truck, Zap, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart, lineUnitPrice } from "@/context/CartContext";
-import CardPreview, { detectCardType } from "./CardPreview";
 import CheckoutSummary from "./CheckoutSummary";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface ContactForm { email: string; phone: string }
 interface ShippingForm { firstName: string; lastName: string; address: string; city: string; state: string; zip: string; country: string }
-interface PaymentForm { cardNumber: string; expiry: string; cvv: string; nameOnCard: string }
 type ShippingMethod = "standard" | "express";
 type Errors = Record<string, string>;
 
@@ -24,10 +26,9 @@ const COUNTRIES = [
 function generateOrderNumber(): string {
   return Array.from({ length: 8 }, () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[Math.floor(Math.random() * 36)]).join("");
 }
-function formatCardNumber(raw: string): string { return raw.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim(); }
-function formatExpiry(raw: string): string { const d = raw.replace(/\D/g, "").slice(0, 4); return d.length <= 2 ? d : `${d.slice(0, 2)}/${d.slice(2)}`; }
 
-// Field components
+// ─── Shared field components ──────────────────────────────────────────────────
+
 function Field({ label, name, type = "text", value, error, placeholder, autoComplete, maxLength, onChange, className = "", rightElement }: {
   label: string; name: string; type?: string; value: string; error?: string; placeholder?: string;
   autoComplete?: string; maxLength?: number; onChange: (v: string) => void; className?: string; rightElement?: React.ReactNode;
@@ -63,6 +64,8 @@ function SelectField({ label, name, value, error, children, onChange, className 
   );
 }
 
+// ─── Step indicator ───────────────────────────────────────────────────────────
+
 function StepIndicator({ current }: { current: number }) {
   return (
     <div className="mb-8 flex items-start">
@@ -85,6 +88,8 @@ function StepIndicator({ current }: { current: number }) {
     </div>
   );
 }
+
+// ─── Steps 0-2 ───────────────────────────────────────────────────────────────
 
 function ContactStep({ data, errors, onChange }: { data: ContactForm; errors: Errors; onChange: (f: string, v: string) => void }) {
   return (
@@ -149,68 +154,124 @@ function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; s
   );
 }
 
-function PaymentStep({ data, errors, onChange, onCardFlip }: { data: PaymentForm; errors: Errors; onChange: (f: string, v: string) => void; onCardFlip: (flipped: boolean) => void }) {
-  const [showCvv, setShowCvv] = useState(false);
-  const cardType = detectCardType(data.cardNumber);
-  const cardTypeLabel = cardType === "visa" ? "Visa" : cardType === "mastercard" ? "Mastercard" : cardType === "amex" ? "Amex" : null;
+// ─── Stripe payment form (must be inside <Elements>) ─────────────────────────
+
+function StripePaymentForm({ onBack, onSuccess }: {
+  onBack: () => void;
+  onSuccess: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [submitting, setSubmitting] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+  const [researchConfirmed, setResearchConfirmed] = useState(false);
+  const [researchError, setResearchError] = useState(false);
+
+  const handlePlaceOrder = async () => {
+    if (!stripe || !elements) return;
+    if (!researchConfirmed) { setResearchError(true); return; }
+
+    setSubmitting(true);
+    setStripeError(null);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: `${window.location.origin}/order-confirmation` },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      setStripeError(error.message ?? "Payment failed. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    onSuccess();
+  };
+
   return (
-    <div className="space-y-5">
-      <Field label="Card Number" name="cardNumber" value={data.cardNumber} error={errors.cardNumber} placeholder="0000 0000 0000 0000" autoComplete="cc-number" maxLength={19}
-        onChange={(v) => onChange("cardNumber", formatCardNumber(v))}
-        rightElement={cardTypeLabel ? <span className="text-[10px] font-bold uppercase tracking-wider text-accent">{cardTypeLabel}</span> : <CreditCard size={15} className="text-zinc-400" />} />
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Expiry Date" name="expiry" value={data.expiry} error={errors.expiry} placeholder="MM/YY" autoComplete="cc-exp" maxLength={5} onChange={(v) => onChange("expiry", formatExpiry(v))} />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="cvv" className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">CVV</label>
-          <div className="relative">
-            <input id="cvv" name="cvv" type={showCvv ? "text" : "password"} value={data.cvv} placeholder="•••" autoComplete="cc-csc" maxLength={4}
-              onFocus={() => onCardFlip(true)} onBlur={() => onCardFlip(false)}
-              onChange={(e) => onChange("cvv", e.target.value.replace(/\D/g, "").slice(0, 4))}
-              className={["w-full rounded-xl border bg-white px-4 py-3 pr-10 text-sm text-zinc-900 placeholder:text-zinc-400 transition-all focus:outline-none focus:ring-1",
-                errors.cvv ? "border-red-300 focus:border-red-400 focus:ring-red-200" : "border-zinc-200 focus:border-accent focus:ring-accent/20"].join(" ")} />
-            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setShowCvv((s) => !s)} className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600">
-              {showCvv ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
-          </div>
-          {errors.cvv && <p className="flex items-center gap-1 text-[11px] text-red-500">↑ {errors.cvv}</p>}
-        </div>
+    <div>
+      {/* Stripe card input */}
+      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <PaymentElement options={{ layout: "tabs" }} />
       </div>
-      <Field label="Name on Card" name="nameOnCard" value={data.nameOnCard} error={errors.nameOnCard} placeholder="John Doe" autoComplete="cc-name" onChange={(v) => onChange("nameOnCard", v)} />
-      <div>
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-zinc-400">Also accepted</p>
-        <div className="flex gap-2">
-          {[{ icon: Bitcoin, label: "Crypto", note: "BTC / ETH" }, { icon: Building2, label: "Bank", note: "Wire transfer" }].map(({ icon: Icon, label, note }) => (
-            <div key={label} title="Coming soon" className="flex flex-1 cursor-not-allowed items-center gap-2.5 rounded-xl border border-dashed border-zinc-200 px-3 py-2.5 opacity-40">
-              <Icon size={16} className="text-zinc-400 shrink-0" />
-              <div><p className="text-xs font-semibold text-zinc-600">{label}</p><p className="text-[10px] text-zinc-400">{note}</p></div>
-              <span className="ml-auto rounded-full bg-zinc-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400">Soon</span>
-            </div>
-          ))}
+
+      {/* Stripe error */}
+      {stripeError && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {stripeError}
         </div>
+      )}
+
+      {/* Research confirm */}
+      <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <label className="flex cursor-pointer items-start gap-3">
+          <div className={["mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all",
+            researchConfirmed ? "border-amber-600 bg-amber-600" : researchError ? "border-red-400 bg-white" : "border-amber-400 bg-white"].join(" ")}>
+            {researchConfirmed && <Check size={10} className="text-white" strokeWidth={3} />}
+          </div>
+          <input type="checkbox" className="sr-only" checked={researchConfirmed}
+            onChange={(e) => { setResearchConfirmed(e.target.checked); setResearchError(false); }} />
+          <span className="text-xs leading-relaxed text-amber-800">
+            I confirm these products are for research use only and I am a qualified researcher.
+          </span>
+        </label>
+        {researchError && <p className="mt-2 text-[11px] text-red-500">↑ You must confirm research use to place your order.</p>}
+      </div>
+
+      {/* Navigation */}
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
+          <ChevronLeft size={15} /> Back
+        </button>
+        <button onClick={handlePlaceOrder} disabled={submitting || !stripe} type="button"
+          className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
+          {submitting ? <><Loader2 size={16} className="animate-spin" />Processing…</> : <>Place Order <ChevronLeft size={15} className="rotate-180" /></>}
+        </button>
       </div>
     </div>
   );
 }
+
+// ─── Main checkout orchestrator ───────────────────────────────────────────────
 
 export default function CheckoutClient() {
   const { items, subtotal, hydrated, clearCart } = useCart();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [researchConfirmed, setResearchConfirmed] = useState(false);
-  const [cardFlipped, setCardFlipped] = useState(false);
   const [contact, setContact] = useState<ContactForm>({ email: "", phone: "" });
   const [shipping, setShipping] = useState<ShippingForm>({ firstName: "", lastName: "", address: "", city: "", state: "", zip: "", country: "US" });
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
-  const [payment, setPayment] = useState<PaymentForm>({ cardNumber: "", expiry: "", cvv: "", nameOnCard: "" });
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [intentLoading, setIntentLoading] = useState(false);
+  const [intentError, setIntentError] = useState<string | null>(null);
 
   const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 200 ? 0 : 9.99;
+  const total = subtotal + shippingCost;
+
+  // Fetch payment intent when entering step 3
+  useEffect(() => {
+    if (step !== 3 || clientSecret || intentLoading || total <= 0) return;
+    setIntentLoading(true);
+    setIntentError(null);
+    fetch("/api/create-payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: total }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setClientSecret(data.clientSecret);
+      })
+      .catch((err: Error) => setIntentError(err.message))
+      .finally(() => setIntentLoading(false));
+  }, [step, clientSecret, intentLoading, total]);
 
   const clearFieldError = (field: string) => setErrors((e) => { const n = { ...e }; delete n[field]; return n; });
   const updateContact = (field: string, value: string) => { setContact((p) => ({ ...p, [field]: value } as ContactForm)); clearFieldError(field); };
   const updateShipping = (field: string, value: string) => { setShipping((p) => ({ ...p, [field]: value } as ShippingForm)); clearFieldError(field); };
-  const updatePayment = (field: string, value: string) => { setPayment((p) => ({ ...p, [field]: value } as PaymentForm)); clearFieldError(field); };
 
   function validateContact(): Errors {
     const e: Errors = {};
@@ -231,19 +292,6 @@ export default function CheckoutClient() {
     else if (!/^\d{4,10}$/.test(shipping.zip.replace(/\s/g, ""))) e.zip = "Please enter a valid postal code";
     return e;
   }
-  function validatePayment(): Errors {
-    const e: Errors = {};
-    const digits = payment.cardNumber.replace(/\s/g, "");
-    if (!digits) e.cardNumber = "Card number is required";
-    else if (digits.length !== 16) e.cardNumber = "Card number must be 16 digits";
-    if (!payment.expiry) e.expiry = "Expiry date is required";
-    else if (!/^\d{2}\/\d{2}$/.test(payment.expiry)) e.expiry = "Enter a valid expiry (MM/YY)";
-    else { const [mm, yy] = payment.expiry.split("/").map(Number); if (new Date(2000 + yy, mm - 1) < new Date()) e.expiry = "This card has expired"; }
-    if (!payment.cvv) e.cvv = "CVV is required";
-    else if (!/^\d{3,4}$/.test(payment.cvv)) e.cvv = "Enter a valid CVV";
-    if (!payment.nameOnCard.trim()) e.nameOnCard = "Name on card is required";
-    return e;
-  }
 
   const handleNext = () => {
     const errs = step === 0 ? validateContact() : step === 1 ? validateShipping() : {};
@@ -253,25 +301,20 @@ export default function CheckoutClient() {
   };
   const handleBack = () => { setErrors({}); setStep((s) => s - 1); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-  const handlePlaceOrder = async () => {
-    const errs = validatePayment();
-    if (!researchConfirmed) errs.researchConfirm = "You must confirm research use to place your order.";
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1600));
+  const handleOrderSuccess = () => {
     const orderNumber = generateOrderNumber();
     try {
       localStorage.setItem("peptobuy-last-order", JSON.stringify({
         orderNumber, email: contact.email, placedAt: new Date().toISOString(),
         items: items.map((i) => ({ productId: i.product.id, name: i.product.name, price: lineUnitPrice(i), quantity: i.quantity, image: i.product.image, category: i.product.category, selectedDose: i.selectedDose.size, reconstitution: i.reconstitution })),
-        subtotal, shippingCost, total: subtotal + shippingCost, shippingAddress: shipping, shippingMethod,
+        subtotal, shippingCost, total, shippingAddress: shipping, shippingMethod,
       }));
     } catch { /* ignore */ }
     clearCart();
     router.push("/order-confirmation");
   };
 
-  if (hydrated && items.length === 0 && !submitting) {
+  if (hydrated && items.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50">
@@ -288,6 +331,19 @@ export default function CheckoutClient() {
 
   const stepTitles = ["Contact Information", "Shipping Address", "Shipping Method", "Payment Details"];
 
+  const stripeAppearance = {
+    theme: "stripe" as const,
+    variables: {
+      colorPrimary: "#ff2d78",
+      colorBackground: "#ffffff",
+      colorText: "#18181b",
+      colorDanger: "#ef4444",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      borderRadius: "12px",
+      spacingUnit: "4px",
+    },
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <Link href="/cart" className="mb-8 inline-flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-zinc-900">
@@ -301,50 +357,48 @@ export default function CheckoutClient() {
             <h1 className="text-2xl font-black tracking-tight text-zinc-900 sm:text-3xl">{stepTitles[step]}</h1>
           </div>
 
+          {/* Steps 0-2: standard form */}
+          {step < 3 && (
+            <>
+              <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+                {step === 0 && <ContactStep data={contact} errors={errors} onChange={updateContact} />}
+                {step === 1 && <ShippingStep data={shipping} errors={errors} onChange={updateShipping} />}
+                {step === 2 && <MethodStep method={shippingMethod} setMethod={setShippingMethod} subtotal={subtotal} />}
+              </div>
+              <div className="mt-5 flex items-center justify-between gap-3">
+                {step > 0 ? (
+                  <button onClick={handleBack} className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
+                    <ChevronLeft size={15} /> Back
+                  </button>
+                ) : <div />}
+                <button onClick={handleNext} className="flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white shadow-[0_0_16px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_24px_rgba(255,45,120,0.3)] active:scale-[0.98]">
+                  Continue <ChevronLeft size={15} className="rotate-180" />
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Step 3: Stripe payment */}
           {step === 3 && (
-            <div className="mb-6">
-              <CardPreview cardNumber={payment.cardNumber} nameOnCard={payment.nameOnCard} expiry={payment.expiry} cvv={payment.cvv} isFlipped={cardFlipped} />
-            </div>
-          )}
-
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-            {step === 0 && <ContactStep data={contact} errors={errors} onChange={updateContact} />}
-            {step === 1 && <ShippingStep data={shipping} errors={errors} onChange={updateShipping} />}
-            {step === 2 && <MethodStep method={shippingMethod} setMethod={setShippingMethod} subtotal={subtotal} />}
-            {step === 3 && <PaymentStep data={payment} errors={errors} onChange={updatePayment} onCardFlip={setCardFlipped} />}
-          </div>
-
-          {step === STEPS.length - 1 && (
-            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <label className="flex cursor-pointer items-start gap-3">
-                <div className={["mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all", researchConfirmed ? "border-amber-600 bg-amber-600" : errors.researchConfirm ? "border-red-400 bg-white" : "border-amber-400 bg-white"].join(" ")}>
-                  {researchConfirmed && <Check size={10} className="text-white" strokeWidth={3} />}
+            <>
+              {intentLoading && (
+                <div className="flex h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                  <Loader2 size={24} className="animate-spin text-accent" />
                 </div>
-                <input type="checkbox" className="sr-only" checked={researchConfirmed} onChange={(e) => { setResearchConfirmed(e.target.checked); clearFieldError("researchConfirm"); }} />
-                <span className="text-xs leading-relaxed text-amber-800">
-                  I confirm these products are for research use only and I am a qualified researcher.
-                </span>
-              </label>
-              {errors.researchConfirm && <p className="mt-2 text-[11px] text-red-500">↑ {errors.researchConfirm}</p>}
-            </div>
+              )}
+              {intentError && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+                  Failed to initialize payment: {intentError}
+                  <button onClick={() => { setIntentError(null); }} className="ml-2 underline">Retry</button>
+                </div>
+              )}
+              {clientSecret && !intentLoading && (
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+                  <StripePaymentForm onBack={handleBack} onSuccess={handleOrderSuccess} />
+                </Elements>
+              )}
+            </>
           )}
-
-          <div className="mt-5 flex items-center justify-between gap-3">
-            {step > 0 ? (
-              <button onClick={handleBack} className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
-                <ChevronLeft size={15} /> Back
-              </button>
-            ) : <div />}
-            {step < STEPS.length - 1 ? (
-              <button onClick={handleNext} className="flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white shadow-[0_0_16px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_24px_rgba(255,45,120,0.3)] active:scale-[0.98]">
-                Continue <ChevronLeft size={15} className="rotate-180" />
-              </button>
-            ) : (
-              <button onClick={handlePlaceOrder} disabled={submitting} className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
-                {submitting ? <><Loader2 size={16} className="animate-spin" />Processing…</> : <>Place Order <ChevronLeft size={15} className="rotate-180" /></>}
-              </button>
-            )}
-          </div>
         </div>
 
         <div className="lg:sticky lg:top-24 lg:self-start">
