@@ -290,7 +290,7 @@ FOR RESEARCH USE ONLY — NOT FOR HUMAN USE`,
       "Bacteriostatic Water (0.9% benzyl alcohol in sterile water). Research-grade solvent used for peptide reconstitution and preparation of solutions in controlled laboratory settings. For research use only.",
     category: "Essentials",
     inStock: true,
-    image: "https://picsum.photos/seed/bacwater/600/600",
+    image: "/products/Peptobuy BAC water.png",
     doses: [
       { size: "30ml", price: 12 },
       { size: "50ml", price: 18 },
