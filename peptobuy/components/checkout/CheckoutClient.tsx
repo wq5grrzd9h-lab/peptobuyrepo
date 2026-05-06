@@ -14,7 +14,7 @@ import CheckoutSummary from "./CheckoutSummary";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-type PaymentMethod = "card" | "crypto";
+type PaymentMethod = "card" | "crypto" | "zelle";
 
 interface ContactForm { email: string; phone: string }
 interface ShippingForm { firstName: string; lastName: string; address: string; city: string; state: string; zip: string; country: string }
@@ -27,14 +27,22 @@ const COUNTRIES = [
   { code: "GB", name: "United Kingdom" }, { code: "AU", name: "Australia" },
   { code: "DE", name: "Germany" }, { code: "FR", name: "France" }, { code: "JP", name: "Japan" },
 ];
-
 const CRYPTO_COINS = ["BTC", "ETH", "USDT", "LTC", "BNB", "XMR"] as const;
 
 function generateOrderNumber(): string {
   return Array.from({ length: 8 }, () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[Math.floor(Math.random() * 36)]).join("");
 }
 
-// ─── Shared research-confirm checkbox ────────────────────────────────────────
+function generateZelleOrderNumber(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `PB-${y}${m}${d}-${suffix}`;
+}
+
+// ─── Shared research-confirm ──────────────────────────────────────────────────
 
 function ResearchConfirm({ confirmed, error, onChange }: {
   confirmed: boolean; error: boolean; onChange: (v: boolean) => void;
@@ -56,7 +64,7 @@ function ResearchConfirm({ confirmed, error, onChange }: {
   );
 }
 
-// ─── Shared field components ──────────────────────────────────────────────────
+// ─── Field components ─────────────────────────────────────────────────────────
 
 function Field({ label, name, type = "text", value, error, placeholder, autoComplete, maxLength, onChange, className = "", rightElement }: {
   label: string; name: string; type?: string; value: string; error?: string; placeholder?: string;
@@ -183,50 +191,62 @@ function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; s
   );
 }
 
-// ─── Payment method toggle ────────────────────────────────────────────────────
+// ─── Payment method toggle (3 tabs) ──────────────────────────────────────────
 
 function PaymentMethodToggle({ active, onChange }: { active: PaymentMethod; onChange: (m: PaymentMethod) => void }) {
-  return (
-    <div className="mb-6 flex gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 p-1.5">
-      {/* Card tab */}
-      <button
-        type="button"
-        onClick={() => onChange("card")}
-        className={["flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200",
-          active === "card" ? "bg-accent text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700"].join(" ")}
-      >
-        <CreditCard size={15} />
-        Pay with Card
-      </button>
-
-      {/* Crypto tab */}
-      <button
-        type="button"
-        onClick={() => onChange("crypto")}
-        className={["flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200",
-          active === "crypto" ? "bg-accent text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700"].join(" ")}
-      >
-        <span className="flex items-center gap-2">
-          <Bitcoin size={15} />
-          Pay with Crypto
+  const tabs: { id: PaymentMethod; label: string; icon: React.ReactNode }[] = [
+    {
+      id: "card",
+      label: "Card",
+      icon: <CreditCard size={14} />,
+    },
+    {
+      id: "crypto",
+      label: "Crypto",
+      icon: <Bitcoin size={14} />,
+    },
+    {
+      id: "zelle",
+      label: "Zelle",
+      icon: (
+        <span className={["flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black transition-colors",
+          active === "zelle" ? "bg-white/25 text-white" : "bg-purple-100 text-purple-700"].join(" ")}>
+          Z
         </span>
-        <span className="flex gap-1">
+      ),
+    },
+  ];
+
+  return (
+    <div className="mb-6 grid grid-cols-3 gap-1.5 rounded-2xl border border-zinc-200 bg-zinc-50 p-1.5">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => onChange(tab.id)}
+          className={["flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-200",
+            active === tab.id ? "bg-accent text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700"].join(" ")}
+        >
+          {tab.icon}
+          {tab.label}
+        </button>
+      ))}
+
+      {/* Crypto coin badges — shown below toggle when crypto is selected */}
+      {active === "crypto" && (
+        <div className="col-span-3 -mt-0.5 flex flex-wrap justify-center gap-1 px-2 pb-1">
           {CRYPTO_COINS.map((coin) => (
-            <span
-              key={coin}
-              className={["rounded-full px-1.5 py-0.5 text-[9px] font-bold transition-colors",
-                active === "crypto" ? "bg-white/20 text-white" : "bg-zinc-200 text-zinc-500"].join(" ")}
-            >
+            <span key={coin} className="rounded-full bg-accent/10 px-1.5 py-0.5 text-[9px] font-bold text-accent">
               {coin}
             </span>
           ))}
-        </span>
-      </button>
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── Stripe payment form (must be inside <Elements>) ─────────────────────────
+// ─── Stripe payment form ──────────────────────────────────────────────────────
 
 function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSuccess: () => void }) {
   const stripe = useStripe();
@@ -262,9 +282,7 @@ function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSucces
         <PaymentElement options={{ layout: "tabs" }} />
       </div>
       {stripeError && (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {stripeError}
-        </div>
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{stripeError}</div>
       )}
       <ResearchConfirm confirmed={confirmed} error={confirmError} onChange={(v) => { setConfirmed(v); setConfirmError(false); }} />
       <div className="mt-5 flex items-center justify-between gap-3">
@@ -283,22 +301,13 @@ function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSucces
 // ─── Crypto payment form ──────────────────────────────────────────────────────
 
 function CryptoPaymentForm({ onBack, onPay, submitting, error }: {
-  onBack: () => void;
-  onPay: () => void;
-  submitting: boolean;
-  error: string | null;
+  onBack: () => void; onPay: () => void; submitting: boolean; error: string | null;
 }) {
   const [confirmed, setConfirmed] = useState(false);
   const [confirmError, setConfirmError] = useState(false);
 
-  const handlePay = () => {
-    if (!confirmed) { setConfirmError(true); return; }
-    onPay();
-  };
-
   return (
     <div>
-      {/* Info card */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-start gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50">
@@ -307,34 +316,93 @@ function CryptoPaymentForm({ onBack, onPay, submitting, error }: {
           <div>
             <p className="mb-1 font-semibold text-zinc-900">Pay with Cryptocurrency</p>
             <p className="text-sm leading-relaxed text-zinc-500">
-              You&apos;ll be redirected to a secure Plisio checkout page to complete
-              your payment with your preferred cryptocurrency.
+              You&apos;ll be redirected to a secure Plisio checkout page to complete your payment with your preferred cryptocurrency.
             </p>
           </div>
         </div>
-
-        {/* Accepted coins */}
         <div>
           <p className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Accepted Currencies</p>
           <div className="flex flex-wrap gap-2">
             {CRYPTO_COINS.map((coin) => (
-              <span
-                key={coin}
-                className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-700"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                {coin}
+              <span key={coin} className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />{coin}
               </span>
             ))}
           </div>
         </div>
       </div>
+      {error && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
+      <ResearchConfirm confirmed={confirmed} error={confirmError} onChange={(v) => { setConfirmed(v); setConfirmError(false); }} />
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
+          <ChevronLeft size={15} /> Back
+        </button>
+        <button onClick={() => { if (!confirmed) { setConfirmError(true); return; } onPay(); }} disabled={submitting} type="button"
+          className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
+          {submitting ? <><Loader2 size={16} className="animate-spin" />Creating Invoice…</> : <>Pay with Crypto <ArrowRight size={15} /></>}
+        </button>
+      </div>
+    </div>
+  );
+}
 
-      {error && (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
+// ─── Zelle payment form ───────────────────────────────────────────────────────
+
+function ZellePaymentForm({ onBack, onPay, submitting, error, total }: {
+  onBack: () => void; onPay: () => void; submitting: boolean; error: string | null; total: number;
+}) {
+  const [confirmed, setConfirmed] = useState(false);
+  const [confirmError, setConfirmError] = useState(false);
+
+  const steps = [
+    <>Click <strong>&ldquo;Place Order&rdquo;</strong> below — you&apos;ll receive your order number immediately.</>,
+    <>Open your bank app and start a Zelle payment.</>,
+    <>Send <strong className="text-zinc-900">${total.toFixed(2)}</strong> to <strong className="font-mono text-zinc-900">peptobuy@gmail.com</strong>.</>,
+    <>In the Zelle <strong>memo / comments</strong> field, enter <em>only</em> your order number.</>,
+    <>Your order will be confirmed via email once payment is received.</>,
+  ];
+
+  return (
+    <div>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        {/* Header */}
+        <div className="mb-5 flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50">
+            <span className="text-lg font-black text-purple-600">Z</span>
+          </div>
+          <div>
+            <p className="mb-1 font-semibold text-zinc-900">Pay with Zelle</p>
+            <p className="text-sm leading-relaxed text-zinc-500">
+              Place your order now, then complete payment via Zelle. No additional fees.
+            </p>
+          </div>
         </div>
-      )}
+
+        {/* Steps */}
+        <ol className="space-y-3">
+          {steps.map((step, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-100 text-[10px] font-bold text-purple-700">
+                {i + 1}
+              </span>
+              <span className="text-sm leading-relaxed text-zinc-600">{step}</span>
+            </li>
+          ))}
+        </ol>
+
+        {/* Zelle address callout */}
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600">Zelle Address</p>
+            <p className="mt-0.5 font-mono text-sm font-bold text-purple-900">peptobuy@gmail.com</p>
+          </div>
+          <span className="rounded-full bg-purple-100 px-2.5 py-1 text-[11px] font-bold text-purple-700">
+            ${total.toFixed(2)}
+          </span>
+        </div>
+      </div>
+
+      {error && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
 
       <ResearchConfirm confirmed={confirmed} error={confirmError} onChange={(v) => { setConfirmed(v); setConfirmError(false); }} />
 
@@ -342,9 +410,9 @@ function CryptoPaymentForm({ onBack, onPay, submitting, error }: {
         <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
           <ChevronLeft size={15} /> Back
         </button>
-        <button onClick={handlePay} disabled={submitting} type="button"
+        <button onClick={() => { if (!confirmed) { setConfirmError(true); return; } onPay(); }} disabled={submitting} type="button"
           className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
-          {submitting ? <><Loader2 size={16} className="animate-spin" />Creating Invoice…</> : <>Pay with Crypto <ArrowRight size={15} /></>}
+          {submitting ? <><Loader2 size={16} className="animate-spin" />Processing…</> : <>Place Order <ArrowRight size={15} /></>}
         </button>
       </div>
     </div>
@@ -372,10 +440,14 @@ export default function CheckoutClient() {
   const [cryptoSubmitting, setCryptoSubmitting] = useState(false);
   const [cryptoError, setCryptoError] = useState<string | null>(null);
 
+  // Zelle
+  const [zelleSubmitting, setZelleSubmitting] = useState(false);
+  const [zelleError, setZelleError] = useState<string | null>(null);
+
   const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 200 ? 0 : 9.99;
   const total = subtotal + shippingCost;
 
-  // Fetch Stripe intent when entering step 3 with card method
+  // Fetch Stripe intent only when card is selected at step 3
   useEffect(() => {
     if (step !== 3 || paymentMethod !== "card" || clientSecret || intentLoading || total <= 0) return;
     setIntentLoading(true);
@@ -394,7 +466,7 @@ export default function CheckoutClient() {
       .finally(() => setIntentLoading(false));
   }, [step, paymentMethod, clientSecret, intentLoading, total]);
 
-  const clearFieldError = (field: string) => setErrors((e) => { const n = { ...e }; delete n[field]; return n; });
+  const clearFieldError = (f: string) => setErrors((e) => { const n = { ...e }; delete n[f]; return n; });
   const updateContact = (f: string, v: string) => { setContact((p) => ({ ...p, [f]: v } as ContactForm)); clearFieldError(f); };
   const updateShipping = (f: string, v: string) => { setShipping((p) => ({ ...p, [f]: v } as ShippingForm)); clearFieldError(f); };
 
@@ -426,36 +498,29 @@ export default function CheckoutClient() {
   };
   const handleBack = () => { setErrors({}); setStep((s) => s - 1); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-  // Called by StripePaymentForm on successful payment
-  const handleStripeSuccess = () => {
-    const orderNumber = generateOrderNumber();
+  const saveOrder = (orderNumber: string, extraFields: Record<string, unknown> = {}) => {
     try {
       localStorage.setItem("peptobuy-last-order", JSON.stringify({
         orderNumber, email: contact.email, placedAt: new Date().toISOString(),
-        paymentMethod: "card",
         items: items.map((i) => ({ productId: i.product.id, name: i.product.name, price: lineUnitPrice(i), quantity: i.quantity, image: i.product.image, category: i.product.category, selectedDose: i.selectedDose.size, reconstitution: i.reconstitution })),
         subtotal, shippingCost, total, shippingAddress: shipping, shippingMethod,
+        ...extraFields,
       }));
     } catch { /* ignore */ }
+  };
+
+  const handleStripeSuccess = () => {
+    const orderNumber = generateOrderNumber();
+    saveOrder(orderNumber, { paymentMethod: "card" });
     clearCart();
     router.push("/order-confirmation");
   };
 
-  // Called by CryptoPaymentForm — creates Plisio invoice and redirects
   const handleCryptoPay = async () => {
     setCryptoSubmitting(true);
     setCryptoError(null);
-
     const orderNumber = generateOrderNumber();
-    try {
-      localStorage.setItem("peptobuy-last-order", JSON.stringify({
-        orderNumber, email: contact.email, placedAt: new Date().toISOString(),
-        paymentMethod: "crypto", paymentStatus: "pending",
-        items: items.map((i) => ({ productId: i.product.id, name: i.product.name, price: lineUnitPrice(i), quantity: i.quantity, image: i.product.image, category: i.product.category, selectedDose: i.selectedDose.size, reconstitution: i.reconstitution })),
-        subtotal, shippingCost, total, shippingAddress: shipping, shippingMethod,
-      }));
-    } catch { /* ignore */ }
-
+    saveOrder(orderNumber, { paymentMethod: "crypto", paymentStatus: "pending" });
     try {
       const res = await fetch("/api/create-plisio-invoice", {
         method: "POST",
@@ -464,13 +529,21 @@ export default function CheckoutClient() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-
       clearCart();
       window.location.href = data.invoiceUrl;
     } catch (err: unknown) {
       setCryptoError(err instanceof Error ? err.message : "Failed to create invoice. Please try again.");
       setCryptoSubmitting(false);
     }
+  };
+
+  const handleZellePay = () => {
+    setZelleSubmitting(true);
+    setZelleError(null);
+    const orderNumber = generateZelleOrderNumber();
+    saveOrder(orderNumber, { paymentMethod: "zelle", paymentStatus: "pending_payment" });
+    clearCart();
+    router.push("/order-confirmation");
   };
 
   if (hydrated && items.length === 0) {
@@ -493,13 +566,9 @@ export default function CheckoutClient() {
   const stripeAppearance = {
     theme: "stripe" as const,
     variables: {
-      colorPrimary: "#ff2d78",
-      colorBackground: "#ffffff",
-      colorText: "#18181b",
-      colorDanger: "#ef4444",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      borderRadius: "12px",
-      spacingUnit: "4px",
+      colorPrimary: "#ff2d78", colorBackground: "#ffffff", colorText: "#18181b",
+      colorDanger: "#ef4444", fontFamily: "system-ui, -apple-system, sans-serif",
+      borderRadius: "12px", spacingUnit: "4px",
     },
   };
 
@@ -542,7 +611,7 @@ export default function CheckoutClient() {
             <>
               <PaymentMethodToggle active={paymentMethod} onChange={setPaymentMethod} />
 
-              {/* ── Card / Stripe ── */}
+              {/* Card / Stripe */}
               {paymentMethod === "card" && (
                 <>
                   {intentLoading && (
@@ -564,14 +633,14 @@ export default function CheckoutClient() {
                 </>
               )}
 
-              {/* ── Crypto / Plisio ── */}
+              {/* Crypto / Plisio */}
               {paymentMethod === "crypto" && (
-                <CryptoPaymentForm
-                  onBack={handleBack}
-                  onPay={handleCryptoPay}
-                  submitting={cryptoSubmitting}
-                  error={cryptoError}
-                />
+                <CryptoPaymentForm onBack={handleBack} onPay={handleCryptoPay} submitting={cryptoSubmitting} error={cryptoError} />
+              )}
+
+              {/* Zelle */}
+              {paymentMethod === "zelle" && (
+                <ZellePaymentForm onBack={handleBack} onPay={handleZellePay} submitting={zelleSubmitting} error={zelleError} total={total} />
               )}
             </>
           )}

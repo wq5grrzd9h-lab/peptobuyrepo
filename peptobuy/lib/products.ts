@@ -32,7 +32,7 @@ export const products: Product[] = [
   // ── Weight Loss ─────────────────────────────────────────────────────────────
   {
     id: "rtglp3",
-    name: "RTGLP3",
+    name: "RTGLP3 (Reta 🐀)",
     slug: "rtglp3",
     price: 89.99,
     description:
