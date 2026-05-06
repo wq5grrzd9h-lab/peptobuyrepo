@@ -5,8 +5,6 @@ import { ShieldCheck, Lock, FlaskConical } from "lucide-react";
 import Image from "next/image";
 import { useCart, lineUnitPrice } from "@/context/CartContext";
 
-interface CheckoutSummaryProps { shippingCost: number; discount?: number }
-
 function TrustBadge({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
@@ -16,9 +14,9 @@ function TrustBadge({ icon: Icon, label }: { icon: React.ElementType; label: str
   );
 }
 
-export default function CheckoutSummary({ shippingCost, discount = 0 }: CheckoutSummaryProps) {
+export default function CheckoutSummary({ shippingCost }: { shippingCost: number }) {
   const { items, subtotal } = useCart();
-  const total = subtotal - discount + shippingCost;
+  const total = subtotal + shippingCost;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
@@ -82,12 +80,7 @@ export default function CheckoutSummary({ shippingCost, discount = 0 }: Checkout
             <span className="text-zinc-500">Subtotal</span>
             <span className="tabular-nums text-zinc-900">${subtotal.toFixed(2)}</span>
           </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-zinc-500">Discount</span>
-              <span className="tabular-nums text-emerald-600">-${discount.toFixed(2)}</span>
-            </div>
-          )}
+
           <div className="flex justify-between text-sm">
             <span className="text-zinc-500">Shipping</span>
             <span className="tabular-nums text-zinc-900">

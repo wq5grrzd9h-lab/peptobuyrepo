@@ -2,87 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import {
-  Search,
-  ShoppingCart,
-  Menu,
-  X,
-  ChevronRight,
-  Zap,
-  LogOut,
-  User,
-} from "lucide-react";
+import { Search, ShoppingCart, Menu, X, ChevronRight, Zap } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
-import { useAuth } from "@/context/AuthContext";
 import { useSearch } from "@/context/SearchContext";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/shop" },
   { label: "About", href: "/about" },
 ];
-
-// ─── User menu ────────────────────────────────────────────────────────────────
-
-function UserMenu() {
-  const { user, isLoggedIn, hydrated, logout } = useAuth();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  if (!hydrated) return <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200" />;
-
-  if (!isLoggedIn) {
-    return (
-      <Link href="/login" aria-label="Sign in" className="rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
-        <User size={18} />
-      </Link>
-    );
-  }
-
-  const initials = [user?.firstName?.[0], user?.lastName?.[0]]
-    .filter(Boolean).join("").toUpperCase() || user?.email?.[0]?.toUpperCase() || "U";
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Account menu"
-        aria-expanded={open}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent ring-1 ring-accent/25 text-xs font-bold transition-all hover:bg-accent/20"
-      >
-        {initials}
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-          <div className="border-b border-zinc-100 px-4 py-3">
-            <p className="truncate text-sm font-semibold text-zinc-900">{user?.firstName} {user?.lastName}</p>
-            <p className="truncate text-xs text-zinc-500">{user?.email}</p>
-          </div>
-          <div className="p-1.5">
-            <Link href="/account" onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900">
-              <User size={14} /> My Account
-            </Link>
-            <button onClick={() => { logout(); setOpen(false); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-red-50 hover:text-red-600">
-              <LogOut size={14} /> Sign out
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Navbar ───────────────────────────────────────────────────────────────────
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -91,7 +19,6 @@ export default function Navbar() {
   const [badgePop, setBadgePop] = useState(false);
 
   const { totalCount, hydrated } = useCart();
-  const { isLoggedIn } = useAuth();
   const { open: openSearch } = useSearch();
   const prevCount = useRef(0);
 
@@ -118,7 +45,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Announcement bar — stays pink/white */}
+      {/* Announcement bar */}
       {announcementVisible && (
         <div className="relative z-50 flex items-center justify-center gap-2 bg-accent px-4 py-2 text-center text-[13px] font-medium text-white">
           <Zap size={13} className="shrink-0" />
@@ -156,7 +83,7 @@ export default function Navbar() {
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link href="/" onClick={() => setMobileOpen(false)}>
-            <PeptoBuyLogo layout="horizontal" flaskH={34} />
+            <PeptoBuyLogo flaskH={40} />
           </Link>
 
           {/* Desktop nav */}
@@ -175,8 +102,6 @@ export default function Navbar() {
             <button aria-label="Search products" onClick={openSearch} className="rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
               <Search size={18} />
             </button>
-
-            <div className="px-1"><UserMenu /></div>
 
             <Link
               href="/cart"
@@ -215,7 +140,6 @@ export default function Navbar() {
                 </li>
               ))}
             </ul>
-
             <div className="mt-4 flex flex-col gap-1 border-t border-zinc-100 pt-4">
               <Link href="/cart" onClick={() => setMobileOpen(false)} className="flex items-center justify-between rounded-md px-3 py-3 text-base font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900">
                 <span className="flex items-center gap-3"><ShoppingCart size={16} /> Cart</span>
@@ -223,15 +147,6 @@ export default function Navbar() {
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white">{totalCount}</span>
                 )}
               </Link>
-              {isLoggedIn ? (
-                <button onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900">
-                  <User size={16} /> My Account
-                </button>
-              ) : (
-                <Link href="/login" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900">
-                  <User size={16} /> Sign In
-                </Link>
-              )}
               <button onClick={openSearch} className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-sm text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900">
                 <Search size={16} /> Search products
               </button>

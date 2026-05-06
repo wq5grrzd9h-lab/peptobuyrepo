@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Nunito } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { SearchProvider } from "@/context/SearchContext";
@@ -18,6 +17,10 @@ export const metadata: Metadata = {
   title: "PeptoBuy — Research Peptides",
   description:
     "Research-grade peptides for qualified scientists. Every batch third-party tested.",
+  icons: {
+    icon: "/Peptobuy LOGO.png",
+    apple: "/Peptobuy LOGO.png",
+  },
 };
 
 export default function RootLayout({
@@ -28,20 +31,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${nunito.variable}`}>
       <body className="bg-background text-foreground font-sans antialiased">
-        <AuthProvider>
-          <CartProvider>
-            <ToastProvider>
-              <SearchProvider>
-                <Navbar />
-                <main className="min-h-[calc(100vh-4rem)]">{children}</main>
-                <Footer />
-                <SearchOverlay />
-                <Toaster />
-                <AgeVerification />
-              </SearchProvider>
-            </ToastProvider>
-          </CartProvider>
-        </AuthProvider>
+        <CartProvider>
+          <ToastProvider>
+            <SearchProvider>
+              <Navbar />
+              <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+              <Footer />
+              <SearchOverlay />
+              <Toaster />
+              <AgeVerification />
+            </SearchProvider>
+          </ToastProvider>
+        </CartProvider>
       </body>
     </html>
   );

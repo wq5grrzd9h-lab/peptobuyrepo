@@ -39,7 +39,7 @@ export const products: Product[] = [
       "Triple GLP receptor agonist peptide compound formulated for advanced metabolic research. Supplied as lyophilized powder for in vitro and preclinical study models. For research use only — not for human consumption.",
     category: "Weight Loss",
     inStock: true,
-    image: "/products/Peptobuy RTGLP3.png",
+    image: "/products/RTGLP3_NEW_Peptobuy.png",
     badge: "Best Seller",
     doses: [
       { size: "10mg", price: 89.99 },
@@ -212,7 +212,7 @@ export const products: Product[] = [
       "Nicotinamide Adenine Dinucleotide — a coenzyme central to cellular energy metabolism and redox signaling research. Investigated in models of mitochondrial function, sirtuin activation, and DNA repair pathway studies. For research use only.",
     category: "Essentials",
     inStock: true,
-    image: "/products/Peptobuy NAD.png",
+    image: "/products/NAD_peptobuy.png",
     doses: [
       { size: "500mg", price: 75 },
     ],

@@ -14,7 +14,7 @@ import type { Product, DoseOption } from "@/lib/products";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-export const RECONSTITUTION_PRICE = 19.99;
+export const RECONSTITUTION_PRICE = 29.99;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

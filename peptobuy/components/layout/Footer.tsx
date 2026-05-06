@@ -1,5 +1,4 @@
 import Link from "next/link";
-import NewsletterForm from "@/components/layout/NewsletterForm";
 import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
 
 const COLUMNS = [
@@ -88,13 +87,7 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-14 rounded-xl border border-border bg-white px-6 py-6 sm:flex sm:items-center sm:justify-between">
-          <div className="mb-4 sm:mb-0">
-            <p className="text-sm font-semibold text-zinc-900">Get 10% off your first order</p>
-            <p className="mt-0.5 text-xs text-zinc-500">Stay updated on new compounds and batch releases.</p>
-          </div>
-          <NewsletterForm />
-        </div>
+
       </div>
 
       <div className="border-t border-border">
