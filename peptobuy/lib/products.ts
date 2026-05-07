@@ -4,7 +4,6 @@ export type Category =
   | "Weight Loss"
   | "Recovery & Healing"
   | "Muscle Growth"
-  | "Combos"
   | "Essentials";
 
 export interface DoseOption {
@@ -16,7 +15,7 @@ export interface Product {
   id: string;
   name: string;
   slug: string;
-  price: number;      // = doses[0].price — used for cart/checkout backward-compat
+  price: number;      // = doses[0].price
   description: string;
   category: Category;
   inStock: boolean;
@@ -39,13 +38,12 @@ export const products: Product[] = [
       "Triple GLP receptor agonist peptide compound formulated for advanced metabolic research. Supplied as lyophilized powder for in vitro and preclinical study models. For research use only — not for human consumption.",
     category: "Weight Loss",
     inStock: true,
-    image: "/products/RTGLP3_NEW_Peptobuy.png",
+    image: "/products/RTGLP3_New_Pic.png",
     badge: "Best Seller",
     doses: [
       { size: "10mg", price: 89.99 },
       { size: "20mg", price: 159.99 },
       { size: "30mg", price: 199.99 },
-      { size: "50mg", price: 269.99 },
     ],
   },
 
@@ -59,13 +57,10 @@ export const products: Product[] = [
       "Body Protection Compound 157 — a 15-amino acid synthetic peptide derived from a human gastric protein sequence. Studied in models of gastrointestinal integrity, joint tissue repair, and angiogenesis. Supplied as lyophilized powder. For research use only.",
     category: "Recovery & Healing",
     inStock: true,
-    image: "/products/Peptobuy BPC157.png",
+    image: "/products/BPC_NEW_PIC_Peptobuy.png",
     badge: "Best Seller",
     doses: [
       { size: "10mg", price: 69.99 },
-      { size: "20mg", price: 124.99 },
-      { size: "30mg", price: 159.99 },
-      { size: "50mg", price: 209.99 },
     ],
   },
   {
@@ -77,111 +72,53 @@ export const products: Product[] = [
       "Thymosin Beta-500 — synthetic analogue of Thymosin Beta-4 with high actin-binding affinity. Investigated in preclinical models of wound healing, inflammation modulation, and soft tissue recovery signaling pathways. For research use only.",
     category: "Recovery & Healing",
     inStock: true,
-    image: "/products/Peptobuy TB500.png",
+    image: "/products/TB500_new_pic.png",
     doses: [
       { size: "10mg", price: 69.99 },
-      { size: "20mg", price: 124.99 },
-      { size: "30mg", price: 159.99 },
-      { size: "50mg", price: 209.99 },
     ],
   },
   {
     id: "ghk-cu",
     name: "GHK-Cu",
     slug: "ghk-cu",
-    price: 70,
+    price: 79.99,
     description:
       "Glycyl-L-histidyl-L-lysine copper chelate — a naturally occurring tripeptide-copper complex. Researched for roles in extracellular matrix remodeling, antioxidant signaling, and skin barrier function studies. For research use only.",
     category: "Recovery & Healing",
     inStock: true,
-    image: "/products/Peptobuy GHK.png",
+    image: "/products/GHKCU_NEW_PIC.png",
     doses: [
-      { size: "100mg", price: 70 },
+      { size: "100mg", price: 79.99 },
+    ],
+  },
+  {
+    id: "mots-c",
+    name: "MOTS-C",
+    slug: "mots-c",
+    price: 79.99,
+    description:
+      "Research-grade MOTS-C peptide — a mitochondria-derived peptide investigated for roles in metabolic regulation, insulin sensitivity, and cellular energy homeostasis signaling pathways. Supplied as lyophilized powder for in vitro and preclinical research. For research use only.",
+    category: "Recovery & Healing",
+    inStock: true,
+    image: "/products/MOTS-C_New_Pic.png",
+    doses: [
+      { size: "10mg", price: 79.99 },
     ],
   },
 
   // ── Muscle Growth ───────────────────────────────────────────────────────────
   {
-    id: "cjc-1295",
-    name: "CJC-1295 / IPA",
-    slug: "cjc-1295",
-    price: 74.99,
-    description:
-      "Modified GHRH analogue incorporating Drug Affinity Complex (DAC) technology combined with Ipamorelin for enhanced growth hormone secretagogue activity. Studied for pulsatile GH release kinetics and IGF-1 axis modulation. For research use only.",
-    category: "Muscle Growth",
-    inStock: true,
-    image: "/products/Peptobuy CJC1259.png",
-    doses: [
-      { size: "10mg", price: 74.99 },
-      { size: "20mg", price: 134.99 },
-      { size: "30mg", price: 169.99 },
-      { size: "50mg", price: 219.99 },
-    ],
-  },
-  {
     id: "tesamorelin",
     name: "Tesamorelin / TESA",
     slug: "tesamorelin",
-    price: 80,
+    price: 89.99,
     description:
       "Synthetic GHRF analogue stabilized with a trans-3-hexenoic acid modification. Used in growth hormone pulsatility and visceral adipose tissue research models. For research use only — not for human consumption.",
     category: "Muscle Growth",
     inStock: true,
-    image: "/products/Peptobuy Tesa.png",
+    image: "/products/Tesamorelin_new_pic.png",
     doses: [
-      { size: "10mg", price: 80 },
-      { size: "20mg", price: 139.99 },
-      { size: "30mg", price: 174.99 },
-      { size: "50mg", price: 224.99 },
-    ],
-  },
-
-  // ── Combos ──────────────────────────────────────────────────────────────────
-  {
-    id: "wolverine-blend",
-    name: "Wolverine Blend",
-    slug: "wolverine-blend",
-    price: 74.99,
-    description:
-      "Multi-peptide research formulation studied in accelerated tissue repair biomarker models, anti-inflammatory signaling cascades, and cellular recovery pathway research. For research use only.",
-    category: "Combos",
-    inStock: true,
-    image: "/products/Peptobuy wolverine.png",
-    badge: "Best Seller",
-    doses: [
-      { size: "10mg", price: 74.99 },
-      { size: "20mg", price: 134.99 },
-      { size: "30mg", price: 169.99 },
-      { size: "50mg", price: 219.99 },
-    ],
-  },
-  {
-    id: "klow-blend",
-    name: "KLOW Blend",
-    slug: "klow-blend",
-    price: 130,
-    description:
-      "Proprietary multi-peptide research blend investigated for metabolic signaling, cellular homeostasis, and adipokine pathway modulation in in vitro model systems. For research use only.",
-    category: "Combos",
-    inStock: true,
-    image: "/products/Peptobuy KLOW.png",
-    doses: [
-      { size: "80mg", price: 130 },
-    ],
-  },
-  {
-    id: "glow-blend",
-    name: "GLOW Blend",
-    slug: "glow-blend",
-    price: 120,
-    description:
-      "Proprietary research formulation combining select peptides investigated for complementary roles in skin health signaling, collagen synthesis pathways, and photoprotection biomarker studies. For research use only.",
-    category: "Combos",
-    inStock: true,
-    image: "/products/Peptobuy GLOW.png",
-    badge: "New",
-    doses: [
-      { size: "70mg", price: 120 },
+      { size: "10mg", price: 89.99 },
     ],
   },
 
@@ -190,31 +127,30 @@ export const products: Product[] = [
     id: "bac-water",
     name: "BAC Water",
     slug: "bac-water",
-    price: 15,
+    price: 14.99,
     description:
       "Bacteriostatic Water (0.9% benzyl alcohol in sterile water). Research-grade solvent used for peptide reconstitution and preparation of solutions in controlled laboratory settings. For research use only.",
     category: "Essentials",
     inStock: true,
-    image: "/products/Peptobuy BAC water.png",
+    image: "/products/Bac_Water_New.png",
     doses: [
-      { size: "10ml", price: 15 },
-      { size: "20ml", price: 30 },
-      { size: "30ml", price: 45 },
-      { size: "50ml", price: 60 },
+      { size: "10ml", price: 14.99 },
+      { size: "20ml", price: 29.99 },
+      { size: "30ml", price: 44.99 },
     ],
   },
   {
     id: "nad-plus",
     name: "NAD+",
     slug: "nad-plus",
-    price: 75,
+    price: 79.99,
     description:
       "Nicotinamide Adenine Dinucleotide — a coenzyme central to cellular energy metabolism and redox signaling research. Investigated in models of mitochondrial function, sirtuin activation, and DNA repair pathway studies. For research use only.",
     category: "Essentials",
     inStock: true,
-    image: "/products/NAD_peptobuy.png",
+    image: "/products/NAD_new_pic.png",
     doses: [
-      { size: "500mg", price: 75 },
+      { size: "500mg", price: 79.99 },
     ],
   },
 ];
@@ -225,7 +161,6 @@ export const categories: Category[] = [
   "Weight Loss",
   "Recovery & Healing",
   "Muscle Growth",
-  "Combos",
   "Essentials",
 ];
 
@@ -233,7 +168,6 @@ export const shopCategories: readonly Category[] = [
   "Weight Loss",
   "Recovery & Healing",
   "Muscle Growth",
-  "Combos",
 ];
 
 // ─── Slug helpers ─────────────────────────────────────────────────────────────

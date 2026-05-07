@@ -9,7 +9,6 @@ const COLUMNS = [
       { label: "Weight Loss", href: "/shop?category=Weight+Loss" },
       { label: "Recovery & Healing", href: "/shop?category=Recovery+%26+Healing" },
       { label: "Muscle Growth", href: "/shop?category=Muscle+Growth" },
-      { label: "Combos", href: "/shop?category=Combos" },
       { label: "Essentials", href: "/shop?category=Essentials" },
     ],
   },
@@ -19,6 +18,8 @@ const COLUMNS = [
       { label: "FAQ", href: "/#faq" },
       { label: "About Us", href: "/about" },
       { label: "Contact Us", href: "mailto:peptobuy@gmail.com" },
+      { label: "Terms & Conditions", href: "/terms" },
+      { label: "Privacy Policy", href: "/privacy" },
     ],
   },
 ];

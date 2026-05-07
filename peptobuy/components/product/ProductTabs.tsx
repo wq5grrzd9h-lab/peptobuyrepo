@@ -22,13 +22,6 @@ const PEPTIDE_BASE: CompoundRow[] = [
   { label: "Reconstitution", value: "Sterile or bacteriostatic water" },
 ];
 
-const BLEND_BASE: CompoundRow[] = [
-  { label: "Classification",    value: "Proprietary Peptide Blend" },
-  { label: "Individual Purity", value: "≥98% per component (HPLC)" },
-  { label: "Form",              value: "Lyophilized Powder (co-lyophilized)" },
-  { label: "Storage",           value: "-20 °C — desiccate" },
-  { label: "Reconstitution",    value: "Sterile or bacteriostatic water" },
-];
 
 const DISCLAIMER =
   "For research use only. Not for human or animal consumption. Handle in accordance with applicable laboratory safety regulations.";
@@ -95,23 +88,22 @@ const PRODUCT_DETAILS: Record<string, ProductDetail> = {
       { label: "Reconstitution",   value: "Sterile or bacteriostatic water" },
     ],
   },
-
-  // ── Muscle Growth ────────────────────────────────────────────────────────────
-  "cjc-1295": {
+  "mots-c": {
     overview: [
-      "CJC-1295 / IPA is a research blend combining CJC-1295 (a GHRH analogue with Drug Affinity Complex technology) and Ipamorelin (a selective GH secretagogue). Together they are studied for synergistic effects on pulsatile GH release kinetics in preclinical models.",
-      "CJC-1295 provides extended half-life via albumin binding, while Ipamorelin selectively stimulates GH release without significant cortisol or prolactin elevation in research assays. The combination is used in IGF-1 axis modulation and body composition signaling studies.",
-      "Supplied as lyophilized powder. Reconstitute in BAC Water or sterile water. For research use only.",
+      "MOTS-C is a mitochondria-derived peptide encoded within the mitochondrial 12S rRNA gene. It has emerged as a key regulator of metabolic homeostasis, with research applications spanning insulin sensitivity assays, adipogenesis models, and cellular energy pathway investigations.",
+      "Preclinical studies have examined MOTS-C in the context of AMPK pathway activation, skeletal muscle glucose uptake, and anti-obesity signaling cascades. The peptide demonstrates high stability and bioactivity in standard in vitro assay conditions.",
+      "Supplied as lyophilized powder. Reconstitute in sterile or bacteriostatic water. For research use only.",
     ],
     compoundData: [
-      { label: "Components",        value: "CJC-1295 (DAC) + Ipamorelin" },
-      { label: "CJC-1295 MW",       value: "~3,647.28 Da" },
-      { label: "Ipamorelin MW",     value: "~711.86 Da" },
-      { label: "CJC-1295 CAS",      value: "863288-34-0" },
-      { label: "Ipamorelin CAS",    value: "170851-70-4" },
+      { label: "Compound Type",   value: "Mitochondria-Derived Peptide" },
+      { label: "Amino Acids",     value: "16" },
+      { label: "Molecular Weight", value: "~2,174.5 Da" },
+      { label: "CAS Number",      value: "1627580-64-6" },
       ...PEPTIDE_BASE,
     ],
   },
+
+  // ── Muscle Growth ────────────────────────────────────────────────────────────
   "tesamorelin": {
     overview: [
       "Tesamorelin (TESA) is a synthetic analogue of endogenous Growth Hormone-Releasing Factor (GHRF 1-44) stabilized with a trans-3-hexenoic acid modification at the N-terminus that improves resistance to dipeptidyl peptidase IV degradation in research models.",
@@ -124,40 +116,6 @@ const PRODUCT_DETAILS: Record<string, ProductDetail> = {
       { label: "CAS Number",       value: "901758-09-6" },
       { label: "Amino Acids",      value: "44" },
       ...PEPTIDE_BASE,
-    ],
-  },
-  // ── Combos ───────────────────────────────────────────────────────────────────
-  "glow-blend": {
-    overview: [
-      "GLOW Blend is a proprietary multi-peptide research formulation for studies investigating complementary peptide interactions in skin health signaling — including collagen synthesis pathway assays, photoprotection biomarker analysis, and barrier function research models.",
-      "Each component is independently validated for purity (≥98% HPLC) prior to co-lyophilization. The lyophilized format preserves individual peptide integrity during storage and shipping.",
-      "Reconstitute in sterile or bacteriostatic water per your laboratory protocol. For research use only.",
-    ],
-    compoundData: [
-      ...BLEND_BASE,
-      { label: "Research Focus", value: "Skin signaling, collagen synthesis, photoprotection" },
-    ],
-  },
-  "klow-blend": {
-    overview: [
-      "KLOW Blend is a proprietary research formulation combining peptides investigated for synergistic activity in metabolic signaling, cellular homeostasis assays, and adipokine pathway modulation studies in vitro.",
-      "The blend is formulated via co-lyophilization to ensure uniform distribution of components per dosage unit. Each batch is HPLC-verified for individual component purity before release.",
-      "For research use only. Not intended for human or animal consumption.",
-    ],
-    compoundData: [
-      ...BLEND_BASE,
-      { label: "Research Focus", value: "Metabolic signaling, cellular homeostasis" },
-    ],
-  },
-  "wolverine-blend": {
-    overview: [
-      "Wolverine Blend is a multi-peptide research formulation studied in models of accelerated tissue repair biomarkers, anti-inflammatory signaling cascades, and cellular recovery pathway characterization.",
-      "The formulation targets multiple repair-associated receptor systems simultaneously — useful for researchers studying pathway crosstalk in tissue regeneration models. Components are co-lyophilized for stability.",
-      "Reconstitute in BAC Water or sterile water. Store at -20 °C. For research use only.",
-    ],
-    compoundData: [
-      ...BLEND_BASE,
-      { label: "Research Focus", value: "Tissue repair, anti-inflammatory signaling" },
     ],
   },
   // ── Essentials ───────────────────────────────────────────────────────────────

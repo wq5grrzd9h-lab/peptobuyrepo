@@ -3,7 +3,7 @@ import { ArrowRight, Flame } from "lucide-react";
 import { products } from "@/lib/products";
 import ProductCard from "@/components/ui/ProductCard";
 
-const BEST_SELLER_IDS = ["rtglp3", "bpc-157", "wolverine-blend", "cjc-1295"];
+const BEST_SELLER_IDS = ["rtglp3", "bpc-157", "tesamorelin", "mots-c"];
 
 export default function BestSellers() {
   const featured = BEST_SELLER_IDS.map((id) => products.find((p) => p.id === id)!);

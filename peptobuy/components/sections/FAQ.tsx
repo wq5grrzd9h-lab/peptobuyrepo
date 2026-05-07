@@ -5,20 +5,28 @@ import { Plus, Minus } from "lucide-react";
 
 const FAQS = [
   {
-    q: "Are your products third-party tested?",
-    a: "Yes — every product in our catalog is tested by an independent, ISO-17025 accredited lab before it leaves the warehouse. You can find the Certificates of Analysis on each product page.",
+    q: "Who are your products intended for?",
+    a: "PeptoBuy products are strictly intended for qualified researchers, licensed scientists, academic institutions, and biotech professionals conducting legitimate in vitro laboratory research. Our compounds are not for personal use, human consumption, or veterinary use. By purchasing, you confirm you are acting in a research capacity and in full compliance with all applicable laws.",
   },
   {
-    q: "How long does shipping take?",
-    a: "Orders placed before 3 PM EST ship the same business day. Standard delivery is 3–5 business days across the US. Expedited (1–2 day) options are available at checkout. Orders over $200 ship free.",
-  },
-  {
-    q: "Can I order multiple peptides together?",
-    a: "Yes. Our Combos category offers pre-mixed research-grade blend formulations for studying multiple signaling pathways simultaneously. Individual peptides can also be ordered separately and combined per your lab protocol. BAC Water for reconstitution is available in the Essentials section.",
+    q: "Are your products for human consumption?",
+    a: "No. All PeptoBuy products are for research use only and are not approved by the FDA for human use. They are not intended to diagnose, treat, cure, or prevent any disease or condition in humans or animals.",
   },
   {
     q: "What is your return policy?",
-    a: "All sales are final. We do not accept returns or exchanges, and no refunds will be issued after purchase. Please review product details carefully before ordering. If you received a damaged or incorrect item, contact us at peptobuy@gmail.com within 48 hours of delivery.",
+    a: "All sales are final. We do not accept returns or issue refunds under any circumstances. Please review your order carefully before completing checkout. If there is an issue with your order, email us at peptobuy@gmail.com within 48 hours of receiving your shipment.",
+  },
+  {
+    q: "How do I request a Certificate of Analysis (COA)?",
+    a: "COAs are available upon request for every batch we carry. Email peptobuy@gmail.com with your order number and the compound you need the COA for and we will send it promptly.",
+  },
+  {
+    q: "What payment methods do you accept?",
+    a: "We accept credit and debit cards via Stripe, cryptocurrency via Plisio, and Zelle. For Zelle payments, include only your order number in the memo field — your order will be fulfilled once payment is confirmed.",
+  },
+  {
+    q: "How are products packaged and stored?",
+    a: "All peptides are supplied as lyophilized (freeze-dried) powder unless reconstitution service is selected at checkout. Lyophilized compounds are stable at room temperature for short-term storage and should be kept refrigerated or frozen for long-term use. Avoid repeated freeze-thaw cycles.",
   },
 ];
 

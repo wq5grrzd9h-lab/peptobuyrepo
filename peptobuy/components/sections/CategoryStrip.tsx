@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, LayoutGrid, Flame, HeartPulse, Dumbbell, Package } from "lucide-react";
+import { ArrowRight, LayoutGrid, Flame, HeartPulse, Dumbbell } from "lucide-react";
 import { products, shopCategories, categoryToSlug, type Category } from "@/lib/products";
 
 const CATEGORY_META: Record<Category, { icon: React.ElementType; description: string }> = {
@@ -9,20 +9,14 @@ const CATEGORY_META: Record<Category, { icon: React.ElementType; description: st
   },
   "Recovery & Healing": {
     icon: HeartPulse,
-    description: "BPC-157, TB-500, GHK-Cu",
+    description: "BPC-157, TB-500, GHK-Cu, MOTS-C",
   },
   "Muscle Growth": {
     icon: Dumbbell,
-    description: "CJC-1295/IPA, Tesamorelin",
+    description: "Tesamorelin / TESA",
   },
-  Combos: {
-    icon: Package,
-    description: "Pre-mixed research blends",
-  },
-  // Essentials (BAC Water) is intentionally excluded from homepage category strip.
-  // BAC Water still appears in the shop under "All Products".
   Essentials: {
-    icon: Package,
+    icon: LayoutGrid,
     description: "",
   },
 };
@@ -56,8 +50,8 @@ export default function CategoryStrip() {
           </Link>
         </div>
 
-        {/* 5 cards: All Products + 4 shopCategories */}
-        <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
+        {/* All Products + 3 shopCategories = 4 cards */}
+        <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
 
           {/* All Products card */}
           <Link href="/shop" className={CARD}>
@@ -79,7 +73,6 @@ export default function CategoryStrip() {
             </div>
           </Link>
 
-          {/* Per-category cards (shopCategories only — no Essentials) */}
           {shopCategories.map((cat) => {
             const { icon: Icon, description } = CATEGORY_META[cat];
             const count = countByCategory(cat);

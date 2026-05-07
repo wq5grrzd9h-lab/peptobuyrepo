@@ -15,7 +15,6 @@ const CONTENT: Record<Category, { fill: string; isLiquid: boolean }> = {
   "Weight Loss":        { fill: "rgba(255,210,225,0.82)", isLiquid: false },
   "Recovery & Healing": { fill: "rgba(245,244,238,0.88)", isLiquid: false },
   "Muscle Growth":      { fill: "rgba(248,244,228,0.86)", isLiquid: false },
-  Combos:               { fill: "rgba(245,240,252,0.84)", isLiquid: false },
   Essentials:           { fill: "rgba(208,235,250,0.40)", isLiquid: true  },
 };
 
@@ -23,7 +22,6 @@ const BG: Record<Category, string> = {
   "Weight Loss":        "#fff4f7",
   "Recovery & Healing": "#f4f8ff",
   "Muscle Growth":      "#f5fff8",
-  Combos:               "#f8f4ff",
   Essentials:           "#f3f8ff",
 };
 
