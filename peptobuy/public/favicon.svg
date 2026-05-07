@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 92">
+  <defs>
+    <linearGradient id="lg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff9cbc"/>
+      <stop offset="100%" stop-color="#ff2d78"/>
+    </linearGradient>
+    <clipPath id="fc">
+      <path d="M31,18 L49,18 L49,36 C58,44 70,53 70,62 L70,73 C70,79 63,82 54,82 L26,82 C17,82 10,79 10,73 L10,62 C10,53 22,44 31,36 Z"/>
+    </clipPath>
+  </defs>
+  <!-- Liquid fill -->
+  <rect x="0" y="44" width="80" height="48" fill="url(#lg)" clip-path="url(#fc)"/>
+  <!-- Glass shine -->
+  <path d="M14,65 C13,57 16,48 22,42 L22,70 Z" fill="rgba(255,255,255,0.28)" clip-path="url(#fc)"/>
+  <!-- Flask outline -->
+  <path d="M31,18 L49,18 L49,36 C58,44 70,53 70,62 L70,73 C70,79 63,82 54,82 L26,82 C17,82 10,79 10,73 L10,62 C10,53 22,44 31,36 Z" fill="none" stroke="#2d2d3a" stroke-width="3.2" stroke-linejoin="round"/>
+  <!-- Neck rim -->
+  <rect x="29" y="13" width="22" height="7" rx="2.5" fill="#2d2d3a"/>
+</svg>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, FlaskConical } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
 
 export default function Hero() {
@@ -60,20 +60,13 @@ export default function Hero() {
           Shipped within 24 hours.
         </p>
 
-        {/* CTAs */}
+        {/* CTA */}
         <div className="flex flex-wrap gap-3">
           <Link
             href="/shop"
             className="inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_28px_rgba(255,45,120,0.30)] transition-all hover:bg-accent-hover hover:shadow-[0_0_40px_rgba(255,45,120,0.44)] active:scale-[0.98]"
           >
             Browse Compounds <ArrowRight size={15} />
-          </Link>
-          <Link
-            href="/shop"
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white/80 px-6 py-3.5 text-sm font-semibold text-zinc-700 backdrop-blur-sm transition-all hover:bg-white hover:text-zinc-900"
-          >
-            <FlaskConical size={14} className="shrink-0 text-accent" />
-            View Lab Results
           </Link>
         </div>
 

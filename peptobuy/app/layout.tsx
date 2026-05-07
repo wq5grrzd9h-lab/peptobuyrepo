@@ -18,8 +18,9 @@ export const metadata: Metadata = {
   description:
     "Research-grade peptides for qualified scientists. Every batch third-party tested.",
   icons: {
-    icon: "/Peptobuy LOGO.png",
-    apple: "/Peptobuy LOGO.png",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 

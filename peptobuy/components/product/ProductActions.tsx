@@ -91,11 +91,9 @@ export default function ProductActions({ product }: { product: Product }) {
 
       {/* ── Reconstitution add-on (hidden for Essentials / BAC Water) ─── */}
       {!isEssentials && (
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-          <label className="flex cursor-pointer items-start gap-3">
-            {/* Custom checkbox */}
+        <label className="block cursor-pointer rounded-xl border border-zinc-200 bg-zinc-50 p-4 transition-colors hover:border-zinc-300">
+          <div className="flex items-start gap-3">
             <div
-              onClick={() => setRecon((v) => !v)}
               className={[
                 "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all",
                 recon ? "border-accent bg-accent" : "border-zinc-300 bg-white hover:border-zinc-400",
@@ -109,7 +107,6 @@ export default function ProductActions({ product }: { product: Product }) {
               checked={recon}
               onChange={(e) => setRecon(e.target.checked)}
             />
-
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-sm font-semibold text-zinc-900">
@@ -124,8 +121,8 @@ export default function ProductActions({ product }: { product: Product }) {
                 Vial delivered pre-mixed and labeled with dosages
               </p>
             </div>
-          </label>
-        </div>
+          </div>
+        </label>
       )}
 
       {/* ── Live price ──────────────────────────────────────── */}
