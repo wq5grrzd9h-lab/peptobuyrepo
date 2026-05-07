@@ -29,13 +29,16 @@ const COUNTRIES = [
 ];
 const CRYPTO_COINS = ["BTC", "ETH", "USDT", "LTC", "BNB", "XMR"] as const;
 
-function generateOrderNumber(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  const suffix = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
-  return `PB-${y}${m}${d}-${suffix}`;
+async function getOrderNumber(): Promise<string> {
+  try {
+    const res = await fetch("/api/generate-order-number", { method: "POST" });
+    const data = await res.json();
+    return data.orderNumber as string;
+  } catch {
+    // Fallback if API unreachable
+    const now = new Date();
+    return `PB-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`;
+  }
 }
 
 // ─── Shared research-confirm ──────────────────────────────────────────────────
@@ -530,8 +533,8 @@ export default function CheckoutClient() {
     }).catch(err => console.error("[sendOrderEmail]", err));
   };
 
-  const handleStripeSuccess = () => {
-    const orderNumber = generateOrderNumber();
+  const handleStripeSuccess = async () => {
+    const orderNumber = await getOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "card" });
     sendOrderEmail(orderNumber, "card");
     clearCart();
@@ -541,7 +544,7 @@ export default function CheckoutClient() {
   const handleCryptoPay = async () => {
     setCryptoSubmitting(true);
     setCryptoError(null);
-    const orderNumber = generateOrderNumber();
+    const orderNumber = await getOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "crypto", paymentStatus: "pending" });
     sendOrderEmail(orderNumber, "crypto");
     try {
@@ -560,10 +563,10 @@ export default function CheckoutClient() {
     }
   };
 
-  const handleZellePay = () => {
+  const handleZellePay = async () => {
     setZelleSubmitting(true);
     setZelleError(null);
-    const orderNumber = generateOrderNumber();
+    const orderNumber = await getOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "zelle", paymentStatus: "pending_payment" });
     sendOrderEmail(orderNumber, "zelle");
     clearCart();
