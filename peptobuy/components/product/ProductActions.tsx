@@ -187,7 +187,7 @@ export default function ProductActions({ product }: { product: Product }) {
 
       {product.inStock && (
         <p className="text-center text-xs text-zinc-400">
-          Free shipping on orders over $200
+          Free shipping on orders over $250
         </p>
       )}
     </div>

@@ -9,7 +9,7 @@ const FEATURES = [
   {
     icon: Truck,
     heading: "Ships in 24hrs",
-    body: "Orders placed before 3 PM EST dispatched same business day. Free on orders over $200.",
+    body: "Orders placed before 3 PM EST dispatched same business day. Free on orders over $250.",
   },
   {
     icon: ShieldCheck,

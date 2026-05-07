@@ -357,7 +357,7 @@ export default function AboutPage() {
           <p className="mb-8 text-sm leading-relaxed text-zinc-500">
             Every compound in our catalog is available for immediate dispatch.
             Certificate of Analysis provided with every order.
-            Orders over $200 ship free.
+            Orders over $250 ship free.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link

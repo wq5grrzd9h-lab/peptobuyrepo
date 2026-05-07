@@ -223,7 +223,7 @@ function CompoundTab({ detail }: { detail: ProductDetail }) {
 
 function ShippingTab() {
   const rates = [
-    { method: "Standard (3–5 days)",         price: "Free over $200, else $9.99" },
+    { method: "Standard (3–5 days)",         price: "Free over $250, else $9.99" },
     { method: "Expedited (2 days)",           price: "$12.99" },
     { method: "Overnight (next business day)", price: "$24.99" },
     { method: "International",               price: "Calculated at checkout" },

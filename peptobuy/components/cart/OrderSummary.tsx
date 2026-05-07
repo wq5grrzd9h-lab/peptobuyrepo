@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChevronRight, ArrowLeft, ShieldCheck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
-const SHIPPING_THRESHOLD = 200;
+const SHIPPING_THRESHOLD = 250;
 const SHIPPING_COST = 9.99;
 
 function Row({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {

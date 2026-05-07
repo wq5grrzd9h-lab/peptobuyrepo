@@ -47,18 +47,18 @@ function ResearchConfirm({ confirmed, error, onChange }: {
   confirmed: boolean; error: boolean; onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
       <label className="flex cursor-pointer items-start gap-3">
         <div className={["mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all",
-          confirmed ? "border-amber-600 bg-amber-600" : error ? "border-red-400 bg-white" : "border-amber-400 bg-white"].join(" ")}>
+          confirmed ? "border-accent bg-accent" : error ? "border-red-400 bg-white" : "border-zinc-300 bg-white"].join(" ")}>
           {confirmed && <Check size={10} className="text-white" strokeWidth={3} />}
         </div>
         <input type="checkbox" className="sr-only" checked={confirmed} onChange={(e) => onChange(e.target.checked)} />
-        <span className="text-xs leading-relaxed text-amber-800">
-          I confirm these products are for research use only and I am a qualified researcher.
+        <span className="text-xs leading-relaxed text-zinc-500">
+          I confirm that I am a qualified researcher or authorized agent of a recognized laboratory or institution. I acknowledge these products are for in vitro research use only and not for human consumption, in compliance with all applicable laws.
         </span>
       </label>
-      {error && <p className="mt-2 text-[11px] text-red-500">↑ You must confirm research use to place your order.</p>}
+      {error && <p className="mt-2 text-[11px] text-red-500">↑ You must confirm your researcher status before placing an order.</p>}
     </div>
   );
 }
@@ -160,7 +160,7 @@ function ShippingStep({ data, errors, onChange }: { data: ShippingForm; errors: 
 }
 
 function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; setMethod: (m: ShippingMethod) => void; subtotal: number }) {
-  const freeStandard = subtotal >= 200;
+  const freeStandard = subtotal >= 250;
   const options = [
     { id: "standard" as ShippingMethod, icon: Truck, label: "Standard Shipping", sub: "3–5 business days", price: freeStandard ? "Free" : "$9.99", priceNum: freeStandard ? 0 : 9.99 },
     { id: "express" as ShippingMethod, icon: Zap, label: "Express Shipping", sub: "1–2 business days", price: "$19.99", priceNum: 19.99 },
@@ -288,7 +288,7 @@ function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSucces
         <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
           <ChevronLeft size={15} /> Back
         </button>
-        <button onClick={handlePlaceOrder} disabled={submitting || !stripe} type="button"
+        <button onClick={handlePlaceOrder} disabled={submitting || !stripe || !confirmed} type="button"
           className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
           {submitting ? <><Loader2 size={16} className="animate-spin" />Processing…</> : <>Place Order <ChevronLeft size={15} className="rotate-180" /></>}
         </button>
@@ -336,7 +336,7 @@ function CryptoPaymentForm({ onBack, onPay, submitting, error }: {
         <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
           <ChevronLeft size={15} /> Back
         </button>
-        <button onClick={() => { if (!confirmed) { setConfirmError(true); return; } onPay(); }} disabled={submitting} type="button"
+        <button onClick={() => { if (!confirmed) { setConfirmError(true); return; } onPay(); }} disabled={submitting || !confirmed} type="button"
           className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
           {submitting ? <><Loader2 size={16} className="animate-spin" />Creating Invoice…</> : <>Pay with Crypto <ArrowRight size={15} /></>}
         </button>
@@ -409,7 +409,7 @@ function ZellePaymentForm({ onBack, onPay, submitting, error, total }: {
         <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
           <ChevronLeft size={15} /> Back
         </button>
-        <button onClick={() => { if (!confirmed) { setConfirmError(true); return; } onPay(); }} disabled={submitting} type="button"
+        <button onClick={() => { if (!confirmed) { setConfirmError(true); return; } onPay(); }} disabled={submitting || !confirmed} type="button"
           className="flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70">
           {submitting ? <><Loader2 size={16} className="animate-spin" />Processing…</> : <>Place Order <ArrowRight size={15} /></>}
         </button>
@@ -443,7 +443,7 @@ export default function CheckoutClient() {
   const [zelleSubmitting, setZelleSubmitting] = useState(false);
   const [zelleError, setZelleError] = useState<string | null>(null);
 
-  const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 200 ? 0 : 9.99;
+  const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 250 ? 0 : 9.99;
   const total = subtotal + shippingCost;
 
   // Fetch Stripe intent only when card is selected at step 3

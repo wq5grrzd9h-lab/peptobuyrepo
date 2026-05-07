@@ -50,7 +50,7 @@ export default function Navbar() {
         <div className="relative z-50 flex items-center justify-center gap-2 bg-accent px-4 py-2 text-center text-[13px] font-medium text-white">
           <Zap size={13} className="shrink-0" />
           <span>
-            Free shipping on orders over <span className="font-bold">$200</span>
+            Free shipping on orders over <span className="font-bold">$250</span>
             {" — "}
             <Link href="/shop" className="inline-flex items-center gap-0.5 underline underline-offset-2 hover:no-underline">
               Shop Now <ChevronRight size={12} />
