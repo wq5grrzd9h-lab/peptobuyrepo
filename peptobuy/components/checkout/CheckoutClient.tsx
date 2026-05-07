@@ -30,15 +30,11 @@ const COUNTRIES = [
 const CRYPTO_COINS = ["BTC", "ETH", "USDT", "LTC", "BNB", "XMR"] as const;
 
 function generateOrderNumber(): string {
-  return Array.from({ length: 8 }, () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[Math.floor(Math.random() * 36)]).join("");
-}
-
-function generateZelleOrderNumber(): string {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
-  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  const suffix = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
   return `PB-${y}${m}${d}-${suffix}`;
 }
 
@@ -509,9 +505,35 @@ export default function CheckoutClient() {
     } catch { /* ignore */ }
   };
 
+  // Fire-and-forget — never blocks navigation
+  const sendOrderEmail = (orderNumber: string, method: PaymentMethod) => {
+    fetch("/api/send-order-emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderNumber,
+        customerEmail: contact.email,
+        customerName: `${shipping.firstName} ${shipping.lastName}`,
+        items: items.map(i => ({
+          name: i.product.name,
+          dose: i.selectedDose.size,
+          quantity: i.quantity,
+          price: lineUnitPrice(i),
+          reconstitution: i.reconstitution ?? false,
+        })),
+        subtotal,
+        shipping: shippingCost,
+        total,
+        paymentMethod: method,
+        shippingAddress: shipping,
+      }),
+    }).catch(err => console.error("[sendOrderEmail]", err));
+  };
+
   const handleStripeSuccess = () => {
     const orderNumber = generateOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "card" });
+    sendOrderEmail(orderNumber, "card");
     clearCart();
     router.push("/order-confirmation");
   };
@@ -521,6 +543,7 @@ export default function CheckoutClient() {
     setCryptoError(null);
     const orderNumber = generateOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "crypto", paymentStatus: "pending" });
+    sendOrderEmail(orderNumber, "crypto");
     try {
       const res = await fetch("/api/create-plisio-invoice", {
         method: "POST",
@@ -540,8 +563,9 @@ export default function CheckoutClient() {
   const handleZellePay = () => {
     setZelleSubmitting(true);
     setZelleError(null);
-    const orderNumber = generateZelleOrderNumber();
+    const orderNumber = generateOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "zelle", paymentStatus: "pending_payment" });
+    sendOrderEmail(orderNumber, "zelle");
     clearCart();
     router.push("/order-confirmation");
   };
