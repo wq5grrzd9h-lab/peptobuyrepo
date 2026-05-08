@@ -65,6 +65,23 @@ export default function OrderConfirmationPage() {
     } catch { router.replace("/"); } finally { setLoading(false); }
   }, [router]);
 
+  useEffect(() => {
+    if (!order) return;
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.innerHTML = `
+      window.goaffpro_order = {
+        number: ${JSON.stringify(order.orderNumber)},
+        total: ${order.total}
+      };
+      if (typeof window.goaffproTrackConversion !== "undefined") {
+        window.goaffproTrackConversion(window.goaffpro_order);
+      }
+    `;
+    document.body.appendChild(script);
+    return () => { document.body.removeChild(script); };
+  }, [order]);
+
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-accent" /></div>;
   }
