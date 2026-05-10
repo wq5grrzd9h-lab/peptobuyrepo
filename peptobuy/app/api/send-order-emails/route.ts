@@ -133,7 +133,7 @@ function customerEmailHtml(d: OrderEmailPayload): string {
       <p style="margin:0 0 24px;font-size:14px;color:#71717a;">
         ${isZelle
           ? "Your order has been placed. Complete your Zelle payment to confirm it."
-          : "Thank you for your order. We will dispatch within 24 hours."}
+          : "Thank you for your order. We will ship promptly."}
       </p>
 
       <!-- Order number -->

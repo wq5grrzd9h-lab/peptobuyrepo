@@ -56,8 +56,8 @@ export default function Hero() {
 
         {/* Sub-headline */}
         <p className="mb-10 max-w-[300px] text-[15px] leading-relaxed text-zinc-600">
-          Every batch independently tested. COA published.
-          Shipped within 24 hours.
+          Every batch independently tested. COA available on request.
+          Ships promptly.
         </p>
 
         {/* CTA */}
@@ -75,8 +75,8 @@ export default function Hero() {
           {(
             [
               { val: "≥98%", sub: "Avg. Purity" },
-              { val: "24hr", sub: "Dispatch"   },
-              { val: "COA",  sub: "Per Batch"  },
+              { val: "Fast", sub: "Dispatch"   },
+              { val: "COA",  sub: "On Request"  },
             ] as const
           ).map(({ val, sub }) => (
             <div key={sub}>

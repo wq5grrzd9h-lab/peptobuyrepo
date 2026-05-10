@@ -255,7 +255,7 @@ export default function OrderConfirmationPage() {
             <>
               <p className="text-sm font-bold text-zinc-900">After payment confirmed</p>
               <p className="mt-0.5 text-sm text-zinc-500 capitalize">{order.shippingMethod} shipping</p>
-              <p className="mt-2 text-[11px] text-zinc-400">Order ships within 24 hours of Zelle confirmation.</p>
+              <p className="mt-2 text-[11px] text-zinc-400">Order ships promptly after Zelle confirmation.</p>
             </>
           ) : (
             <>

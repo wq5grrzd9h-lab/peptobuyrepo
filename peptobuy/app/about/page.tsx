@@ -88,7 +88,7 @@ export default function AboutPage() {
         />
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-36">
           <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.26em] text-accent">
-            Research-Grade Peptides · Since 2021
+            Research-Grade Peptides · Since 2025
           </p>
           <h1 className="mb-6 max-w-4xl text-5xl font-black leading-[1.04] tracking-tight text-zinc-900 sm:text-6xl lg:text-[80px]">
             Built for the Lab.
@@ -98,7 +98,7 @@ export default function AboutPage() {
           <p className="max-w-2xl text-lg leading-relaxed text-zinc-500">
             PeptoBuy supplies research institutions, independent laboratories, and
             qualified investigators with independently verified peptide compounds —
-            batch-tested, COA-published, and dispatched within 24 hours.
+            batch-tested and independently verified for purity and identity.
           </p>
         </div>
       </section>
@@ -140,15 +140,14 @@ export default function AboutPage() {
                 criterion.
               </p>
               <p>
-                Our commitment to transparency is unconditional. We do not publish summary
+                Our commitment to transparency is unconditional. We do not use summary
                 data or representative COAs. Every batch receives its own independent
                 analysis, and the full report — chromatogram, mass spectrum, endotoxin
-                result, and sterility data — is posted on the product page before the
-                batch ships.
+                result, and sterility data — is available on request.
               </p>
               <p>
                 All sales are final. We stand behind the quality of every product we
-                dispatch. If you receive a batch that does not match its published COA,
+                dispatch. If you receive a batch that does not match its Certificate of Analysis,
                 <a href="mailto:peptobuy@gmail.com" className="text-accent underline underline-offset-2 hover:no-underline">contact us</a> within 48 hours and we will resolve it without exception.
               </p>
             </div>
@@ -237,7 +236,7 @@ export default function AboutPage() {
               <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200">
                 {[
                   { val: "Batch-specific", sub: "COA per lot, not per product" },
-                  { val: "ISO 17025",      sub: "Third-party lab accreditation" },
+                  { val: "ISO 9001",       sub: "Third-party lab accreditation" },
                   { val: "Pre-shipment",   sub: "Published before dispatch" },
                   { val: "Full report",    sub: "Chromatogram + MS data included" },
                 ].map(({ val, sub }) => (
@@ -255,28 +254,26 @@ export default function AboutPage() {
                 Most peptide suppliers publish a &ldquo;representative&rdquo; COA — a single
                 test result applied across an entire production run. We do not operate
                 this way. Every individual batch receives its own independent analysis at
-                an ISO 17025-accredited third-party laboratory.
+                an ISO 9001-certified third-party laboratory.
               </p>
               <p>
                 The full report — including raw HPLC chromatogram data, mass spectrum
                 confirming molecular identity, LAL endotoxin result, sterility testing
-                outcome, and ICP-MS heavy metal panel — is published on the corresponding
-                product page before the batch ships. Every COA includes the batch number,
-                manufacture date, expiry date, and the testing laboratory&apos;s report
-                reference number.
+                outcome, and ICP-MS heavy metal panel — is available upon request for any
+                batch we carry. Every COA includes the batch number, manufacture date,
+                expiry date, and the testing laboratory&apos;s report reference number.
               </p>
               <p>
-                You can verify the data before you order. Every COA is publicly
-                accessible on each product detail page. If a batch COA is pending (rare,
-                during rapid restocking), we publish an explicit &ldquo;Pending&rdquo; status
-                and hold shipment until testing is complete.
+                To request a COA, email us with your order number and the compound name.
+                We respond promptly. No batch enters inventory until testing is complete
+                and all acceptance criteria are met.
               </p>
-              <Link
-                href="/shop"
-                className="inline-flex w-fit items-center gap-2 rounded-xl border border-zinc-200 px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-all hover:border-zinc-300 hover:text-zinc-900"
+              <a
+                href="mailto:peptobuy@gmail.com"
+                className="inline-flex w-fit items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover"
               >
-                Browse product COAs <ArrowRight size={14} />
-              </Link>
+                Request a COA <ArrowRight size={14} />
+              </a>
             </div>
           </div>
         </div>
