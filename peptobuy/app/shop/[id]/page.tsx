@@ -15,7 +15,22 @@ export function generateStaticParams() { return products.map((p) => ({ id: p.id 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const product = products.find((p) => p.id === params.id);
   if (!product) return {};
-  return { title: `${product.name} — PeptoBuy`, description: product.description };
+  const url = `https://peptobuy.com/shop/${product.id}`;
+  return {
+    title: `${product.name} Research Peptide`,
+    description: product.description,
+    openGraph: {
+      title: `${product.name} Research Peptide | PeptoBuy`,
+      description: product.description,
+      url,
+      images: [{ url: product.image, alt: product.name }],
+    },
+    twitter: {
+      card: "summary",
+      title: `${product.name} Research Peptide | PeptoBuy`,
+      description: product.description,
+    },
+  };
 }
 
 const TRUST = [
@@ -35,8 +50,31 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     ...products.filter((p) => p.id !== product.id && p.category !== product.category),
   ].slice(0, 3);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: `https://peptobuy.com${product.image}`,
+    brand: { "@type": "Brand", name: "PeptoBuy" },
+    offers: product.doses.map((d) => ({
+      "@type": "Offer",
+      name: d.size,
+      price: d.price.toFixed(2),
+      priceCurrency: "USD",
+      availability: product.inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      url: `https://peptobuy.com/shop/${product.id}`,
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <div className="border-b border-border bg-surface-1">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">

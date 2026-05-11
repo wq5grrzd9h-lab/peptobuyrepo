@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions — PeptoBuy",
-  description: "PeptoBuy Terms & Conditions for research-grade peptide purchases.",
+  title: "Terms & Conditions",
+  description: "PeptoBuy Terms & Conditions for research-grade peptide purchases. All products are for in vitro research use only.",
 };
 
 const SECTIONS = [

@@ -16,9 +16,15 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About — PeptoBuy",
+  title: "About PeptoBuy | Research Grade Peptide Supplier",
   description:
-    "Research-grade peptides for qualified scientists. Learn about PeptoBuy's testing process, sourcing standards, and commitment to COA transparency.",
+    "Learn about PeptoBuy's third-party testing process, ISO 9001-certified sourcing, and commitment to providing research-grade peptides with verified purity.",
+  openGraph: {
+    title: "About PeptoBuy | Research Grade Peptide Supplier",
+    description:
+      "Third-party tested, ISO 9001-certified sourcing. Every batch independently verified.",
+    url: "https://peptobuy.com/about",
+  },
 };
 
 // ─── Quality Control steps ─────────────────────────────────────────────────────

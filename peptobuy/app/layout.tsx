@@ -15,9 +15,39 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", weight: ["700", "800"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "PeptoBuy — Research Peptides",
+  title: {
+    default: "PeptoBuy | Research Grade Peptides",
+    template: "%s | PeptoBuy",
+  },
   description:
-    "Research-grade peptides for qualified scientists. Every batch third-party tested.",
+    "Research-grade peptides with 99%+ purity. BPC-157, TB-500, RTGLP3, MOTS-C, NAD+, Tesamorelin and more. COA available on request. For research use only.",
+  keywords: [
+    "research peptides",
+    "buy BPC-157",
+    "buy TB-500",
+    "RTGLP3 supplier",
+    "MOTS-C research",
+    "NAD+ peptide",
+    "research grade peptides",
+    "peptide supplier USA",
+  ],
+  metadataBase: new URL("https://peptobuy.com"),
+  openGraph: {
+    title: "PeptoBuy | Research Grade Peptides",
+    description:
+      "Research-grade peptides with 99%+ purity. BPC-157, TB-500, RTGLP3, MOTS-C, NAD+, Tesamorelin and more. COA available on request.",
+    url: "https://peptobuy.com",
+    siteName: "PeptoBuy",
+    images: [{ url: "/Peptobuy LOGO.png", width: 400, height: 400, alt: "PeptoBuy Logo" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "PeptoBuy | Research Grade Peptides",
+    description:
+      "Research-grade peptides with 99%+ purity. BPC-157, TB-500, RTGLP3, MOTS-C, NAD+, Tesamorelin and more.",
+    images: ["/Peptobuy LOGO.png"],
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
