@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Nunito } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { ToastProvider } from "@/context/ToastContext";
@@ -78,6 +79,7 @@ export default function RootLayout({
             </SearchProvider>
           </ToastProvider>
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );
