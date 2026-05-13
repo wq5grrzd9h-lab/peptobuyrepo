@@ -65,6 +65,18 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${nunito.variable}`}>
       <head>
         <Script src="https://api.goaffpro.com/loader.js?shop=mownrwvjfb" strategy="afterInteractive" />
+        <Script id="meta-pixel" strategy="afterInteractive">{`
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window,document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init','958503717098446');
+          fbq('track','PageView');
+        `}</Script>
       </head>
       <body className="bg-background text-foreground font-sans antialiased">
         <CartProvider>

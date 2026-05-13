@@ -47,6 +47,11 @@ export default function ProductActions({ product }: { product: Product }) {
     if (!product.inStock || added) return;
     addItem(product, selectedDose, qty, !isEssentials && recon);
     toast.cart("Added to cart", `${product.name} · ${selectedDose.size}${recon && !isEssentials ? " · Pre-mixed" : ""}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).fbq("track", "AddToCart", { value: unitPrice * qty, currency: "USD" });
+    }
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
   };

@@ -219,6 +219,14 @@ export default function ShopClient({ initialCategory }: { initialCategory?: stri
     return () => clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).fbq("track", "ViewContent");
+    }
+  }, []);
+
   // Sync URL when category selection changes
   useEffect(() => {
     const slug =

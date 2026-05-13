@@ -446,6 +446,14 @@ export default function CheckoutClient() {
   const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 250 ? 0 : 9.99;
   const total = subtotal + shippingCost;
 
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).fbq("track", "InitiateCheckout");
+    }
+  }, []);
+
   // Fetch Stripe intent only when card is selected at step 3
   useEffect(() => {
     if (step !== 3 || paymentMethod !== "card" || clientSecret || intentLoading || total <= 0) return;

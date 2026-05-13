@@ -82,6 +82,15 @@ export default function OrderConfirmationPage() {
     return () => { document.body.removeChild(script); };
   }, [order]);
 
+  useEffect(() => {
+    if (!order) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).fbq("track", "Purchase", { value: order.total, currency: "USD" });
+    }
+  }, [order]);
+
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-accent" /></div>;
   }
