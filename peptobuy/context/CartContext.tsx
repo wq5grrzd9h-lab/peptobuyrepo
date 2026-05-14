@@ -38,6 +38,8 @@ export interface CartContextValue {
   items: CartItem[];
   totalCount: number;
   subtotal: number;
+  discountAmount: number;
+  promoCode: string | null;
   hydrated: boolean;
   addItem: (
     product: Product,
@@ -48,6 +50,8 @@ export interface CartContextValue {
   removeItem: (itemKey: string) => void;
   updateQuantity: (itemKey: string, quantity: number) => void;
   clearCart: () => void;
+  applyPromo: (code: string) => { success: boolean; error?: string };
+  removePromo: () => void;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -125,6 +129,7 @@ const STORAGE_KEY = "peptobuy-cart-v2";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, dispatch] = useReducer(reducer, []);
   const [hydrated, setHydrated] = useState(false);
+  const [promoCode, setPromoCode] = useState<string | null>(null);
   const isMounted = useRef(false);
 
   // Hydrate from localStorage on mount
@@ -199,17 +204,43 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Subtotal uses the actual unit price per item (dose price + reconstitution)
   const subtotal = items.reduce((sum, i) => sum + lineUnitPrice(i) * i.quantity, 0);
 
+  // Discount: FIRST20 = 20% off subtotal
+  const discountAmount = promoCode === "FIRST20" ? Math.round(subtotal * 0.2 * 100) / 100 : 0;
+
+  const applyPromo = useCallback((code: string): { success: boolean; error?: string } => {
+    const normalized = code.trim().toUpperCase();
+    if (normalized !== "FIRST20") {
+      return { success: false, error: "Invalid discount code." };
+    }
+    try {
+      const used: string[] = JSON.parse(localStorage.getItem("usedDiscountCodes") || "[]");
+      if (used.includes("FIRST20")) {
+        return { success: false, error: "This code has already been used. FIRST20 is valid for first orders only." };
+      }
+    } catch { /* ignore */ }
+    setPromoCode("FIRST20");
+    return { success: true };
+  }, []);
+
+  const removePromo = useCallback(() => {
+    setPromoCode(null);
+  }, []);
+
   return (
     <CartContext.Provider
       value={{
         items,
         totalCount,
         subtotal,
+        discountAmount,
+        promoCode,
         hydrated,
         addItem,
         removeItem,
         updateQuantity,
         clearCart,
+        applyPromo,
+        removePromo,
       }}
     >
       {children}

@@ -421,7 +421,7 @@ function ZellePaymentForm({ onBack, onPay, submitting, error, total }: {
 // ─── Main checkout orchestrator ───────────────────────────────────────────────
 
 export default function CheckoutClient() {
-  const { items, subtotal, hydrated, clearCart } = useCart();
+  const { items, subtotal, discountAmount, promoCode, hydrated, clearCart } = useCart();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
@@ -444,7 +444,8 @@ export default function CheckoutClient() {
   const [zelleError, setZelleError] = useState<string | null>(null);
 
   const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 250 ? 0 : 9.99;
-  const total = subtotal + shippingCost;
+  const discountedSubtotal = subtotal - discountAmount;
+  const total = discountedSubtotal + shippingCost;
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -510,9 +511,20 @@ export default function CheckoutClient() {
       localStorage.setItem("peptobuy-last-order", JSON.stringify({
         orderNumber, email: contact.email, placedAt: new Date().toISOString(),
         items: items.map((i) => ({ productId: i.product.id, name: i.product.name, price: lineUnitPrice(i), quantity: i.quantity, image: i.product.image, category: i.product.category, selectedDose: i.selectedDose.size, reconstitution: i.reconstitution })),
-        subtotal, shippingCost, total, shippingAddress: shipping, shippingMethod,
+        subtotal, discountAmount, promoCode, shippingCost, total, shippingAddress: shipping, shippingMethod,
         ...extraFields,
       }));
+    } catch { /* ignore */ }
+  };
+
+  const markPromoUsed = () => {
+    if (!promoCode) return;
+    try {
+      const used: string[] = JSON.parse(localStorage.getItem("usedDiscountCodes") || "[]");
+      if (!used.includes(promoCode)) {
+        used.push(promoCode);
+        localStorage.setItem("usedDiscountCodes", JSON.stringify(used));
+      }
     } catch { /* ignore */ }
   };
 
@@ -533,6 +545,8 @@ export default function CheckoutClient() {
           reconstitution: i.reconstitution ?? false,
         })),
         subtotal,
+        discountCode: promoCode ?? undefined,
+        discountAmount: discountAmount > 0 ? discountAmount : undefined,
         shipping: shippingCost,
         total,
         paymentMethod: method,
@@ -545,6 +559,7 @@ export default function CheckoutClient() {
     const orderNumber = await getOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "card" });
     sendOrderEmail(orderNumber, "card");
+    markPromoUsed();
     clearCart();
     router.push("/order-confirmation");
   };
@@ -563,6 +578,7 @@ export default function CheckoutClient() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+      markPromoUsed();
       clearCart();
       window.location.href = data.invoiceUrl;
     } catch (err: unknown) {
@@ -577,6 +593,7 @@ export default function CheckoutClient() {
     const orderNumber = await getOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "zelle", paymentStatus: "pending_payment" });
     sendOrderEmail(orderNumber, "zelle");
+    markPromoUsed();
     clearCart();
     router.push("/order-confirmation");
   };

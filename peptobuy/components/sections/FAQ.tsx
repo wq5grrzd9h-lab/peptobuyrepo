@@ -25,6 +25,10 @@ const FAQS = [
     a: "We accept credit and debit cards via Stripe, cryptocurrency via Plisio, and Zelle. For Zelle payments, include only your order number in the memo field — your order will be fulfilled once payment is confirmed.",
   },
   {
+    q: "Do you offer any discount codes?",
+    a: "Yes — new customers can use code FIRST20 at checkout for 20% off their first order. Enter the code in the promo code field in your cart before proceeding to checkout. FIRST20 is valid once per device for first-time orders only.",
+  },
+  {
     q: "How are products packaged and stored?",
     a: "All peptides are supplied as lyophilized (freeze-dried) powder unless reconstitution service is selected at checkout. Lyophilized compounds are stable at room temperature for short-term storage and should be kept refrigerated or frozen for long-term use. Avoid repeated freeze-thaw cycles.",
   },

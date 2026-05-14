@@ -15,8 +15,8 @@ function TrustBadge({ icon: Icon, label }: { icon: React.ElementType; label: str
 }
 
 export default function CheckoutSummary({ shippingCost }: { shippingCost: number }) {
-  const { items, subtotal } = useCart();
-  const total = subtotal + shippingCost;
+  const { items, subtotal, discountAmount, promoCode } = useCart();
+  const total = subtotal - discountAmount + shippingCost;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
@@ -80,6 +80,13 @@ export default function CheckoutSummary({ shippingCost }: { shippingCost: number
             <span className="text-zinc-500">Subtotal</span>
             <span className="tabular-nums text-zinc-900">${subtotal.toFixed(2)}</span>
           </div>
+
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="font-medium text-emerald-600">Discount ({promoCode})</span>
+              <span className="tabular-nums font-semibold text-emerald-600">-${discountAmount.toFixed(2)}</span>
+            </div>
+          )}
 
           <div className="flex justify-between text-sm">
             <span className="text-zinc-500">Shipping</span>

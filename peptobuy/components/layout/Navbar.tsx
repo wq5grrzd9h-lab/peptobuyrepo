@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X, ChevronRight, Zap } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
 import { useSearch } from "@/context/SearchContext";
@@ -15,7 +15,6 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [announcementVisible, setAnnouncementVisible] = useState(true);
   const [badgePop, setBadgePop] = useState(false);
 
   const { totalCount, hydrated } = useCart();
@@ -45,26 +44,28 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Announcement bar */}
-      {announcementVisible && (
-        <div className="relative z-50 flex items-center justify-center gap-2 bg-accent px-4 py-2 text-center text-[13px] font-medium text-white">
-          <Zap size={13} className="shrink-0" />
-          <span>
-            Free shipping on orders over <span className="font-bold">$250</span>
-            {" — "}
-            <Link href="/shop" className="inline-flex items-center gap-0.5 underline underline-offset-2 hover:no-underline">
-              Shop Now <ChevronRight size={12} />
-            </Link>
-          </span>
-          <button
-            aria-label="Dismiss announcement"
-            onClick={() => setAnnouncementVisible(false)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 opacity-70 hover:opacity-100"
-          >
-            <X size={14} />
-          </button>
+      {/* Promo ticker */}
+      <div className="relative z-50 h-9 overflow-hidden bg-accent" aria-label="Promotions">
+        <div
+          className="flex h-full items-center whitespace-nowrap"
+          style={{ animation: "ticker-scroll 22s linear infinite", width: "max-content" }}
+        >
+          {[0, 1].map((i) => (
+            <span key={i} className="inline-flex items-center gap-6 px-8 text-[13px] font-bold text-white">
+              <span>🧪 20% OFF YOUR FIRST ORDER — Use Code: <span className="underline underline-offset-2">FIRST20</span> at Checkout 🧪</span>
+              <span className="opacity-60">·</span>
+              <span>Research Grade Peptides</span>
+              <span className="opacity-60">·</span>
+              <span>Third-Party Tested</span>
+              <span className="opacity-60">·</span>
+              <span>COA On Request</span>
+              <span className="opacity-60">·</span>
+              <span>Free Shipping Over $250</span>
+              <span className="opacity-60">·</span>
+            </span>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Research-use-only banner */}
       <div className="z-50 border-b border-amber-200 bg-amber-50 px-4 py-1.5 text-center text-[11px] font-medium text-amber-800">
