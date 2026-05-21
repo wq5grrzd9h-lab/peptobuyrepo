@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, ArrowLeft, ShieldCheck, Tag, X, Check } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Tag, X, Check, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 const SHIPPING_THRESHOLD = 250;
 const SHIPPING_COST = 9.99;
+
+const TRUST_BADGES = [
+  { emoji: "🔒", label: "Secure Checkout" },
+  { emoji: "🏅", label: "ISO 9001 Tested" },
+  { emoji: "📋", label: "COA On Request" },
+];
 
 function Row({ label, value, sub, accent, discount }: {
   label: string; value: string; sub?: string; accent?: boolean; discount?: boolean;
@@ -27,6 +33,15 @@ export default function OrderSummary() {
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState(false);
+  const [codeAlreadyUsed, setCodeAlreadyUsed] = useState(false);
+
+  // Check localStorage on mount to know whether to show nudge
+  useEffect(() => {
+    try {
+      const used: string[] = JSON.parse(localStorage.getItem("usedDiscountCodes") || "[]");
+      setCodeAlreadyUsed(used.includes("FIRST20"));
+    } catch { /* ignore */ }
+  }, []);
 
   const isFreeShipping = subtotal >= SHIPPING_THRESHOLD;
   const shipping = isFreeShipping ? 0 : SHIPPING_COST;
@@ -59,6 +74,7 @@ export default function OrderSummary() {
       </div>
 
       <div className="px-5 py-5">
+        {/* Totals */}
         <div className="space-y-3">
           <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
           {discountAmount > 0 && (
@@ -82,6 +98,11 @@ export default function OrderSummary() {
           <span className="text-sm font-bold text-zinc-900">Estimated Total</span>
           <span className="text-2xl font-black text-zinc-900">${total.toFixed(2)}</span>
         </div>
+
+        {/* Estimated delivery */}
+        <p className="mt-2 text-center text-[12px] text-zinc-400">
+          📦 Estimated delivery: 3–7 business days
+        </p>
 
         {/* Promo code input */}
         <div className="mt-4">
@@ -120,14 +141,44 @@ export default function OrderSummary() {
           {promoError && (
             <p className="mt-1.5 text-[12px] text-red-500">{promoError}</p>
           )}
-          {promoSuccess && !promoCode && (
-            <p className="mt-1.5 text-[12px] text-emerald-600">Code applied — 20% off your first order!</p>
-          )}
         </div>
 
-        <div className="mt-5 flex flex-col gap-3">
-          <Link href="/checkout" className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] active:scale-[0.98]">
-            Continue to Checkout <ChevronRight size={16} />
+        {/* FIRST20 nudge — only show if code not applied + never used */}
+        {!promoCode && !codeAlreadyUsed && (
+          <div className="mt-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
+            <p className="text-[13px] leading-snug text-zinc-700">
+              🧪 First order? Use code{" "}
+              <strong
+                className="cursor-pointer select-all rounded bg-accent/10 px-1.5 py-0.5 font-black tracking-wider text-accent"
+                title="Click to select"
+              >
+                FIRST20
+              </strong>{" "}
+              for 20% off — apply it above before checking out
+            </p>
+          </div>
+        )}
+
+        {/* Trust badges */}
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {TRUST_BADGES.map(({ emoji, label }) => (
+            <div
+              key={label}
+              className="flex flex-col items-center gap-1 rounded-xl border border-zinc-100 bg-zinc-50 px-2 py-2.5 text-center"
+            >
+              <span className="text-base leading-none">{emoji}</span>
+              <span className="text-[10px] font-semibold leading-tight text-zinc-500">{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Checkout CTA */}
+        <div className="mt-4 flex flex-col gap-3">
+          <Link
+            href="/checkout"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 text-[15px] font-black text-white shadow-[0_0_28px_rgba(255,45,120,0.25)] transition-all hover:bg-accent-hover hover:shadow-[0_0_40px_rgba(255,45,120,0.4)] active:scale-[0.98]"
+          >
+            Proceed to Secure Checkout <ArrowRight size={17} />
           </Link>
           <Link href="/shop" className="flex items-center justify-center gap-1.5 py-1 text-sm text-zinc-400 transition-colors hover:text-zinc-700">
             <ArrowLeft size={14} /> Continue Shopping

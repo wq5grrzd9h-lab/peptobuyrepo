@@ -9,6 +9,7 @@ import ProductActions from "@/components/product/ProductActions";
 import ProductTabs from "@/components/product/ProductTabs";
 import COASection from "@/components/product/COASection";
 import ProductCard from "@/components/ui/ProductCard";
+import { TestimonialsCompact } from "@/components/sections/Testimonials";
 
 export function generateStaticParams() { return products.map((p) => ({ id: p.id })); }
 
@@ -145,6 +146,13 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         {/* COA */}
         <div className="border-t border-zinc-200 pt-4">
           <COASection />
+        </div>
+
+        {/* Testimonials */}
+        <div className="mt-16 border-t border-zinc-200 pt-10">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">Researcher Reviews</p>
+          <h2 className="mb-6 text-2xl font-black tracking-tight text-zinc-900">What Researchers Are Saying</h2>
+          <TestimonialsCompact />
         </div>
 
         {/* Related */}

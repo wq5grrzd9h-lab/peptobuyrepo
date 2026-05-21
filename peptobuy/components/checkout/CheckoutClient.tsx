@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,7 +16,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 type PaymentMethod = "card" | "crypto" | "zelle";
 
-interface ContactForm { email: string; phone: string }
+interface ContactForm { email: string }
 interface ShippingForm { firstName: string; lastName: string; address: string; city: string; state: string; zip: string; country: string }
 type ShippingMethod = "standard" | "express";
 type Errors = Record<string, string>;
@@ -129,10 +129,11 @@ function StepIndicator({ current }: { current: number }) {
 
 function ContactStep({ data, errors, onChange }: { data: ContactForm; errors: Errors; onChange: (f: string, v: string) => void }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <Field label="Email Address" name="email" type="email" value={data.email} error={errors.email} placeholder="you@example.com" autoComplete="email" onChange={(v) => onChange("email", v)} />
-      <Field label="Phone Number" name="phone" type="tel" value={data.phone} error={errors.phone} placeholder="+1 (555) 000-0000" autoComplete="tel" onChange={(v) => onChange("phone", v)} />
-      <p className="text-[11px] text-zinc-400">We&apos;ll only use these to send your order confirmation and shipping updates.</p>
+      <p className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+        <span>🔒</span> Your information is secure and encrypted.
+      </p>
     </div>
   );
 }
@@ -146,15 +147,13 @@ function ShippingStep({ data, errors, onChange }: { data: ShippingForm; errors: 
       </div>
       <Field label="Street Address" name="address" value={data.address} error={errors.address} placeholder="123 Main Street, Apt 4B" autoComplete="street-address" onChange={(v) => onChange("address", v)} />
       <div className="grid grid-cols-3 gap-4">
-        <Field label="City" name="city" value={data.city} error={errors.city} placeholder="New York" autoComplete="address-level2" onChange={(v) => onChange("city", v)} className="col-span-2" />
+        <Field label="City" name="city" value={data.city} error={errors.city} placeholder="New York" autoComplete="address-level2" onChange={(v) => onChange("city", v)} />
         <Field label="State" name="state" value={data.state} error={errors.state} placeholder="NY" autoComplete="address-level1" onChange={(v) => onChange("state", v)} />
+        <Field label="ZIP Code" name="zip" value={data.zip} error={errors.zip} placeholder="10001" autoComplete="postal-code" onChange={(v) => onChange("zip", v)} />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="ZIP / Postal Code" name="zip" value={data.zip} error={errors.zip} placeholder="10001" autoComplete="postal-code" onChange={(v) => onChange("zip", v)} />
-        <SelectField label="Country" name="country" value={data.country} error={errors.country} onChange={(v) => onChange("country", v)}>
-          {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
-        </SelectField>
-      </div>
+      <SelectField label="Country" name="country" value={data.country} error={errors.country} onChange={(v) => onChange("country", v)}>
+        {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+      </SelectField>
     </div>
   );
 }
@@ -425,10 +424,14 @@ export default function CheckoutClient() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
-  const [contact, setContact] = useState<ContactForm>({ email: "", phone: "" });
+  const [contact, setContact] = useState<ContactForm>({ email: "" });
   const [shipping, setShipping] = useState<ShippingForm>({ firstName: "", lastName: "", address: "", city: "", state: "", zip: "", country: "US" });
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+
+  // Abandoned cart timer
+  const abandonedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const orderCompletedRef = useRef(false);
 
   // Stripe
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -447,13 +450,50 @@ export default function CheckoutClient() {
   const discountedSubtotal = subtotal - discountAmount;
   const total = discountedSubtotal + shippingCost;
 
+  // Fire InitiateCheckout with value when user reaches payment step
   useEffect(() => {
+    if (step !== 3) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== "undefined" && (window as any).fbq) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).fbq("track", "InitiateCheckout");
+      (window as any).fbq("track", "InitiateCheckout", {
+        value: total,
+        currency: "USD",
+        num_items: items.reduce((sum, i) => sum + i.quantity, 0),
+      });
     }
-  }, []);
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Abandoned cart — start 60-min timer when email is valid, reset on change
+  useEffect(() => {
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email);
+    if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
+    if (!emailValid || !items.length) return;
+
+    abandonedTimerRef.current = setTimeout(() => {
+      if (orderCompletedRef.current) return;
+      fetch("/api/abandoned-cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerEmail: contact.email,
+          customerName: shipping.firstName ? `${shipping.firstName} ${shipping.lastName}`.trim() : undefined,
+          cartItems: items.map((i) => ({
+            name: i.product.name,
+            dose: i.selectedDose.size,
+            price: lineUnitPrice(i),
+            quantity: i.quantity,
+          })),
+          cartTotal: subtotal - discountAmount,
+          abandonedAt: new Date().toISOString(),
+        }),
+      }).catch((err) => console.error("[abandonedCart]", err));
+    }, 60 * 60 * 1000); // 60 minutes
+
+    return () => {
+      if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
+    };
+  }, [contact.email, items, shipping.firstName, shipping.lastName, subtotal, discountAmount]);
 
   // Fetch Stripe intent only when card is selected at step 3
   useEffect(() => {
@@ -482,8 +522,6 @@ export default function CheckoutClient() {
     const e: Errors = {};
     if (!contact.email) e.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) e.email = "Please enter a valid email address";
-    if (!contact.phone) e.phone = "Phone number is required";
-    else if (!/^\+?[\d\s()\-.]{7,}$/.test(contact.phone)) e.phone = "Please enter a valid phone number";
     return e;
   }
   function validateShipping(): Errors {
@@ -501,6 +539,14 @@ export default function CheckoutClient() {
   const handleNext = () => {
     const errs = step === 0 ? validateContact() : step === 1 ? validateShipping() : {};
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    // Fire AddPaymentInfo when email step passes — builds Meta retargeting audience
+    if (step === 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (typeof window !== "undefined" && (window as any).fbq) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).fbq("track", "AddPaymentInfo");
+      }
+    }
     setErrors({}); setStep((s) => s + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -556,6 +602,8 @@ export default function CheckoutClient() {
   };
 
   const handleStripeSuccess = async () => {
+    orderCompletedRef.current = true;
+    if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
     const orderNumber = await getOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "card" });
     sendOrderEmail(orderNumber, "card");
@@ -565,6 +613,8 @@ export default function CheckoutClient() {
   };
 
   const handleCryptoPay = async () => {
+    orderCompletedRef.current = true;
+    if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
     setCryptoSubmitting(true);
     setCryptoError(null);
     const orderNumber = await getOrderNumber();
@@ -588,6 +638,8 @@ export default function CheckoutClient() {
   };
 
   const handleZellePay = async () => {
+    orderCompletedRef.current = true;
+    if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
     setZelleSubmitting(true);
     setZelleError(null);
     const orderNumber = await getOrderNumber();
