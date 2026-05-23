@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Tag, X, Check, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import EmailCapturePopup, { getStoredCheckoutEmail, useCheckoutNavigate } from "@/components/cart/EmailCapturePopup";
 
 const SHIPPING_THRESHOLD = 300;
 const SHIPPING_COST = 9.99;
@@ -34,6 +35,8 @@ export default function OrderSummary() {
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState(false);
   const [codeAlreadyUsed, setCodeAlreadyUsed] = useState(false);
+  const [emailPopupOpen, setEmailPopupOpen] = useState(false);
+  const { navigateToCheckout } = useCheckoutNavigate();
 
   // Check localStorage on mount to know whether to show nudge
   useEffect(() => {
@@ -174,16 +177,19 @@ export default function OrderSummary() {
 
         {/* Checkout CTA */}
         <div className="mt-4 flex flex-col gap-3">
-          <Link
-            href="/checkout"
+          <button
+            onClick={() => navigateToCheckout(() => setEmailPopupOpen(true))}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 text-[15px] font-black text-white shadow-[0_0_28px_rgba(255,45,120,0.25)] transition-all hover:bg-accent-hover hover:shadow-[0_0_40px_rgba(255,45,120,0.4)] active:scale-[0.98]"
           >
             Proceed to Secure Checkout <ArrowRight size={17} />
-          </Link>
+          </button>
           <Link href="/shop" className="flex items-center justify-center gap-1.5 py-1 text-sm text-zinc-400 transition-colors hover:text-zinc-700">
             <ArrowLeft size={14} /> Continue Shopping
           </Link>
         </div>
+
+        {/* Email capture popup */}
+        <EmailCapturePopup open={emailPopupOpen} onClose={() => setEmailPopupOpen(false)} />
       </div>
 
       <div className="flex items-center justify-center gap-2 border-t border-zinc-100 px-5 py-3">

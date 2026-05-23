@@ -28,6 +28,8 @@ export default function AgeVerification() {
     } catch { /* ignore */ }
     document.body.style.overflow = "";
     setVisible(false);
+    // Signal to MemorialDayPopup that age gate was just confirmed
+    window.dispatchEvent(new CustomEvent("peptobuy:ageVerified"));
   };
 
   const handleExit = () => {

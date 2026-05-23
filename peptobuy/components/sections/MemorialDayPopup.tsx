@@ -1,24 +1,64 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { isPromoActive } from "@/lib/memorialDay";
 
 const SESSION_KEY = "md_popup_dismissed";
+const AGE_STORAGE_KEY = "peptobuy-age-verified";
+const AGE_EXPIRY_MS = 24 * 60 * 60 * 1000;
+
+function isAgeAlreadyVerified(): boolean {
+  try {
+    const raw = localStorage.getItem(AGE_STORAGE_KEY);
+    if (!raw) return false;
+    const { ts } = JSON.parse(raw);
+    return Date.now() - ts < AGE_EXPIRY_MS;
+  } catch {
+    return false;
+  }
+}
+
+function isPopupDismissed(): boolean {
+  try {
+    return !!sessionStorage.getItem(SESSION_KEY);
+  } catch {
+    return false;
+  }
+}
 
 export default function MemorialDayPopup() {
   const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function scheduleShow() {
+    if (timerRef.current) return; // already scheduled
+    timerRef.current = setTimeout(() => setVisible(true), 1000);
+  }
 
   useEffect(() => {
     if (!isPromoActive()) return;
-    try {
-      if (sessionStorage.getItem(SESSION_KEY)) return;
-    } catch { /* ignore */ }
+    if (isPopupDismissed()) return;
 
-    const t = setTimeout(() => setVisible(true), 1000);
-    return () => clearTimeout(t);
-  }, []);
+    // Returning visitor — age gate won't show, safe to schedule immediately
+    if (isAgeAlreadyVerified()) {
+      scheduleShow();
+      return;
+    }
+
+    // New visitor — wait for age gate confirmation before showing
+    const handleAgeVerified = () => {
+      if (isPopupDismissed()) return;
+      scheduleShow();
+    };
+
+    window.addEventListener("peptobuy:ageVerified", handleAgeVerified);
+    return () => {
+      window.removeEventListener("peptobuy:ageVerified", handleAgeVerified);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function dismiss() {
     try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }

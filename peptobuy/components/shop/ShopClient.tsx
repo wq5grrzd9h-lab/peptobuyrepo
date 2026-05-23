@@ -381,11 +381,6 @@ export default function ShopClient({ initialCategory }: { initialCategory?: stri
         </div>
       )}
 
-      {/* ── CTA boxes ───────────────────────────────────────── */}
-      <div className="-mx-4 mb-10 sm:mx-0">
-        <CTABoxes />
-      </div>
-
       {/* ── Main layout ─────────────────────────────────────── */}
       <div className="flex items-start gap-8">
 
@@ -410,6 +405,11 @@ export default function ShopClient({ initialCategory }: { initialCategory?: stri
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── CTA boxes — below product catalog ───────────────── */}
+      <div className="-mx-4 mt-16 sm:mx-0">
+        <CTABoxes />
       </div>
 
       {/* ── Mobile filter drawer ─────────────────────────────── */}

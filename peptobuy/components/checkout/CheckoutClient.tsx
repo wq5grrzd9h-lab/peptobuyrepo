@@ -41,6 +41,10 @@ async function getOrderNumber(): Promise<string> {
   }
 }
 
+// ─── localStorage keys (shared with EmailCapturePopup) ───────────────────────
+
+const LS_EMAIL_KEY = "checkoutEmail";
+
 // ─── Shared research-confirm ──────────────────────────────────────────────────
 
 function ResearchConfirm({ confirmed, error, onChange }: {
@@ -127,10 +131,26 @@ function StepIndicator({ current }: { current: number }) {
 
 // ─── Steps 0–2 ───────────────────────────────────────────────────────────────
 
-function ContactStep({ data, errors, onChange }: { data: ContactForm; errors: Errors; onChange: (f: string, v: string) => void }) {
+function ContactStep({ data, errors, onChange, prefilled }: { data: ContactForm; errors: Errors; onChange: (f: string, v: string) => void; prefilled: boolean }) {
   return (
     <div className="space-y-3">
-      <Field label="Email Address" name="email" type="email" value={data.email} error={errors.email} placeholder="you@example.com" autoComplete="email" onChange={(v) => onChange("email", v)} />
+      <Field
+        label="Email Address"
+        name="email"
+        type="email"
+        value={data.email}
+        error={errors.email}
+        placeholder="you@example.com"
+        autoComplete="email"
+        onChange={(v) => onChange("email", v)}
+        rightElement={
+          prefilled && data.email ? (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+              <Check size={11} strokeWidth={3} /> Saved
+            </span>
+          ) : undefined
+        }
+      />
       <p className="flex items-center gap-1.5 text-[11px] text-zinc-400">
         <span>🔒</span> Your information is secure and encrypted.
       </p>
@@ -424,10 +444,44 @@ export default function CheckoutClient() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
+  const [emailPrefilled, setEmailPrefilled] = useState(false);
   const [contact, setContact] = useState<ContactForm>({ email: "" });
   const [shipping, setShipping] = useState<ShippingForm>({ firstName: "", lastName: "", address: "", city: "", state: "", zip: "", country: "US" });
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+
+  // Prefill email from cart capture localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(LS_EMAIL_KEY);
+      if (stored && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stored)) {
+        setContact({ email: stored });
+        setEmailPrefilled(true);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Sync email back to localStorage when changed (and re-register)
+  useEffect(() => {
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email);
+    if (!emailValid) return;
+    try { localStorage.setItem(LS_EMAIL_KEY, contact.email); } catch { /* ignore */ }
+    if (!items.length) return;
+    fetch("/api/register-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: contact.email,
+        cartItems: items.map((i) => ({
+          name: i.product.name,
+          dose: i.selectedDose.size,
+          price: lineUnitPrice(i),
+          quantity: i.quantity,
+        })),
+        cartTotal: subtotal,
+      }),
+    }).catch((err) => console.error("[checkout-register-sync]", err));
+  }, [contact.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Abandoned cart timer
   const abandonedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -601,9 +655,28 @@ export default function CheckoutClient() {
     }).catch(err => console.error("[sendOrderEmail]", err));
   };
 
+  // Cancel abandoned cart on Redis + clear localStorage capture keys
+  const cancelAbandonedCart = () => {
+    const email = contact.email;
+    if (email) {
+      fetch("/api/cancel-abandoned-cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).catch((err) => console.error("[cancel-abandoned-cart]", err));
+    }
+    try {
+      localStorage.removeItem(LS_EMAIL_KEY);
+      localStorage.removeItem("checkoutCartSnapshot");
+      localStorage.removeItem("checkoutStarted");
+      sessionStorage.removeItem("capturedEmail");
+    } catch { /* ignore */ }
+  };
+
   const handleStripeSuccess = async () => {
     orderCompletedRef.current = true;
     if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
+    cancelAbandonedCart();
     const orderNumber = await getOrderNumber();
     saveOrder(orderNumber, { paymentMethod: "card" });
     sendOrderEmail(orderNumber, "card");
@@ -615,6 +688,7 @@ export default function CheckoutClient() {
   const handleCryptoPay = async () => {
     orderCompletedRef.current = true;
     if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
+    cancelAbandonedCart();
     setCryptoSubmitting(true);
     setCryptoError(null);
     const orderNumber = await getOrderNumber();
@@ -640,6 +714,7 @@ export default function CheckoutClient() {
   const handleZellePay = async () => {
     orderCompletedRef.current = true;
     if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
+    cancelAbandonedCart();
     setZelleSubmitting(true);
     setZelleError(null);
     const orderNumber = await getOrderNumber();
@@ -693,7 +768,7 @@ export default function CheckoutClient() {
           {step < 3 && (
             <>
               <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-                {step === 0 && <ContactStep data={contact} errors={errors} onChange={updateContact} />}
+                {step === 0 && <ContactStep data={contact} errors={errors} onChange={updateContact} prefilled={emailPrefilled} />}
                 {step === 1 && <ShippingStep data={shipping} errors={errors} onChange={updateShipping} />}
                 {step === 2 && <MethodStep method={shippingMethod} setMethod={setShippingMethod} subtotal={subtotal} />}
               </div>

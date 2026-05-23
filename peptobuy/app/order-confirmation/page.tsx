@@ -58,11 +58,29 @@ export default function OrderConfirmationPage() {
   const router = useRouter();
 
   useEffect(() => {
+    let email = "";
     try {
       const raw = localStorage.getItem("peptobuy-last-order");
       if (!raw) { router.replace("/"); return; }
-      setOrder(JSON.parse(raw));
+      const parsed = JSON.parse(raw) as OrderData;
+      setOrder(parsed);
+      email = parsed.email ?? "";
     } catch { router.replace("/"); } finally { setLoading(false); }
+
+    // Cancel any pending abandoned cart job and clear capture keys
+    if (email) {
+      fetch("/api/cancel-abandoned-cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).catch((err) => console.error("[order-confirm cancel]", err));
+    }
+    try {
+      localStorage.removeItem("checkoutEmail");
+      localStorage.removeItem("checkoutCartSnapshot");
+      localStorage.removeItem("checkoutStarted");
+      sessionStorage.removeItem("capturedEmail");
+    } catch { /* ignore */ }
   }, [router]);
 
   useEffect(() => {
