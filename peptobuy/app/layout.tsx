@@ -11,6 +11,7 @@ import Footer from "@/components/layout/Footer";
 import Toaster from "@/components/ui/Toaster";
 import SearchOverlay from "@/components/search/SearchOverlay";
 import AgeVerification from "@/components/AgeVerification";
+import MemorialDayPopup from "@/components/sections/MemorialDayPopup";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", weight: ["700", "800"], display: "swap" });
@@ -93,6 +94,7 @@ export default function RootLayout({
               <SearchOverlay />
               <Toaster />
               <AgeVerification />
+              <MemorialDayPopup />
             </SearchProvider>
           </ToastProvider>
         </CartProvider>

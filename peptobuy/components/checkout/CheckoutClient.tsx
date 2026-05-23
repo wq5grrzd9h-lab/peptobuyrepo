@@ -159,7 +159,7 @@ function ShippingStep({ data, errors, onChange }: { data: ShippingForm; errors: 
 }
 
 function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; setMethod: (m: ShippingMethod) => void; subtotal: number }) {
-  const freeStandard = subtotal >= 250;
+  const freeStandard = subtotal >= 300;
   const options = [
     { id: "standard" as ShippingMethod, icon: Truck, label: "Standard Shipping", sub: "3–5 business days", price: freeStandard ? "Free" : "$9.99", priceNum: freeStandard ? 0 : 9.99 },
     { id: "express" as ShippingMethod, icon: Zap, label: "Express Shipping", sub: "1–2 business days", price: "$19.99", priceNum: 19.99 },
@@ -446,7 +446,7 @@ export default function CheckoutClient() {
   const [zelleSubmitting, setZelleSubmitting] = useState(false);
   const [zelleError, setZelleError] = useState<string | null>(null);
 
-  const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 250 ? 0 : 9.99;
+  const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 300 ? 0 : 9.99;
   const discountedSubtotal = subtotal - discountAmount;
   const total = discountedSubtotal + shippingCost;
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Tag, X, Check, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
-const SHIPPING_THRESHOLD = 250;
+const SHIPPING_THRESHOLD = 300;
 const SHIPPING_COST = 9.99;
 
 const TRUST_BADGES = [

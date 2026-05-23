@@ -3,6 +3,7 @@ import CategoryStrip from "@/components/sections/CategoryStrip";
 import BestSellers from "@/components/sections/BestSellers";
 import TrustBar from "@/components/sections/TrustBar";
 import Testimonials from "@/components/sections/Testimonials";
+import CTABoxes from "@/components/sections/CTABoxes";
 import FAQ from "@/components/sections/FAQ";
 import CTABanner from "@/components/sections/CTABanner";
 
@@ -31,6 +32,7 @@ export default function Home() {
       <BestSellers />
       <TrustBar />
       <Testimonials />
+      <CTABoxes showHeading />
       <FAQ />
       <CTABanner />
     </>

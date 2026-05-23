@@ -9,7 +9,7 @@ const FEATURES = [
   {
     icon: Truck,
     heading: "Ships Promptly",
-    body: "Orders dispatched as soon as they are processed. Free shipping on orders over $250.",
+    body: "Orders dispatched as soon as they are processed. Free shipping on orders over $300.",
   },
   {
     icon: ShieldCheck,

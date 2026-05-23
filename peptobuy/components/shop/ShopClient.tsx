@@ -12,6 +12,7 @@ import {
 } from "@/lib/products";
 import ProductCard from "@/components/ui/ProductCard";
 import PriceRangeSlider from "@/components/shop/PriceRangeSlider";
+import CTABoxes from "@/components/sections/CTABoxes";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -379,6 +380,11 @@ export default function ShopClient({ initialCategory }: { initialCategory?: stri
           </button>
         </div>
       )}
+
+      {/* ── CTA boxes ───────────────────────────────────────── */}
+      <div className="-mx-4 mb-10 sm:mx-0">
+        <CTABoxes />
+      </div>
 
       {/* ── Main layout ─────────────────────────────────────── */}
       <div className="flex items-start gap-8">

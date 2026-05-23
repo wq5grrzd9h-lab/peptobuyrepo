@@ -6,6 +6,7 @@ import { ShoppingCart, Zap, Minus, Plus, Check, Info } from "lucide-react";
 import { Product } from "@/lib/products";
 import { useCart, RECONSTITUTION_PRICE, lineUnitPrice } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
+import { isPromoActive } from "@/lib/memorialDay";
 
 const RECON_TOOLTIP =
   "Your vial will arrive reconstituted and labeled with per-dose markings. For research use only.";
@@ -192,8 +193,29 @@ export default function ProductActions({ product }: { product: Product }) {
 
       {product.inStock && (
         <p className="text-center text-xs text-zinc-400">
-          Free shipping on orders over $250
+          Free shipping on orders over $300
         </p>
+      )}
+
+      {/* Memorial Day urgency banner */}
+      {product.inStock && isPromoActive() && (
+        <div
+          className="rounded-xl border border-red-200 px-4 py-3 text-center"
+          style={{ background: "linear-gradient(135deg,#fff5f5 0%,#fff8f8 100%)" }}
+        >
+          <p className="text-[12px] font-bold text-red-800">
+            🇺🇸 Memorial Day Sale — Free gifts with every order
+          </p>
+          <p className="mt-0.5 text-[11px] text-red-600">
+            Free BAC Water + Syringes included · Free GHK-Cu on $250+ orders
+          </p>
+          <p className="mt-1 text-[11px] font-bold" style={{ color: "#cc0000" }}>
+            ⚠️ Only 11 BAC Water kits remaining
+          </p>
+          <p className="mt-0.5 text-[11px] text-red-700 opacity-80">
+            Ends Monday May 26, 2026 at 11:59 PM EST
+          </p>
+        </div>
       )}
     </div>
   );
