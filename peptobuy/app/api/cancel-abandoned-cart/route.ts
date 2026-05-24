@@ -1,8 +1,22 @@
 import { NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
-import type { AbandonedRecord } from "@/app/api/register-checkout/route";
 
-const REDIS_KEY_PREFIX = "pb_abandoned:";
+const KEY_PREFIXES = {
+  cart: "cart-abandoned:",
+  checkout: "checkout-abandoned:",
+} as const;
+
+interface AbandonedRecord {
+  status: "pending" | "sent" | "cancelled";
+  [key: string]: unknown;
+}
+
+async function cancelKey(redis: Redis, key: string) {
+  const existing = await redis.get<AbandonedRecord>(key);
+  if (existing && existing.status === "pending") {
+    await redis.set(key, { ...existing, status: "cancelled" }, { ex: 86400 });
+  }
+}
 
 export async function POST(request: Request) {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
@@ -10,9 +24,12 @@ export async function POST(request: Request) {
   }
 
   let email: string;
+  let type: "cart" | "checkout" | "both" | undefined;
+
   try {
     const body = await request.json();
     email = body.email;
+    type = body.type ?? "checkout"; // default to checkout for backward compat
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -24,12 +41,14 @@ export async function POST(request: Request) {
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
   });
 
-  const key = `${REDIS_KEY_PREFIX}${email.toLowerCase()}`;
+  const norm = email.toLowerCase();
 
   try {
-    const existing = await redis.get<AbandonedRecord>(key);
-    if (existing && existing.status === "pending") {
-      await redis.set(key, { ...existing, status: "cancelled" }, { ex: 86400 });
+    if (type === "cart" || type === "both") {
+      await cancelKey(redis, `${KEY_PREFIXES.cart}${norm}`);
+    }
+    if (type === "checkout" || type === "both" || !type) {
+      await cancelKey(redis, `${KEY_PREFIXES.checkout}${norm}`);
     }
     return NextResponse.json({ ok: true });
   } catch (err) {

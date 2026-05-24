@@ -67,19 +67,27 @@ export default function OrderConfirmationPage() {
       email = parsed.email ?? "";
     } catch { router.replace("/"); } finally { setLoading(false); }
 
-    // Cancel any pending abandoned cart job and clear capture keys
-    if (email) {
+    // Cancel both abandonment jobs and clear all capture keys
+    const cartEmail = (() => { try { return localStorage.getItem("cartEmail") ?? ""; } catch { return ""; } })();
+    const seen = new Set<string>();
+    const emailsToCancel = [email, cartEmail].filter((e) => { if (!e || seen.has(e)) return false; seen.add(e); return true; });
+
+    emailsToCancel.forEach((e) => {
       fetch("/api/cancel-abandoned-cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: e, type: "both" }),
       }).catch((err) => console.error("[order-confirm cancel]", err));
-    }
+    });
+
     try {
       localStorage.removeItem("checkoutEmail");
       localStorage.removeItem("checkoutCartSnapshot");
       localStorage.removeItem("checkoutStarted");
+      localStorage.removeItem("cartEmail");
+      localStorage.removeItem("cartEmailSnapshot");
       sessionStorage.removeItem("capturedEmail");
+      sessionStorage.removeItem("cartEmailCaptured");
     } catch { /* ignore */ }
   }, [router]);
 

@@ -13,6 +13,7 @@ import {
   FREE_GHKCU_THRESHOLD,
   type TimeRemaining,
 } from "@/lib/memorialDay";
+import CartAbandonmentPopup, { getStoredCartEmail } from "@/components/cart/CartAbandonmentPopup";
 
 // ─── Mini countdown ──────────────────────────────────────────────────────────
 
@@ -117,9 +118,12 @@ function EmptyCart() {
   );
 }
 
+const SS_CART_POPUP_KEY = "cartEmailCaptured";
+
 export default function CartClient() {
   const { items, totalCount, subtotal, hydrated, clearCart } = useCart();
   const [promoActive, setPromoActive] = useState(() => isPromoActive());
+  const [showCartEmailPopup, setShowCartEmailPopup] = useState(false);
 
   useEffect(() => {
     if (!promoActive) return;
@@ -128,6 +132,36 @@ export default function CartClient() {
     }, 5000);
     return () => clearInterval(id);
   }, [promoActive]);
+
+  // Cart abandonment capture — 8s timer + exit intent
+  useEffect(() => {
+    function shouldShow(): boolean {
+      try {
+        if (sessionStorage.getItem(SS_CART_POPUP_KEY)) return false;
+        if (getStoredCartEmail()) return false; // already captured this email
+      } catch { /* ignore */ }
+      return true;
+    }
+
+    // 8-second timer
+    const timer = setTimeout(() => {
+      if (shouldShow()) setShowCartEmailPopup(true);
+    }, 8000);
+
+    // Exit intent
+    function handleExitIntent(e: MouseEvent) {
+      if (e.clientY < 50 && shouldShow()) {
+        setShowCartEmailPopup(true);
+      }
+    }
+
+    document.addEventListener("mousemove", handleExitIntent);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousemove", handleExitIntent);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hydrated) return <Skeleton />;
   if (items.length === 0) return <EmptyCart />;
@@ -218,6 +252,12 @@ export default function CartClient() {
           <OrderSummary />
         </div>
       </div>
+
+      {/* Cart abandonment email capture */}
+      <CartAbandonmentPopup
+        open={showCartEmailPopup}
+        onClose={() => setShowCartEmailPopup(false)}
+      />
     </div>
   );
 }

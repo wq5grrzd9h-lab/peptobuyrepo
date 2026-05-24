@@ -2,24 +2,11 @@ import { NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
 import { Client as QStash } from "@upstash/qstash";
 
-const REDIS_KEY_PREFIX = "checkout-abandoned:";
-const DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours — no duplicate sends in this window
-const DELAY_SECONDS = 45 * 60; // 45 minutes
+const REDIS_KEY_PREFIX = "cart-abandoned:";
+const DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000;
+const DELAY_SECONDS = 30 * 60; // 30 minutes
 
-interface CartItem {
-  name: string;
-  dose: string;
-  price: number;
-  quantity: number;
-}
-
-interface RegisterPayload {
-  email: string;
-  cartItems: CartItem[];
-  cartTotal: number;
-}
-
-export interface AbandonedRecord {
+export interface CartAbandonedRecord {
   email: string;
   cartItems: CartItem[];
   cartTotal: number;
@@ -28,13 +15,19 @@ export interface AbandonedRecord {
   qstashMessageId?: string;
 }
 
+interface CartItem {
+  name: string;
+  dose: string;
+  price: number;
+  quantity: number;
+}
+
 export async function POST(request: Request) {
-  // Gracefully skip if Redis not configured
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     return NextResponse.json({ ok: true, skipped: true, reason: "redis-not-configured" });
   }
 
-  let payload: RegisterPayload;
+  let payload: { email: string; cartItems: CartItem[]; cartTotal: number };
   try {
     payload = await request.json();
   } catch {
@@ -54,47 +47,43 @@ export async function POST(request: Request) {
   const key = `${REDIS_KEY_PREFIX}${email.toLowerCase()}`;
 
   try {
-    const existing = await redis.get<AbandonedRecord>(key);
+    const existing = await redis.get<CartAbandonedRecord>(key);
 
     if (existing) {
-      // If already sent within dedup window — don't reschedule, just update cart
       if (existing.status === "sent") {
         const sentAt = new Date(existing.registeredAt).getTime();
         if (Date.now() - sentAt < DEDUP_WINDOW_MS) {
-          // Update cart data silently — already sent, no new schedule
           await redis.set(key, { ...existing, cartItems, cartTotal }, { ex: 86400 });
           return NextResponse.json({ ok: true, action: "cart-updated-no-reschedule" });
         }
       }
-
-      // If pending — update cart data but don't reschedule (keep original timer)
       if (existing.status === "pending") {
         await redis.set(key, { ...existing, cartItems, cartTotal }, { ex: 86400 });
         return NextResponse.json({ ok: true, action: "cart-updated-timer-kept" });
       }
     }
 
-    // New registration or previously cancelled — schedule QStash job
     let qstashMessageId: string | undefined;
 
     if (process.env.QSTASH_TOKEN) {
       try {
         const qstash = new QStash({ token: process.env.QSTASH_TOKEN });
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace("http://localhost:3000", "https://peptobuy.com") ?? "https://peptobuy.com";
+        const siteUrl =
+          process.env.NEXT_PUBLIC_SITE_URL?.replace("http://localhost:3000", "https://peptobuy.com") ??
+          "https://peptobuy.com";
 
         const msg = await qstash.publishJSON({
-          url: `${siteUrl}/api/send-abandoned-checkout-email`,
+          url: `${siteUrl}/api/send-abandoned-cart-email`,
           body: { email: email.toLowerCase(), cartItems, cartTotal },
           delay: DELAY_SECONDS,
         });
         qstashMessageId = msg.messageId;
       } catch (err) {
-        console.error("[register-checkout] QStash schedule failed:", err);
-        // Non-fatal — still save record, old browser timer will fire
+        console.error("[register-cart-abandonment] QStash schedule failed:", err);
       }
     }
 
-    const record: AbandonedRecord = {
+    const record: CartAbandonedRecord = {
       email: email.toLowerCase(),
       cartItems,
       cartTotal,
@@ -104,10 +93,9 @@ export async function POST(request: Request) {
     };
 
     await redis.set(key, record, { ex: 86400 });
-
     return NextResponse.json({ ok: true, action: "registered", scheduled: !!qstashMessageId });
   } catch (err) {
-    console.error("[register-checkout]", err);
+    console.error("[register-cart-abandonment]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

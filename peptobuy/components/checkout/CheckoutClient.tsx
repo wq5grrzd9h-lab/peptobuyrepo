@@ -450,15 +450,28 @@ export default function CheckoutClient() {
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
 
-  // Prefill email from cart capture localStorage
+  // Prefill email from cart capture localStorage + cancel cart abandonment job
   useEffect(() => {
+    let prefillEmail = "";
     try {
       const stored = localStorage.getItem(LS_EMAIL_KEY);
       if (stored && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stored)) {
         setContact({ email: stored });
         setEmailPrefilled(true);
+        prefillEmail = stored;
       }
     } catch { /* ignore */ }
+
+    // Cancel cart abandonment job — user reached checkout, no longer abandoned
+    const cartEmail = (() => { try { return localStorage.getItem("cartEmail") ?? ""; } catch { return ""; } })();
+    const emailToCancel = cartEmail || prefillEmail;
+    if (emailToCancel) {
+      fetch("/api/cancel-abandoned-cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailToCancel, type: "cart" }),
+      }).catch((err) => console.error("[cancel-cart-abandonment]", err));
+    }
   }, []);
 
   // Sync email back to localStorage when changed (and re-register)
@@ -655,21 +668,25 @@ export default function CheckoutClient() {
     }).catch(err => console.error("[sendOrderEmail]", err));
   };
 
-  // Cancel abandoned cart on Redis + clear localStorage capture keys
+  // Cancel both abandonment jobs on Redis + clear localStorage capture keys
   const cancelAbandonedCart = () => {
     const email = contact.email;
     if (email) {
+      // Cancel checkout abandonment
       fetch("/api/cancel-abandoned-cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      }).catch((err) => console.error("[cancel-abandoned-cart]", err));
+        body: JSON.stringify({ email, type: "checkout" }),
+      }).catch((err) => console.error("[cancel-checkout-abandonment]", err));
     }
     try {
       localStorage.removeItem(LS_EMAIL_KEY);
       localStorage.removeItem("checkoutCartSnapshot");
       localStorage.removeItem("checkoutStarted");
+      localStorage.removeItem("cartEmail");
+      localStorage.removeItem("cartEmailSnapshot");
       sessionStorage.removeItem("capturedEmail");
+      sessionStorage.removeItem("cartEmailCaptured");
     } catch { /* ignore */ }
   };
 
