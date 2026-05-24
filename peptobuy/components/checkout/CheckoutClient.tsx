@@ -11,6 +11,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart, lineUnitPrice } from "@/context/CartContext";
 import CheckoutSummary from "./CheckoutSummary";
+import { isFreeShippingWeekend } from "@/lib/memorialDay";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -179,9 +180,14 @@ function ShippingStep({ data, errors, onChange }: { data: ShippingForm; errors: 
 }
 
 function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; setMethod: (m: ShippingMethod) => void; subtotal: number }) {
-  const freeStandard = subtotal >= 300;
+  const freeWeekend = isFreeShippingWeekend();
+  const freeStandard = freeWeekend || subtotal >= 300;
   const options = [
-    { id: "standard" as ShippingMethod, icon: Truck, label: "Standard Shipping", sub: "3–5 business days", price: freeStandard ? "Free" : "$9.99", priceNum: freeStandard ? 0 : 9.99 },
+    {
+      id: "standard" as ShippingMethod, icon: Truck, label: "Standard Shipping",
+      sub: freeWeekend ? "3–5 business days · 🎖️ Memorial Day Free Shipping" : "3–5 business days",
+      price: freeStandard ? "Free" : "$9.99", priceNum: freeStandard ? 0 : 9.99,
+    },
     { id: "express" as ShippingMethod, icon: Zap, label: "Express Shipping", sub: "1–2 business days", price: "$19.99", priceNum: 19.99 },
   ];
   return (
@@ -459,6 +465,15 @@ export default function CheckoutClient() {
         setContact({ email: stored });
         setEmailPrefilled(true);
         prefillEmail = stored;
+      } else {
+        // Fall back to cartEmail (captured via cart gate)
+        const cartFallback = localStorage.getItem("cartEmail");
+        if (cartFallback && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cartFallback)) {
+          localStorage.setItem(LS_EMAIL_KEY, cartFallback);
+          setContact({ email: cartFallback });
+          setEmailPrefilled(true);
+          prefillEmail = cartFallback;
+        }
       }
     } catch { /* ignore */ }
 
@@ -513,7 +528,11 @@ export default function CheckoutClient() {
   const [zelleSubmitting, setZelleSubmitting] = useState(false);
   const [zelleError, setZelleError] = useState<string | null>(null);
 
-  const shippingCost = shippingMethod === "express" ? 19.99 : subtotal >= 300 ? 0 : 9.99;
+  const shippingCost = shippingMethod === "express"
+    ? 19.99
+    : (isFreeShippingWeekend() || subtotal >= 300)
+    ? 0
+    : 9.99;
   const discountedSubtotal = subtotal - discountAmount;
   const total = discountedSubtotal + shippingCost;
 

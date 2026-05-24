@@ -7,6 +7,11 @@ export function isPromoActive(): boolean {
   return Date.now() < MEMORIAL_DAY_END.getTime();
 }
 
+/** Free shipping on ALL orders during Memorial Day weekend (same deadline as the promo). */
+export function isFreeShippingWeekend(): boolean {
+  return Date.now() < MEMORIAL_DAY_END.getTime();
+}
+
 export interface TimeRemaining {
   days: number;
   hours: number;

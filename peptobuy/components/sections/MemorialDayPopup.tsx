@@ -136,6 +136,19 @@ export default function MemorialDayPopup() {
               Auto-applied at $250+
             </p>
           </div>
+
+          {/* Card 3 — Free Shipping (spans both columns) */}
+          <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 sm:col-span-2">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🎖️</span>
+              <div>
+                <p className="text-sm font-black text-sky-800">FREE Shipping All Weekend</p>
+                <p className="mt-0.5 text-[12px] text-sky-700">
+                  No minimum required — free shipping on every order through Monday midnight.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* CTA */}

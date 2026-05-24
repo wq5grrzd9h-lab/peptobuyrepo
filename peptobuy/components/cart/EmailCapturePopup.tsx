@@ -196,9 +196,17 @@ export function useCheckoutNavigate() {
 
   function navigateToCheckout(openPopup: () => void) {
     try {
-      const stored = localStorage.getItem(LS_EMAIL_KEY);
-      if (stored && EMAIL_RE.test(stored)) {
-        // Already have email — go straight to checkout
+      // Check checkoutEmail first
+      const checkoutEmail = localStorage.getItem(LS_EMAIL_KEY);
+      if (checkoutEmail && EMAIL_RE.test(checkoutEmail)) {
+        router.push("/checkout");
+        return;
+      }
+      // Fall back to cartEmail (captured via cart gate)
+      const cartEmail = localStorage.getItem("cartEmail");
+      if (cartEmail && EMAIL_RE.test(cartEmail)) {
+        // Copy to checkoutEmail so checkout page pre-fills correctly
+        try { localStorage.setItem(LS_EMAIL_KEY, cartEmail); } catch { /* ignore */ }
         router.push("/checkout");
         return;
       }

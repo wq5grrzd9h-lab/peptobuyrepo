@@ -88,6 +88,8 @@ export default function OrderConfirmationPage() {
       localStorage.removeItem("cartEmailSnapshot");
       sessionStorage.removeItem("capturedEmail");
       sessionStorage.removeItem("cartEmailCaptured");
+      sessionStorage.removeItem("cartAbandonmentSent");
+      sessionStorage.removeItem("checkoutAbandonmentSent");
     } catch { /* ignore */ }
   }, [router]);
 

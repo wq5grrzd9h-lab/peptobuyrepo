@@ -6,6 +6,7 @@ import { ArrowLeft, ShieldCheck, Tag, X, Check, ArrowRight } from "lucide-react"
 import { useCart } from "@/context/CartContext";
 import EmailCapturePopup, { getStoredCheckoutEmail, useCheckoutNavigate } from "@/components/cart/EmailCapturePopup";
 import ExpressCheckout from "@/components/cart/ExpressCheckout";
+import { isFreeShippingWeekend } from "@/lib/memorialDay";
 
 const SHIPPING_THRESHOLD = 300;
 const SHIPPING_COST = 9.99;
@@ -47,7 +48,8 @@ export default function OrderSummary() {
     } catch { /* ignore */ }
   }, []);
 
-  const isFreeShipping = subtotal >= SHIPPING_THRESHOLD;
+  const freeWeekend = isFreeShippingWeekend();
+  const isFreeShipping = freeWeekend || subtotal >= SHIPPING_THRESHOLD;
   const shipping = isFreeShipping ? 0 : SHIPPING_COST;
   const discountedSubtotal = subtotal - discountAmount;
   const total = discountedSubtotal + shipping;
@@ -91,7 +93,13 @@ export default function OrderSummary() {
           <Row
             label="Shipping"
             value={isFreeShipping ? "Free" : `$${shipping.toFixed(2)}`}
-            sub={!isFreeShipping ? `Add $${toFreeShipping.toFixed(2)} more for free shipping` : undefined}
+            sub={
+              freeWeekend
+                ? "🎖️ Memorial Day Weekend"
+                : !isFreeShipping
+                ? `Add $${toFreeShipping.toFixed(2)} more for free shipping`
+                : undefined
+            }
             accent={isFreeShipping}
           />
         </div>

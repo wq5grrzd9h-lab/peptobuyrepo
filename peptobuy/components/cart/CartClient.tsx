@@ -1,37 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ShoppingBag, ArrowRight, Trash2 } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { useCart, lineUnitPrice } from "@/context/CartContext";
 import CartItemRow from "@/components/cart/CartItemRow";
 import OrderSummary from "@/components/cart/OrderSummary";
 import {
   isPromoActive,
+  isFreeShippingWeekend,
   getTimeRemaining,
   pad,
   FREE_GHKCU_THRESHOLD,
   type TimeRemaining,
 } from "@/lib/memorialDay";
-import CartAbandonmentPopup, { getStoredCartEmail } from "@/components/cart/CartAbandonmentPopup";
 import EmailCapturePopup, { useCheckoutNavigate } from "@/components/cart/EmailCapturePopup";
+import { useExitDetection } from "@/hooks/useExitDetection";
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const LS_CART_EMAIL_KEY = "cartEmail";
+const LS_CART_SNAPSHOT_KEY = "cartEmailSnapshot";
+const SS_ABANDONMENT_SENT = "cartAbandonmentSent";
+const SHIPPING_THRESHOLD = 300;
+const SHIPPING_COST = 9.99;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ─── Mini countdown ──────────────────────────────────────────────────────────
 
 function MiniCountdown() {
   const [time, setTime] = useState<TimeRemaining>(() => getTimeRemaining());
-
   useEffect(() => {
     if (time.expired) return;
-    const id = setInterval(() => {
-      const t = getTimeRemaining();
-      setTime(t);
-    }, 1000);
+    const id = setInterval(() => setTime(getTimeRemaining()), 1000);
     return () => clearInterval(id);
   }, [time.expired]);
-
   if (time.expired) return <span className="font-bold text-red-700">SALE ENDED</span>;
-
   return (
     <span className="font-black tabular-nums text-red-800">
       {pad(time.days)}d {pad(time.hours)}h {pad(time.mins)}m {pad(time.secs)}s
@@ -39,7 +43,7 @@ function MiniCountdown() {
   );
 }
 
-// ─── Free gift line item ─────────────────────────────────────────────────────
+// ─── Free gift row ────────────────────────────────────────────────────────────
 
 function FreeGiftRow({ label, urgency }: { label: string; urgency?: string }) {
   return (
@@ -62,6 +66,8 @@ function FreeGiftRow({ label, urgency }: { label: string; urgency?: string }) {
     </div>
   );
 }
+
+// ─── Skeleton ────────────────────────────────────────────────────────────────
 
 function Skeleton() {
   return (
@@ -86,6 +92,8 @@ function Skeleton() {
     </div>
   );
 }
+
+// ─── Empty cart ───────────────────────────────────────────────────────────────
 
 function EmptyCart() {
   return (
@@ -119,12 +127,128 @@ function EmptyCart() {
   );
 }
 
-const SS_CART_POPUP_KEY = "cartEmailCaptured";
+// ─── Email gate ───────────────────────────────────────────────────────────────
 
-const SHIPPING_THRESHOLD = 300;
-const SHIPPING_COST = 9.99;
+function CartEmailGate({ onCapture }: { onCapture: () => void }) {
+  const { items } = useCart();
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-// ─── Sticky mobile checkout bar ──────────────────────────────────────────────
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(val)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    // Build snapshot from current cart
+    const cartItems = items.map((item) => ({
+      name: item.product.name,
+      dose: item.selectedDose.size,
+      price: lineUnitPrice(item),
+      quantity: item.quantity,
+    }));
+    const cartTotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
+
+    // Persist
+    try {
+      localStorage.setItem(LS_CART_EMAIL_KEY, val);
+      localStorage.setItem(LS_CART_SNAPSHOT_KEY, JSON.stringify(cartItems));
+      localStorage.setItem("checkoutStarted", new Date().toISOString());
+    } catch { /* ignore */ }
+
+    // Register cart abandonment (fire-and-forget, non-blocking)
+    fetch("/api/register-cart-abandonment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: val, cartItems, cartTotal }),
+    }).catch(console.error);
+
+    onCapture();
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-md">
+        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_4px_32px_rgba(0,0,0,0.08)]">
+          {/* Pink header */}
+          <div className="bg-accent px-6 py-5 text-center">
+            <p className="text-xl font-black tracking-tight text-white">PeptoBuy</p>
+            <p className="mt-0.5 text-xs font-medium text-white/70">Research-Grade Peptides</p>
+          </div>
+
+          <div className="px-7 py-8">
+            {/* Icon + heading */}
+            <div className="mb-6 text-center">
+              <div className="mb-4 mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent/8">
+                <ShoppingBag size={24} className="text-accent" />
+              </div>
+              <h1 className="text-xl font-black tracking-tight text-zinc-900">
+                Enter your email to view your cart
+              </h1>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                We&apos;ll save your cart and send your order confirmation.
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div>
+                <input
+                  ref={inputRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  inputMode="email"
+                  className={[
+                    "w-full rounded-xl border px-4 py-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none transition-all",
+                    error
+                      ? "border-red-400 focus:ring-2 focus:ring-red-400/20"
+                      : "border-zinc-200 focus:border-accent focus:ring-2 focus:ring-accent/20",
+                  ].join(" ")}
+                />
+                {error && <p className="mt-1.5 text-[12px] font-medium text-red-500">{error}</p>}
+              </div>
+
+              <button
+                type="submit"
+                className="flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-accent text-[15px] font-black text-white shadow-[0_0_24px_rgba(255,45,120,0.25)] transition-all hover:bg-accent-hover active:scale-[0.98]"
+              >
+                View My Cart <ArrowRight size={16} />
+              </button>
+            </form>
+
+            <p className="mt-3 text-center text-[12px] text-zinc-400">
+              🔒 No spam. Used for order updates only.
+            </p>
+
+            {/* Memorial Day urgency */}
+            {isPromoActive() && (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center">
+                <p className="text-[13px] font-bold text-red-700">
+                  ⚡ Memorial Day sale active — Free gifts with your order.
+                </p>
+                <p className="mt-0.5 text-[12px] text-red-600">
+                  Enter your email to claim yours.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sticky mobile checkout bar ───────────────────────────────────────────────
 
 function StickyMobileCheckoutBar() {
   const { subtotal, discountAmount } = useCart();
@@ -132,12 +256,12 @@ function StickyMobileCheckoutBar() {
   const { navigateToCheckout } = useCheckoutNavigate();
 
   const discountedSub = subtotal - (discountAmount ?? 0);
-  const shipping = discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const freeWeekend = isFreeShippingWeekend();
+  const shipping = freeWeekend || discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = discountedSub + shipping;
 
   return (
     <>
-      {/* Fixed bar — mobile only */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-3 border-t border-zinc-200 bg-white/95 px-4 py-3 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm lg:hidden"
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
@@ -158,84 +282,104 @@ function StickyMobileCheckoutBar() {
   );
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function CartClient() {
   const { items, totalCount, subtotal, hydrated, clearCart } = useCart();
   const [promoActive, setPromoActive] = useState(() => isPromoActive());
-  const [showCartEmailPopup, setShowCartEmailPopup] = useState(false);
 
+  // null = not checked yet (avoid gate flash for returning users)
+  const [emailCaptured, setEmailCaptured] = useState<boolean | null>(null);
+
+  // Check localStorage for existing email after hydration
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(LS_CART_EMAIL_KEY);
+      setEmailCaptured(!!stored && EMAIL_RE.test(stored));
+    } catch {
+      setEmailCaptured(false);
+    }
+  }, []);
+
+  // Auto-expire promo ticker
   useEffect(() => {
     if (!promoActive) return;
-    const id = setInterval(() => {
-      if (!isPromoActive()) setPromoActive(false);
-    }, 5000);
+    const id = setInterval(() => { if (!isPromoActive()) setPromoActive(false); }, 5000);
     return () => clearInterval(id);
   }, [promoActive]);
 
-  // Cart abandonment capture — 8s timer + exit intent
-  useEffect(() => {
-    function shouldShow(): boolean {
+  // ── Exit detection — fire beacon when leaving with captured email ──────────
+  const handleCartExit = useCallback(() => {
+    try {
+      const storedEmail = localStorage.getItem(LS_CART_EMAIL_KEY);
+      const snapshot = localStorage.getItem(LS_CART_SNAPSHOT_KEY);
+      if (!storedEmail || !snapshot) return;
       try {
-        if (sessionStorage.getItem(SS_CART_POPUP_KEY)) return false;
-        if (getStoredCartEmail()) return false; // already captured this email
+        if (sessionStorage.getItem(SS_ABANDONMENT_SENT)) return;
+        sessionStorage.setItem(SS_ABANDONMENT_SENT, "1");
       } catch { /* ignore */ }
-      return true;
-    }
+      const cartItems = JSON.parse(snapshot) as Array<{ price: number; quantity: number }>;
+      const cartTotal = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
+      navigator.sendBeacon(
+        "/api/send-abandoned-cart-email-now",
+        JSON.stringify({ email: storedEmail, cartItems, cartTotal }),
+      );
+    } catch { /* ignore */ }
+  }, []);
 
-    // 8-second timer
-    const timer = setTimeout(() => {
-      if (shouldShow()) setShowCartEmailPopup(true);
-    }, 8000);
+  useExitDetection(handleCartExit);
 
-    // Exit intent
-    function handleExitIntent(e: MouseEvent) {
-      if (e.clientY < 50 && shouldShow()) {
-        setShowCartEmailPopup(true);
-      }
-    }
-
-    document.addEventListener("mousemove", handleExitIntent);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("mousemove", handleExitIntent);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (!hydrated) return <Skeleton />;
+  // Show skeleton until both cart and email state are ready
+  if (!hydrated || emailCaptured === null) return <Skeleton />;
   if (items.length === 0) return <EmptyCart />;
+
+  // Show email gate before cart contents
+  if (!emailCaptured) {
+    return <CartEmailGate onCapture={() => setEmailCaptured(true)} />;
+  }
 
   const hasGhkCu = subtotal >= FREE_GHKCU_THRESHOLD;
   const toUnlock = Math.max(0, FREE_GHKCU_THRESHOLD - subtotal);
+  const freeWeekend = isFreeShippingWeekend();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 pb-28 sm:px-6 lg:px-8 lg:pb-10">
       <div className="mb-4">
         <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">Review</p>
         <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">Your Cart</h1>
-        <p className="mt-1.5 text-sm text-zinc-500">{totalCount} {totalCount === 1 ? "item" : "items"}</p>
+        <p className="mt-1.5 text-sm text-zinc-500">
+          {totalCount} {totalCount === 1 ? "item" : "items"}
+        </p>
       </div>
 
-      {/* ── Compact gift status strip (always visible when promo active) ── */}
+      {/* ── Free shipping weekend banner ───────────────────── */}
+      {freeWeekend && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <span className="text-base">🎖️</span>
+          <div>
+            <p className="text-sm font-bold text-emerald-700">
+              FREE SHIPPING applied — Memorial Day Weekend only!
+            </p>
+            <p className="text-[12px] text-emerald-600">Ends Monday May 26 at midnight.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Compact gift strip (mobile) ────────────────────── */}
       {promoActive && (
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 lg:hidden">
-          <span className="text-sm font-bold text-emerald-700">
-            ✅ Free BAC Water &amp; Syringes added
-          </span>
+          <span className="text-sm font-bold text-emerald-700">✅ Free BAC Water &amp; Syringes added</span>
           {hasGhkCu ? (
-            <span className="text-sm font-bold text-amber-700">
-              🎁 Free GHK-Cu (100mg) unlocked!
-            </span>
+            <span className="text-sm font-bold text-amber-700">🎁 Free GHK-Cu (100mg) unlocked!</span>
           ) : (
             <span className="text-sm text-zinc-700">
-              🎁 Add{" "}
-              <span className="font-bold text-zinc-900">${toUnlock.toFixed(2)}</span>
-              {" "}more for free GHK-Cu
+              🎁 Add <span className="font-bold text-zinc-900">${toUnlock.toFixed(2)}</span> more for free GHK-Cu
             </span>
           )}
         </div>
       )}
 
-      {/* Memorial Day promo summary box — desktop only (mobile uses compact strip above) */}
+      {/* ── Memorial Day promo box (desktop) ───────────────── */}
       {promoActive && (
         <div
           className="mb-6 hidden overflow-hidden rounded-2xl border border-red-200 lg:block"
@@ -286,11 +430,11 @@ export default function CartClient() {
         </div>
       )}
 
+      {/* ── Cart grid ──────────────────────────────────────── */}
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div>
           <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white divide-y divide-zinc-100 shadow-sm">
             {items.map((item) => <CartItemRow key={item.product.id} item={item} />)}
-            {/* Free gift rows — display only */}
             {promoActive && (
               <FreeGiftRow
                 label="BAC Water (10ml) + Syringes — Memorial Day Gift"
@@ -300,7 +444,9 @@ export default function CartClient() {
             {promoActive && hasGhkCu && <FreeGiftRow label="GHK-Cu (100mg)" />}
           </div>
           <div className="mt-4 flex items-center justify-between">
-            <Link href="/shop" className="text-sm text-zinc-400 transition-colors hover:text-zinc-600">← Continue Shopping</Link>
+            <Link href="/shop" className="text-sm text-zinc-400 transition-colors hover:text-zinc-600">
+              ← Continue Shopping
+            </Link>
             <button onClick={clearCart} className="flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-red-500">
               <Trash2 size={13} /> Clear cart
             </button>
@@ -310,12 +456,6 @@ export default function CartClient() {
           <OrderSummary />
         </div>
       </div>
-
-      {/* Cart abandonment email capture */}
-      <CartAbandonmentPopup
-        open={showCartEmailPopup}
-        onClose={() => setShowCartEmailPopup(false)}
-      />
 
       {/* Sticky mobile checkout bar */}
       <StickyMobileCheckoutBar />

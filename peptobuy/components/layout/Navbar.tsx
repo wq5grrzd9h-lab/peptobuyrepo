@@ -6,7 +6,7 @@ import { Search, ShoppingCart, Menu, X, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
 import { useSearch } from "@/context/SearchContext";
-import { getTimeRemaining, isPromoActive, pad } from "@/lib/memorialDay";
+import { getTimeRemaining, isPromoActive, isFreeShippingWeekend, pad } from "@/lib/memorialDay";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/shop" },
@@ -102,7 +102,10 @@ export default function Navbar() {
               <span className="opacity-60">·</span>
               <span>COA On Request</span>
               <span className="opacity-60">·</span>
-              <span>Free Shipping Over $300</span>
+              {isFreeShippingWeekend()
+                ? <span className="font-black">🎖️ FREE SHIPPING ALL WEEKEND — Memorial Day Sale · Ends Monday Midnight</span>
+                : <span>Free Shipping Over $300</span>
+              }
               <span className="opacity-60">·</span>
             </span>
           ))}
