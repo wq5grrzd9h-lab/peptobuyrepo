@@ -14,6 +14,7 @@ import {
   type TimeRemaining,
 } from "@/lib/memorialDay";
 import CartAbandonmentPopup, { getStoredCartEmail } from "@/components/cart/CartAbandonmentPopup";
+import EmailCapturePopup, { useCheckoutNavigate } from "@/components/cart/EmailCapturePopup";
 
 // ─── Mini countdown ──────────────────────────────────────────────────────────
 
@@ -120,6 +121,43 @@ function EmptyCart() {
 
 const SS_CART_POPUP_KEY = "cartEmailCaptured";
 
+const SHIPPING_THRESHOLD = 300;
+const SHIPPING_COST = 9.99;
+
+// ─── Sticky mobile checkout bar ──────────────────────────────────────────────
+
+function StickyMobileCheckoutBar() {
+  const { subtotal, discountAmount } = useCart();
+  const [emailPopupOpen, setEmailPopupOpen] = useState(false);
+  const { navigateToCheckout } = useCheckoutNavigate();
+
+  const discountedSub = subtotal - (discountAmount ?? 0);
+  const shipping = discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const total = discountedSub + shipping;
+
+  return (
+    <>
+      {/* Fixed bar — mobile only */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-3 border-t border-zinc-200 bg-white/95 px-4 py-3 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm lg:hidden"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Total</p>
+          <p className="text-xl font-black tabular-nums text-zinc-900">${total.toFixed(2)}</p>
+        </div>
+        <button
+          onClick={() => navigateToCheckout(() => setEmailPopupOpen(true))}
+          className="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-accent text-[15px] font-black text-white shadow-[0_0_24px_rgba(255,45,120,0.3)] active:scale-[0.97]"
+        >
+          Checkout Now <ArrowRight size={16} />
+        </button>
+      </div>
+      <EmailCapturePopup open={emailPopupOpen} onClose={() => setEmailPopupOpen(false)} />
+    </>
+  );
+}
+
 export default function CartClient() {
   const { items, totalCount, subtotal, hydrated, clearCart } = useCart();
   const [promoActive, setPromoActive] = useState(() => isPromoActive());
@@ -170,17 +208,37 @@ export default function CartClient() {
   const toUnlock = Math.max(0, FREE_GHKCU_THRESHOLD - subtotal);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8">
+    <div className="mx-auto max-w-7xl px-4 py-10 pb-28 sm:px-6 lg:px-8 lg:pb-10">
+      <div className="mb-4">
         <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-accent">Review</p>
         <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">Your Cart</h1>
         <p className="mt-1.5 text-sm text-zinc-500">{totalCount} {totalCount === 1 ? "item" : "items"}</p>
       </div>
 
-      {/* Memorial Day promo summary box */}
+      {/* ── Compact gift status strip (always visible when promo active) ── */}
+      {promoActive && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 lg:hidden">
+          <span className="text-sm font-bold text-emerald-700">
+            ✅ Free BAC Water &amp; Syringes added
+          </span>
+          {hasGhkCu ? (
+            <span className="text-sm font-bold text-amber-700">
+              🎁 Free GHK-Cu (100mg) unlocked!
+            </span>
+          ) : (
+            <span className="text-sm text-zinc-700">
+              🎁 Add{" "}
+              <span className="font-bold text-zinc-900">${toUnlock.toFixed(2)}</span>
+              {" "}more for free GHK-Cu
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Memorial Day promo summary box — desktop only (mobile uses compact strip above) */}
       {promoActive && (
         <div
-          className="mb-6 overflow-hidden rounded-2xl border border-red-200"
+          className="mb-6 hidden overflow-hidden rounded-2xl border border-red-200 lg:block"
           style={{ background: "linear-gradient(135deg,#fff5f5 0%,#fff 100%)" }}
         >
           <div
@@ -258,6 +316,9 @@ export default function CartClient() {
         open={showCartEmailPopup}
         onClose={() => setShowCartEmailPopup(false)}
       />
+
+      {/* Sticky mobile checkout bar */}
+      <StickyMobileCheckoutBar />
     </div>
   );
 }

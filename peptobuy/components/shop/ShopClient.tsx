@@ -13,6 +13,12 @@ import {
 import ProductCard from "@/components/ui/ProductCard";
 import PriceRangeSlider from "@/components/shop/PriceRangeSlider";
 import CTABoxes from "@/components/sections/CTABoxes";
+import {
+  isPromoActive,
+  getTimeRemaining,
+  pad,
+  type TimeRemaining,
+} from "@/lib/memorialDay";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -48,6 +54,134 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 const CATEGORY_COUNTS = Object.fromEntries(
   shopCategories.map((cat) => [cat, products.filter((p) => p.category === cat).length])
 ) as Record<Category, number>;
+
+// Best sellers for Most Popular row
+const BEST_SELLER_IDS = ["rtglp3", "bpc-157", "tesamorelin"] as const;
+const BEST_SELLERS = BEST_SELLER_IDS.map((id) => products.find((p) => p.id === id)).filter(Boolean) as typeof products;
+
+// ─── Memorial Day Banner ──────────────────────────────────────────────────────
+
+function ShopMemorialBanner() {
+  const [time, setTime] = useState<TimeRemaining>(() => getTimeRemaining());
+
+  useEffect(() => {
+    if (time.expired) return;
+    const id = setInterval(() => setTime(getTimeRemaining()), 1000);
+    return () => clearInterval(id);
+  }, [time.expired]);
+
+  if (time.expired) return null;
+
+  return (
+    <div
+      className="mb-8 overflow-hidden rounded-2xl"
+      style={{ background: "linear-gradient(135deg,#8B0000 0%,#c0392b 100%)" }}
+    >
+      <div className="px-5 py-6 text-center sm:px-8">
+        {/* Title */}
+        <div className="mb-1 flex items-center justify-center gap-2">
+          <span className="text-2xl sm:text-3xl">🇺🇸</span>
+          <h2 className="text-xl font-black tracking-tight text-white sm:text-3xl">
+            Memorial Day Sale
+          </h2>
+          <span className="text-2xl sm:text-3xl">🇺🇸</span>
+        </div>
+        <p className="mb-4 text-sm font-semibold text-white/70 sm:text-base">
+          Biggest sale of the year — free gifts on every order
+        </p>
+
+        {/* Countdown */}
+        <div className="mb-5 flex items-center justify-center gap-1.5">
+          <span className="text-sm font-bold text-white/60 sm:text-base">Ends in:</span>
+          <div className="flex items-end gap-1">
+            {(
+              [
+                { val: pad(time.days), label: "days" },
+                { val: pad(time.hours), label: "hrs" },
+                { val: pad(time.mins), label: "min" },
+                { val: pad(time.secs), label: "sec" },
+              ] as const
+            ).map(({ val, label }, i) => (
+              <>
+                {i > 0 && (
+                  <span key={`sep-${label}`} className="mb-3 text-lg font-black text-white/50">:</span>
+                )}
+                <div key={label} className="flex flex-col items-center">
+                  <div className="min-w-[2.5rem] rounded-xl bg-white/15 px-2.5 py-1.5 text-2xl font-black tabular-nums text-white shadow-inner sm:min-w-[3rem] sm:text-3xl">
+                    {val}
+                  </div>
+                  <span className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/50 sm:text-[10px]">
+                    {label}
+                  </span>
+                </div>
+              </>
+            ))}
+          </div>
+        </div>
+
+        {/* Gift pills */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          {[
+            { emoji: "🎁", text: "Free BAC Water + Syringes", sub: "every order" },
+            { emoji: "💛", text: "Free GHK-Cu (100mg)", sub: "orders $250+" },
+            { emoji: "⚠️", text: "Only 11 kits left", sub: "while supplies last", urgent: true },
+          ].map(({ emoji, text, sub, urgent }) => (
+            <div
+              key={text}
+              className={[
+                "flex items-center gap-2 rounded-xl px-4 py-2.5 sm:flex-col sm:items-center sm:gap-1",
+                urgent ? "bg-white/20 ring-1 ring-white/40" : "bg-white/10",
+              ].join(" ")}
+            >
+              <span className="text-lg">{emoji}</span>
+              <div className="text-left sm:text-center">
+                <p className={["text-sm font-black text-white", urgent ? "text-yellow-200" : ""].join(" ")}>
+                  {text}
+                </p>
+                <p className="text-[11px] text-white/60">{sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Most Popular ─────────────────────────────────────────────────────────────
+
+function MostPopular() {
+  return (
+    <div className="mb-10">
+      <div className="mb-4 flex items-center gap-2.5">
+        <span className="text-xl">🔥</span>
+        <h2 className="text-lg font-black text-zinc-900 sm:text-xl">Most Popular</h2>
+        <span className="rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+          Best Sellers
+        </span>
+      </div>
+
+      {/* Horizontal scroll on mobile, 3-col grid on sm+ */}
+      <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0">
+        {BEST_SELLERS.map((product) => (
+          <div
+            key={product.id}
+            className="w-[78vw] shrink-0 sm:w-auto"
+          >
+            <ProductCard product={product} />
+          </div>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div className="mt-8 flex items-center gap-4">
+        <div className="h-px flex-1 bg-zinc-200" />
+        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">All Products</span>
+        <div className="h-px flex-1 bg-zinc-200" />
+      </div>
+    </div>
+  );
+}
 
 // ─── FilterPanel ─────────────────────────────────────────────────────────────
 
@@ -309,6 +443,9 @@ export default function ShopClient({ initialCategory }: { initialCategory?: stri
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
 
+      {/* ── Memorial Day banner (auto-hides when promo expired) ── */}
+      {isPromoActive() && <ShopMemorialBanner />}
+
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
@@ -355,6 +492,9 @@ export default function ShopClient({ initialCategory }: { initialCategory?: stri
           </button>
         ))}
       </div>
+
+      {/* ── Most Popular ─────────────────────────────────────── */}
+      {filters.categories.length === 0 && !loading && <MostPopular />}
 
       {/* ── Non-category active filter tags ─────────────────── */}
       {activeTags.filter((t) => !t.key.startsWith("cat:")).length > 0 && (

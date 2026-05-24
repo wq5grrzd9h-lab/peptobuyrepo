@@ -22,7 +22,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const unitPrice = selectedDose.price + (recon && !isEssentials ? RECONSTITUTION_PRICE : 0);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // don't navigate if card image wraps a link
+    e.preventDefault();
+    e.stopPropagation();
     if (!product.inStock || added) return;
     addItem(product, selectedDose, 1, !isEssentials && recon);
     toast.cart(
@@ -35,8 +36,19 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:border-accent/40 hover:shadow-[0_4px_24px_rgba(255,45,120,0.10)]">
-      {/* Image */}
-      <Link href={`/shop/${product.id}`} className="relative block aspect-square overflow-hidden">
+
+      {/* ── Full-card link overlay ──────────────────────────
+          Catches taps on image / price / any dead zone.
+          Interactive elements sit above it via z-[1].       */}
+      <Link
+        href={`/shop/${product.id}`}
+        className="absolute inset-0 z-0 rounded-2xl"
+        aria-label={`View ${product.name}`}
+        tabIndex={-1}
+      />
+
+      {/* ── Image ─────────────────────────────────────────── */}
+      <div className="relative aspect-[4/3] overflow-hidden sm:aspect-square">
         <Image
           src={product.image}
           alt={product.name}
@@ -45,14 +57,15 @@ export default function ProductCard({ product }: { product: Product }) {
           className="object-contain transition-all duration-300 group-hover:scale-105 group-hover:[filter:drop-shadow(0_0_14px_rgba(255,45,120,0.22))]"
         />
         {product.badge && (
-          <div className="absolute left-3 top-3">
+          <div className="absolute left-3 top-3 z-[1]">
             <Badge label={product.badge} variant={resolveBadgeVariant(product.badge)} />
           </div>
         )}
-      </Link>
+      </div>
 
-      {/* Info */}
-      <div className="flex flex-1 flex-col gap-2.5 p-4">
+      {/* ── Info ──────────────────────────────────────────── */}
+      <div className="relative z-[1] flex flex-1 flex-col gap-2.5 p-4">
+
         {/* Category + research badge */}
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
@@ -63,21 +76,21 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         </div>
 
-        {/* Name */}
-        <Link href={`/shop/${product.id}`}>
-          <h3 className="text-sm font-semibold leading-snug text-zinc-900 transition-colors hover:text-accent">
+        {/* Name — larger on mobile */}
+        <Link href={`/shop/${product.id}`} className="z-[1]">
+          <h3 className="text-base font-bold leading-snug text-zinc-900 transition-colors hover:text-accent sm:text-sm sm:font-semibold">
             {product.name}
           </h3>
         </Link>
 
         {/* ── Dose selector ───────────────────────────────── */}
         {product.doses.length > 1 ? (
-          <div className="relative">
+          <div className="relative z-[1]">
             <select
               value={doseIdx}
               onChange={(e) => setDoseIdx(Number(e.target.value))}
-              onClick={(e) => e.preventDefault()}
-              className="w-full appearance-none rounded-lg border border-zinc-200 bg-white py-1.5 pl-3 pr-7 text-xs font-semibold text-zinc-900 transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full appearance-none rounded-lg border border-zinc-200 bg-white py-2 pl-3 pr-7 text-sm font-semibold text-zinc-900 transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20 sm:py-1.5 sm:text-xs"
             >
               {product.doses.map((dose, i) => (
                 <option key={dose.size} value={i}>
@@ -91,14 +104,17 @@ export default function ProductCard({ product }: { product: Product }) {
             />
           </div>
         ) : (
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 py-1.5 pl-3 text-xs font-semibold text-zinc-700">
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 py-2 pl-3 text-sm font-semibold text-zinc-700 sm:py-1.5 sm:text-xs">
             {product.doses[0].size}
           </div>
         )}
 
-        {/* ── Reconstitution toggle (hidden for BAC Water / Essentials) ── */}
+        {/* ── Reconstitution toggle (hidden for Essentials) ── */}
         {!isEssentials && (
-          <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-2.5 py-2 transition-colors hover:border-zinc-300">
+          <label
+            className="relative z-[1] flex cursor-pointer items-start gap-2 rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-2.5 py-2 transition-colors hover:border-zinc-300"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div
               className={[
                 "mt-px flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-all",
@@ -120,9 +136,9 @@ export default function ProductCard({ product }: { product: Product }) {
           </label>
         )}
 
-        {/* ── Live unit price ──────────────────────────────── */}
+        {/* ── Live unit price — larger on mobile ───────────── */}
         <div className="flex items-baseline gap-1.5">
-          <span className="text-lg font-black text-zinc-900">${unitPrice.toFixed(2)}</span>
+          <span className="text-xl font-black text-zinc-900 sm:text-lg">${unitPrice.toFixed(2)}</span>
           <span className="text-xs text-zinc-400">/ {selectedDose.size}</span>
         </div>
 
@@ -142,11 +158,12 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
 
+          {/* Taller button on mobile — 56px vs 42px on desktop */}
           <button
             onClick={handleAddToCart}
             disabled={!product.inStock}
             className={[
-              "flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]",
+              "relative z-[1] flex w-full items-center justify-center gap-2 rounded-lg py-3.5 text-[15px] font-bold transition-all duration-200 active:scale-[0.97] sm:py-2.5 sm:text-sm sm:font-semibold",
               added
                 ? "bg-emerald-500 text-white"
                 : "bg-accent text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400",

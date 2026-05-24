@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Tag, X, Check, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import EmailCapturePopup, { getStoredCheckoutEmail, useCheckoutNavigate } from "@/components/cart/EmailCapturePopup";
+import ExpressCheckout from "@/components/cart/ExpressCheckout";
 
 const SHIPPING_THRESHOLD = 300;
 const SHIPPING_COST = 9.99;
@@ -102,8 +103,8 @@ export default function OrderSummary() {
           <span className="text-2xl font-black text-zinc-900">${total.toFixed(2)}</span>
         </div>
 
-        {/* Estimated delivery */}
-        <p className="mt-2 text-center text-[12px] text-zinc-400">
+        {/* Estimated delivery — hidden on mobile, visible on sm+ */}
+        <p className="mt-2 hidden text-center text-[12px] text-zinc-400 sm:block">
           📦 Estimated delivery: 3–7 business days
         </p>
 
@@ -162,8 +163,8 @@ export default function OrderSummary() {
           </div>
         )}
 
-        {/* Trust badges */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        {/* Trust badges — hidden on mobile */}
+        <div className="mt-4 hidden grid-cols-3 gap-2 sm:grid">
           {TRUST_BADGES.map(({ emoji, label }) => (
             <div
               key={label}
@@ -177,9 +178,12 @@ export default function OrderSummary() {
 
         {/* Checkout CTA */}
         <div className="mt-4 flex flex-col gap-3">
+          {/* Express checkout (Apple Pay / Google Pay) — shows only when browser supports it */}
+          <ExpressCheckout />
+
           <button
             onClick={() => navigateToCheckout(() => setEmailPopupOpen(true))}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 text-[15px] font-black text-white shadow-[0_0_28px_rgba(255,45,120,0.25)] transition-all hover:bg-accent-hover hover:shadow-[0_0_40px_rgba(255,45,120,0.4)] active:scale-[0.98]"
+            className="flex h-[60px] w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 text-[16px] font-black text-white shadow-[0_0_28px_rgba(255,45,120,0.25)] transition-all hover:bg-accent-hover hover:shadow-[0_0_40px_rgba(255,45,120,0.4)] active:scale-[0.98] sm:h-auto sm:py-4 sm:text-[15px]"
           >
             Proceed to Secure Checkout <ArrowRight size={17} />
           </button>
@@ -192,7 +196,7 @@ export default function OrderSummary() {
         <EmailCapturePopup open={emailPopupOpen} onClose={() => setEmailPopupOpen(false)} />
       </div>
 
-      <div className="flex items-center justify-center gap-2 border-t border-zinc-100 px-5 py-3">
+      <div className="hidden items-center justify-center gap-2 border-t border-zinc-100 px-5 py-3 sm:flex">
         <ShieldCheck size={13} className="text-zinc-300" />
         <span className="text-[11px] text-zinc-400">Secure checkout — 256-bit SSL encryption</span>
       </div>

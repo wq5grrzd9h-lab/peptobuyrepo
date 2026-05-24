@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, Zap, Minus, Plus, Check, Info } from "lucide-react";
 import { Product } from "@/lib/products";
@@ -40,6 +40,21 @@ export default function ProductActions({ product }: { product: Product }) {
   const [recon, setRecon] = useState(false);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+
+  // Sticky bar visibility — show when main CTA buttons scroll off screen
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const [stickyVisible, setStickyVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "0px 0px -10% 0px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const isEssentials = product.category === "Essentials";
   const unitPrice = selectedDose.price + (recon && !isEssentials ? RECONSTITUTION_PRICE : 0);
@@ -169,7 +184,7 @@ export default function ProductActions({ product }: { product: Product }) {
       </div>
 
       {/* ── CTA buttons ──────────────────────────────────────── */}
-      <div className="flex gap-3">
+      <div ref={ctaRef} className="flex gap-3">
         <button
           onClick={handleAddToCart}
           disabled={!product.inStock}
@@ -215,6 +230,59 @@ export default function ProductActions({ product }: { product: Product }) {
           <p className="mt-0.5 text-[11px] text-red-700 opacity-80">
             Ends Monday May 26, 2026 at 11:59 PM EST
           </p>
+        </div>
+      )}
+
+      {/* ── Sticky mobile add-to-cart bar ────────────────────
+          Appears when the main CTA buttons scroll off screen.
+          Hidden on lg+ (desktop has sidebar layout).          */}
+      {stickyVisible && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-200 bg-white/95 px-4 py-3 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm lg:hidden"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            {/* Product info */}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-zinc-900">{product.name}</p>
+              <p className="text-base font-black text-accent">${unitPrice.toFixed(2)}</p>
+            </div>
+
+            {/* Qty mini stepper */}
+            <div className="flex items-center overflow-hidden rounded-xl border border-zinc-200 bg-white">
+              <button
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                disabled={qty <= 1}
+                className="flex h-10 w-9 items-center justify-center text-zinc-400 transition-colors hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-30"
+              >
+                <Minus size={13} />
+              </button>
+              <span className="min-w-[1.75rem] text-center text-sm font-bold tabular-nums text-zinc-900">
+                {qty}
+              </span>
+              <button
+                onClick={() => setQty((q) => Math.min(99, q + 1))}
+                disabled={qty >= 99}
+                className="flex h-10 w-9 items-center justify-center text-zinc-400 transition-colors hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-30"
+              >
+                <Plus size={13} />
+              </button>
+            </div>
+
+            {/* Add to cart */}
+            <button
+              onClick={handleAddToCart}
+              disabled={!product.inStock}
+              className={[
+                "flex h-[52px] min-w-[140px] items-center justify-center gap-2 rounded-xl text-[15px] font-black text-white transition-all active:scale-[0.97] disabled:opacity-40",
+                added
+                  ? "bg-emerald-500 shadow-[0_0_20px_rgba(52,211,153,0.3)]"
+                  : "bg-accent shadow-[0_0_20px_rgba(255,45,120,0.25)] hover:bg-accent-hover",
+              ].join(" ")}
+            >
+              {added ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> Add to Cart</>}
+            </button>
+          </div>
         </div>
       )}
     </div>
