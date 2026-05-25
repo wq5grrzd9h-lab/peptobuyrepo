@@ -210,6 +210,9 @@ function customerEmailHtml(d: OrderEmailPayload): string {
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  console.log("send-order-emails called");
+  console.log("Resend key exists:", !!process.env.RESEND_API_KEY);
+
   if (!process.env.RESEND_API_KEY) {
     console.warn("[send-order-emails] RESEND_API_KEY not set — skipping email send");
     return NextResponse.json({ ok: true, skipped: true });
@@ -218,6 +221,10 @@ export async function POST(request: Request) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const payload: OrderEmailPayload = await request.json();
+    console.log("Sending to customer:", payload.customerEmail, "| order:", payload.orderNumber);
+    console.log("Sending to", INTERNAL_EMAIL);
+    console.log("From:", RESEND_FROM);
+
     const timestamp = new Date().toLocaleString("en-US", {
       timeZone: "America/New_York",
       dateStyle: "medium",
@@ -238,6 +245,11 @@ export async function POST(request: Request) {
         html: customerEmailHtml(payload),
       }),
     ]);
+
+    console.log("Resend internal result:", internalResult.status,
+      internalResult.status === "fulfilled" ? internalResult.value : internalResult.reason);
+    console.log("Resend customer result:", customerResult.status,
+      customerResult.status === "fulfilled" ? customerResult.value : customerResult.reason);
 
     if (internalResult.status === "rejected") {
       console.error("[send-order-emails] Internal email failed:", internalResult.reason);

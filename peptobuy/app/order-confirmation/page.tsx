@@ -58,13 +58,69 @@ export default function OrderConfirmationPage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("Order confirmation page loaded", window.location.search);
     let email = "";
     try {
       const raw = localStorage.getItem("peptobuy-last-order");
-      if (!raw) { router.replace("/"); return; }
-      const parsed = JSON.parse(raw) as OrderData;
-      setOrder(parsed);
-      email = parsed.email ?? "";
+
+      if (!raw) {
+        // Check if this is a Stripe redirect (3DS / bank auth)
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectStatus = urlParams.get("redirect_status");
+        const paymentIntent = urlParams.get("payment_intent");
+
+        if (redirectStatus === "succeeded" && paymentIntent) {
+          // ── Server-side email (primary): confirm-and-email retrieves order
+          // data from Stripe metadata and sends both emails with Redis dedup.
+          // This works even if localStorage was cleared.
+          console.log("Stripe redirect — calling confirm-and-email for", paymentIntent);
+          fetch("/api/confirm-and-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentIntentId: paymentIntent }),
+          })
+            .then(r => r.json())
+            .then(d => console.log("confirm-and-email result:", d))
+            .catch(err => console.error("[order-confirm confirm-and-email]", err));
+
+          // ── Client-side restore (for UI): read pending order from localStorage
+          const pendingRaw = localStorage.getItem("peptobuy-pending-stripe-order");
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw) as OrderData & { promoCode?: string; discountAmount?: number };
+            const orderData: OrderData = { ...pending, paymentMethod: "card" };
+
+            localStorage.setItem("peptobuy-last-order", JSON.stringify(orderData));
+            localStorage.removeItem("peptobuy-pending-stripe-order");
+            localStorage.removeItem("peptobuy-cart-v2"); // clear cart
+            setOrder(orderData);
+            email = orderData.email ?? "";
+          } else {
+            // No pending order in localStorage (user switched device / cleared storage).
+            // confirm-and-email already handled the email. Show a generic success page.
+            console.warn("No pending order in localStorage — order email sent via Stripe metadata");
+            const fallbackOrder: OrderData = {
+              orderNumber: paymentIntent.slice(-8).toUpperCase(),
+              email: "",
+              placedAt: new Date().toISOString(),
+              paymentMethod: "card",
+              items: [],
+              subtotal: 0,
+              shippingCost: 0,
+              total: 0,
+              shippingAddress: { firstName: "", lastName: "", address: "", city: "", state: "", zip: "", country: "" },
+              shippingMethod: "standard",
+            };
+            setOrder(fallbackOrder);
+          }
+        } else {
+          router.replace("/");
+          return;
+        }
+      } else {
+        const parsed = JSON.parse(raw) as OrderData;
+        setOrder(parsed);
+        email = parsed.email ?? "";
+      }
     } catch { router.replace("/"); } finally { setLoading(false); }
 
     // Cancel both abandonment jobs and clear all capture keys

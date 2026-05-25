@@ -272,7 +272,12 @@ function PaymentMethodToggle({ active, onChange }: { active: PaymentMethod; onCh
 
 // ─── Stripe payment form ──────────────────────────────────────────────────────
 
-function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSuccess: () => void }) {
+function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
+  onBack: () => void;
+  /** Generates order number + pre-saves pending order; returns the order number. */
+  onPrepare: () => Promise<string>;
+  onSuccess: (orderNumber: string) => void;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -286,6 +291,18 @@ function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSucces
     setSubmitting(true);
     setStripeError(null);
 
+    // Pre-save pending order BEFORE confirmPayment in case Stripe redirects (3DS).
+    // If redirect happens, onSuccess() never fires — order-confirmation page recovers.
+    let orderNumber: string;
+    try {
+      orderNumber = await onPrepare();
+    } catch (err) {
+      console.error("[StripePaymentForm] prepareOrder failed:", err);
+      setStripeError("Failed to prepare order. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: `${window.location.origin}/order-confirmation` },
@@ -293,11 +310,14 @@ function StripePaymentForm({ onBack, onSuccess }: { onBack: () => void; onSucces
     });
 
     if (error) {
+      // Payment failed — clean up the pending order we pre-saved
+      try { localStorage.removeItem("peptobuy-pending-stripe-order"); } catch {}
       setStripeError(error.message ?? "Payment failed. Please try again.");
       setSubmitting(false);
       return;
     }
-    onSuccess();
+    // No redirect — payment completed in-page
+    onSuccess(orderNumber);
   };
 
   return (
@@ -519,6 +539,8 @@ export default function CheckoutClient() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [intentLoading, setIntentLoading] = useState(false);
   const [intentError, setIntentError] = useState<string | null>(null);
+  // Stored when PI is created so prepareStripeOrder reuses the same order number
+  const [stripeOrderNumber, setStripeOrderNumber] = useState<string | null>(null);
 
   // Crypto
   const [cryptoSubmitting, setCryptoSubmitting] = useState(false);
@@ -581,7 +603,9 @@ export default function CheckoutClient() {
     };
   }, [contact.email, items, shipping.firstName, shipping.lastName, subtotal, discountAmount]);
 
-  // Fetch Stripe intent only when card is selected at step 3
+  // Fetch Stripe intent only when card is selected at step 3.
+  // We pass full metadata (email, name, items, address) so /api/confirm-and-email
+  // can reconstruct the order from Stripe if a redirect happens (3DS etc).
   useEffect(() => {
     if (step !== 3 || paymentMethod !== "card" || clientSecret || intentLoading || total <= 0) return;
     setIntentLoading(true);
@@ -589,16 +613,33 @@ export default function CheckoutClient() {
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: total }),
+      body: JSON.stringify({
+        amount: total,
+        customerEmail: contact.email,
+        customerName: `${shipping.firstName} ${shipping.lastName}`.trim(),
+        // Compact format to stay under Stripe's 500-char metadata limit per value
+        cartItems: items.map((i) => ({
+          n: i.product.name,
+          d: i.selectedDose.size,
+          q: i.quantity,
+          p: lineUnitPrice(i),
+          r: i.reconstitution ? 1 : 0,
+        })),
+        subtotal,
+        shipping: shippingCost,
+        shippingAddress: shipping,
+      }),
     })
       .then((r) => r.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);
         setClientSecret(data.clientSecret);
+        // Store server-generated order number — reused in prepareStripeOrder
+        if (data.orderNumber) setStripeOrderNumber(data.orderNumber);
       })
       .catch((err: Error) => setIntentError(err.message))
       .finally(() => setIntentLoading(false));
-  }, [step, paymentMethod, clientSecret, intentLoading, total]);
+  }, [step, paymentMethod, clientSecret, intentLoading, total]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearFieldError = (f: string) => setErrors((e) => { const n = { ...e }; delete n[f]; return n; });
   const updateContact = (f: string, v: string) => { setContact((p) => ({ ...p, [f]: v } as ContactForm)); clearFieldError(f); };
@@ -662,29 +703,37 @@ export default function CheckoutClient() {
 
   // Fire-and-forget — never blocks navigation
   const sendOrderEmail = (orderNumber: string, method: PaymentMethod) => {
-    fetch("/api/send-order-emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orderNumber,
-        customerEmail: contact.email,
-        customerName: `${shipping.firstName} ${shipping.lastName}`,
-        items: items.map(i => ({
-          name: i.product.name,
-          dose: i.selectedDose.size,
-          quantity: i.quantity,
-          price: lineUnitPrice(i),
-          reconstitution: i.reconstitution ?? false,
-        })),
-        subtotal,
-        discountCode: promoCode ?? undefined,
-        discountAmount: discountAmount > 0 ? discountAmount : undefined,
-        shipping: shippingCost,
-        total,
-        paymentMethod: method,
-        shippingAddress: shipping,
-      }),
-    }).catch(err => console.error("[sendOrderEmail]", err));
+    console.log("Calling send-order-emails", { orderNumber, customerEmail: contact.email, method });
+    try {
+      fetch("/api/send-order-emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber,
+          customerEmail: contact.email,
+          customerName: `${shipping.firstName} ${shipping.lastName}`,
+          items: items.map(i => ({
+            name: i.product.name,
+            dose: i.selectedDose.size,
+            quantity: i.quantity,
+            price: lineUnitPrice(i),
+            reconstitution: i.reconstitution ?? false,
+          })),
+          subtotal,
+          discountCode: promoCode ?? undefined,
+          discountAmount: discountAmount > 0 ? discountAmount : undefined,
+          shipping: shippingCost,
+          total,
+          paymentMethod: method,
+          shippingAddress: shipping,
+        }),
+      })
+        .then(r => r.json())
+        .then(d => console.log("Email result:", d))
+        .catch(err => console.error("[sendOrderEmail] fetch failed:", err));
+    } catch (err) {
+      console.error("[sendOrderEmail] error:", err);
+    }
   };
 
   // Cancel both abandonment jobs on Redis + clear localStorage capture keys
@@ -709,11 +758,47 @@ export default function CheckoutClient() {
     } catch { /* ignore */ }
   };
 
-  const handleStripeSuccess = async () => {
+  // Called BEFORE stripe.confirmPayment — pre-saves order to localStorage so the
+  // order-confirmation page can recover it if Stripe redirects (3DS etc) and
+  // onSuccess never fires. Reuses the order number from PI creation so it matches
+  // the one already stored in Stripe metadata (used by /api/confirm-and-email).
+  const prepareStripeOrder = async (): Promise<string> => {
+    // Use server-generated order number from PI creation (or fall back to API call)
+    const orderNumber = stripeOrderNumber ?? await getOrderNumber();
+    cancelAbandonedCart();
+    try {
+      localStorage.setItem("peptobuy-pending-stripe-order", JSON.stringify({
+        orderNumber,
+        email: contact.email,
+        placedAt: new Date().toISOString(),
+        items: items.map((i) => ({
+          productId: i.product.id,
+          name: i.product.name,
+          price: lineUnitPrice(i),
+          quantity: i.quantity,
+          image: i.product.image,
+          category: i.product.category,
+          selectedDose: i.selectedDose.size,
+          reconstitution: i.reconstitution,
+        })),
+        subtotal,
+        discountAmount,
+        promoCode,
+        shippingCost,
+        total,
+        shippingAddress: shipping,
+        shippingMethod,
+        paymentMethod: "card",
+      }));
+    } catch { /* ignore */ }
+    return orderNumber;
+  };
+
+  const handleStripeSuccess = (orderNumber: string) => {
     orderCompletedRef.current = true;
     if (abandonedTimerRef.current) clearTimeout(abandonedTimerRef.current);
-    cancelAbandonedCart();
-    const orderNumber = await getOrderNumber();
+    // Remove pending order — it completed in-page (no redirect)
+    try { localStorage.removeItem("peptobuy-pending-stripe-order"); } catch {}
     saveOrder(orderNumber, { paymentMethod: "card" });
     sendOrderEmail(orderNumber, "card");
     markPromoUsed();
@@ -842,7 +927,11 @@ export default function CheckoutClient() {
                   )}
                   {clientSecret && !intentLoading && (
                     <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-                      <StripePaymentForm onBack={handleBack} onSuccess={handleStripeSuccess} />
+                      <StripePaymentForm
+                        onBack={handleBack}
+                        onPrepare={prepareStripeOrder}
+                        onSuccess={handleStripeSuccess}
+                      />
                     </Elements>
                   )}
                 </>
