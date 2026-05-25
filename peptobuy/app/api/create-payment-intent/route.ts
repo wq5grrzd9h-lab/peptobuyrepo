@@ -64,9 +64,23 @@ export async function POST(request: Request) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // cents
       currency: "usd",
-      // Card only — eliminates redirect-based BNPL methods (Affirm, Klarna, etc.)
+      // Card only — eliminates Affirm, Klarna, and all BNPL redirect methods
       // that bypass the client-side onSuccess handler.
       payment_method_types: ["card"],
+      receipt_email: customerEmail || undefined,
+      description: `PeptoBuy Order ${orderNumber}${customerName ? ` — ${customerName}` : ""}`,
+      ...(addr && addr.firstName ? {
+        shipping: {
+          name: `${addr.firstName} ${addr.lastName}`.trim(),
+          address: {
+            line1: addr.address,
+            city: addr.city,
+            state: addr.state,
+            postal_code: addr.zip,
+            country: addr.country || "US",
+          },
+        },
+      } : {}),
       metadata: {
         orderNumber,
         customerEmail: customerEmail ?? "",
