@@ -95,7 +95,7 @@ export default function OrderSummary() {
             value={isFreeShipping ? "Free" : `$${shipping.toFixed(2)}`}
             sub={
               freeWeekend
-                ? "🎖️ Memorial Day Weekend"
+                ? "🎖️ Flash Sale Free Shipping — Ends TONIGHT"
                 : !isFreeShipping
                 ? `Add $${toFreeShipping.toFixed(2)} more for free shipping`
                 : undefined

@@ -185,7 +185,7 @@ function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; s
   const options = [
     {
       id: "standard" as ShippingMethod, icon: Truck, label: "Standard Shipping",
-      sub: freeWeekend ? "3–5 business days · 🎖️ Memorial Day Free Shipping" : "3–5 business days",
+      sub: freeWeekend ? "3–5 business days · 🎖️ Flash Sale Free Shipping (Ends Tonight)" : "3–5 business days",
       price: freeStandard ? "Free" : "$9.99", priceNum: freeStandard ? 0 : 9.99,
     },
     { id: "express" as ShippingMethod, icon: Zap, label: "Express Shipping", sub: "1–2 business days", price: "$19.99", priceNum: 19.99 },
