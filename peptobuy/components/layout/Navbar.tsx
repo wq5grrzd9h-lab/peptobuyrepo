@@ -49,7 +49,7 @@ function MemorialDayCountdown() {
           <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.secs)}s</span>
         </span>
       )}
-      <span className="hidden sm:inline">· Ends Monday May 26 at Midnight · Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 11 Left!</span>)</span>
+      <span className="hidden sm:inline">· Ends TONIGHT May 26 at Midnight EST · Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 11 Left!</span>)</span>
     </div>
   );
 }
@@ -103,7 +103,7 @@ export default function Navbar() {
               <span>COA On Request</span>
               <span className="opacity-60">·</span>
               {isFreeShippingWeekend()
-                ? <span className="font-black">🎖️ FREE SHIPPING ALL WEEKEND — Memorial Day Sale · Ends Monday Midnight</span>
+                ? <span className="font-black">🎖️ FREE SHIPPING — Memorial Day Sale · Ends TONIGHT at Midnight EST</span>
                 : <span>Free Shipping Over $300</span>
               }
               <span className="opacity-60">·</span>

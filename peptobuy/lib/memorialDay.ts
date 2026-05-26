@@ -1,29 +1,20 @@
 // Memorial Day promotion constants & helpers
-// Phase 1: ends May 25 2026 11:59:59 PM EST
-// Phase 2: auto-extends to May 26 2026 11:59:59 PM EST if visited after phase 1 ends
+// Sale ends: Tuesday May 26 2026 11:59:59 PM EST (UTC-5) — no further extensions
 
-const PHASE_1 = new Date("2026-05-25T23:59:59-05:00"); // May 25 11:59:59 PM EST
-const PHASE_2 = new Date("2026-05-26T23:59:59-05:00"); // May 26 11:59:59 PM EST
+// 2026-05-26T23:59:59-05:00 == 2026-05-27T04:59:59.000Z
+export const MEMORIAL_DAY_END = new Date("2026-05-26T23:59:59-05:00");
 
 export function getSaleEndDate(): Date {
-  const now = Date.now();
-  if (now < PHASE_1.getTime()) return PHASE_1; // before tonight — end tonight
-  if (now < PHASE_2.getTime()) return PHASE_2; // past tonight, before tomorrow — extended
-  return PHASE_2;                               // fully expired — return final date
+  return MEMORIAL_DAY_END;
 }
-
-// Derived constant for server-side code that needs a fixed value at module load time
-// (abandoned email routes, etc.) — these run at request time so getSaleEndDate() is fine,
-// but MEMORIAL_DAY_END is kept for backward compat with existing imports.
-export const MEMORIAL_DAY_END = PHASE_2;
 
 export function isPromoActive(): boolean {
-  return Date.now() < getSaleEndDate().getTime();
+  return Date.now() < MEMORIAL_DAY_END.getTime();
 }
 
-/** Free shipping on ALL orders during Memorial Day weekend. */
+/** Free shipping on ALL orders during Memorial Day sale. */
 export function isFreeShippingWeekend(): boolean {
-  return Date.now() < getSaleEndDate().getTime();
+  return Date.now() < MEMORIAL_DAY_END.getTime();
 }
 
 export interface TimeRemaining {
@@ -35,7 +26,7 @@ export interface TimeRemaining {
 }
 
 export function getTimeRemaining(): TimeRemaining {
-  const ms = Math.max(0, getSaleEndDate().getTime() - Date.now());
+  const ms = Math.max(0, MEMORIAL_DAY_END.getTime() - Date.now());
   if (ms === 0) return { days: 0, hours: 0, mins: 0, secs: 0, expired: true };
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));
   const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

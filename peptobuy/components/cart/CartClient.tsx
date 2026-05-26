@@ -358,9 +358,9 @@ export default function CartClient() {
           <span className="text-base">🎖️</span>
           <div>
             <p className="text-sm font-bold text-emerald-700">
-              FREE SHIPPING applied — Memorial Day Weekend only!
+              FREE SHIPPING applied — Ends TONIGHT at midnight EST!
             </p>
-            <p className="text-[12px] text-emerald-600">Ends Monday May 26 at midnight.</p>
+            <p className="text-[12px] text-emerald-600">Tuesday May 26 — no extensions.</p>
           </div>
         </div>
       )}

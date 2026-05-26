@@ -94,7 +94,7 @@ export default function MemorialDayPopup() {
             Memorial Day Sale
           </h2>
           <p className="mt-1 text-sm font-medium opacity-80">
-            Memorial Day Weekend Sale · Ends Monday May 26 at Midnight
+            Ends TONIGHT — Tuesday May 26 at Midnight EST
           </p>
         </div>
 
@@ -144,7 +144,7 @@ export default function MemorialDayPopup() {
               <div>
                 <p className="text-sm font-black text-sky-800">FREE Shipping All Weekend</p>
                 <p className="mt-0.5 text-[12px] text-sky-700">
-                  No minimum required — free shipping on every order through Monday midnight.
+                  No minimum required — free shipping on every order. Ends TONIGHT at midnight EST.
                 </p>
               </div>
             </div>

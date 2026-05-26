@@ -209,7 +209,7 @@ export default function ProductActions({ product }: { product: Product }) {
       {product.inStock && (
         <p className="text-center text-xs text-zinc-400">
           {isFreeShippingWeekend()
-            ? "🎖️ FREE SHIPPING this Memorial Day Weekend — ends Monday midnight"
+            ? "🎖️ FREE SHIPPING — Memorial Day Sale ends TONIGHT at midnight EST"
             : "Free shipping on orders over $300"}
         </p>
       )}
@@ -233,7 +233,7 @@ export default function ProductActions({ product }: { product: Product }) {
             ⚠️ Only 11 BAC Water kits remaining
           </p>
           <p className="mt-0.5 text-[11px] text-red-700 opacity-80">
-            Memorial Day Weekend Sale · Ends Monday May 26 at Midnight
+            Ends TONIGHT — Tuesday May 26 at Midnight EST. No Extensions.
           </p>
         </div>
       )}
