@@ -1,8 +1,8 @@
 // Memorial Day promotion constants & helpers
-// Promo expires: Monday May 26 2026 11:59:59 PM Eastern Time (EST = UTC-5)
+// Promo expires: Monday May 25 2026 11:59:59 PM Eastern Time (EST = UTC-5)
 
-// 2026-05-26T23:59:59-05:00 == 2026-05-27T04:59:59.000Z
-export const MEMORIAL_DAY_END = new Date("2026-05-26T23:59:59-05:00");
+// 2026-05-25T23:59:59-05:00 == 2026-05-26T04:59:59.000Z
+export const MEMORIAL_DAY_END = new Date("2026-05-25T23:59:59-05:00");
 
 export function isPromoActive(): boolean {
   return Date.now() < MEMORIAL_DAY_END.getTime();
