@@ -14,9 +14,16 @@ function TrustBadge({ icon: Icon, label }: { icon: React.ElementType; label: str
   );
 }
 
-export default function CheckoutSummary({ shippingCost }: { shippingCost: number }) {
+export default function CheckoutSummary({
+  shippingCost,
+  taxAmount = null,
+}: {
+  shippingCost: number;
+  /** null = not yet computed (show "Calculated at checkout") · 0 = tax-exempt · >0 = actual tax */
+  taxAmount?: number | null;
+}) {
   const { items, subtotal, discountAmount, promoCode } = useCart();
-  const total = subtotal - discountAmount + shippingCost;
+  const total = subtotal - discountAmount + shippingCost + (taxAmount ?? 0);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
@@ -95,6 +102,19 @@ export default function CheckoutSummary({ shippingCost }: { shippingCost: number
                 <span className="text-emerald-600">Free</span>
               ) : (
                 `$${shippingCost.toFixed(2)}`
+              )}
+            </span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-zinc-500">Tax</span>
+            <span className="tabular-nums text-zinc-900">
+              {taxAmount === null ? (
+                <span className="italic text-zinc-400 text-xs">Calculated at checkout</span>
+              ) : taxAmount === 0 ? (
+                <span className="text-zinc-400">$0.00</span>
+              ) : (
+                `$${taxAmount.toFixed(2)}`
               )}
             </span>
           </div>

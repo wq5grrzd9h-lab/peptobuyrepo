@@ -31,6 +31,7 @@ interface OrderEmailPayload {
   discountCode?: string;
   discountAmount?: number;
   shipping: number;
+  taxAmount?: number;
   total: number;
   paymentMethod: "card" | "crypto" | "zelle";
   shippingAddress: ShippingAddress;
@@ -92,6 +93,7 @@ function internalEmailHtml(d: OrderEmailPayload, timestamp: string): string {
         <tr><td style="padding:4px 0;font-size:13px;color:#71717a;">Subtotal</td><td style="padding:4px 0;font-size:13px;text-align:right;color:#18181b;">$${d.subtotal.toFixed(2)}</td></tr>
         ${d.discountAmount ? `<tr><td style="padding:4px 0;font-size:13px;color:#16a34a;font-weight:600;">Discount (${d.discountCode})</td><td style="padding:4px 0;font-size:13px;text-align:right;color:#16a34a;font-weight:600;">-$${d.discountAmount.toFixed(2)}</td></tr>` : ""}
         <tr><td style="padding:4px 0;font-size:13px;color:#71717a;">Shipping</td><td style="padding:4px 0;font-size:13px;text-align:right;color:#18181b;">${d.shipping === 0 ? "Free" : `$${d.shipping.toFixed(2)}`}</td></tr>
+        ${(d.taxAmount ?? 0) > 0 ? `<tr><td style="padding:4px 0;font-size:13px;color:#71717a;">Tax</td><td style="padding:4px 0;font-size:13px;text-align:right;color:#18181b;">$${(d.taxAmount ?? 0).toFixed(2)}</td></tr>` : ""}
         <tr style="border-top:1px solid #e5e5e5;">
           <td style="padding:10px 0 4px;font-size:14px;font-weight:700;color:#18181b;">Total</td>
           <td style="padding:10px 0 4px;font-size:16px;font-weight:800;text-align:right;color:#ff2d78;">$${d.total.toFixed(2)}</td>
@@ -173,6 +175,7 @@ function customerEmailHtml(d: OrderEmailPayload): string {
         <tr><td style="padding:3px 0;font-size:13px;color:#71717a;">Subtotal</td><td style="padding:3px 0;font-size:13px;text-align:right;color:#18181b;">$${d.subtotal.toFixed(2)}</td></tr>
         ${d.discountAmount ? `<tr><td style="padding:3px 0;font-size:13px;color:#16a34a;font-weight:600;">Discount (${d.discountCode})</td><td style="padding:3px 0;font-size:13px;text-align:right;color:#16a34a;font-weight:600;">-$${d.discountAmount.toFixed(2)}</td></tr>` : ""}
         <tr><td style="padding:3px 0;font-size:13px;color:#71717a;">Shipping</td><td style="padding:3px 0;font-size:13px;text-align:right;color:#18181b;">${d.shipping === 0 ? "Free" : `$${d.shipping.toFixed(2)}`}</td></tr>
+        ${(d.taxAmount ?? 0) > 0 ? `<tr><td style="padding:3px 0;font-size:13px;color:#71717a;">Tax</td><td style="padding:3px 0;font-size:13px;text-align:right;color:#18181b;">$${(d.taxAmount ?? 0).toFixed(2)}</td></tr>` : ""}
         <tr style="border-top:2px solid #e5e5e5;">
           <td style="padding:10px 0 0;font-size:14px;font-weight:700;color:#18181b;">Total</td>
           <td style="padding:10px 0 0;font-size:17px;font-weight:800;text-align:right;color:#ff2d78;">$${d.total.toFixed(2)}</td>

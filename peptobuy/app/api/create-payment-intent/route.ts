@@ -61,26 +61,34 @@ export async function POST(request: Request) {
     const orderNumber = await generateOrderNumber();
     const addr = shippingAddress;
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // cents
+    const shippingBlock = addr && addr.firstName ? {
+      shipping: {
+        name: `${addr.firstName} ${addr.lastName}`.trim(),
+        address: {
+          line1: addr.address,
+          city: addr.city,
+          state: addr.state,
+          postal_code: addr.zip,
+          country: addr.country || "US",
+        },
+      },
+    } : {};
+
+    const sentCents = Math.round(amount * 100);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const piParams: any = {
+      amount: sentCents,
       currency: "usd",
       // Card only — eliminates Affirm, Klarna, and all BNPL redirect methods
       // that bypass the client-side onSuccess handler.
       payment_method_types: ["card"],
+      // Stripe Tax: automatically calculates and adds tax based on shipping address.
+      // Requires Stripe Tax to be activated in the Stripe Dashboard.
+      automatic_tax: { enabled: true },
       receipt_email: customerEmail || undefined,
       description: `PeptoBuy Order ${orderNumber}${customerName ? ` — ${customerName}` : ""}`,
-      ...(addr && addr.firstName ? {
-        shipping: {
-          name: `${addr.firstName} ${addr.lastName}`.trim(),
-          address: {
-            line1: addr.address,
-            city: addr.city,
-            state: addr.state,
-            postal_code: addr.zip,
-            country: addr.country || "US",
-          },
-        },
-      } : {}),
+      ...shippingBlock,
       metadata: {
         orderNumber,
         customerEmail: customerEmail ?? "",
@@ -98,12 +106,32 @@ export async function POST(request: Request) {
         shippingZip: addr?.zip ?? "",
         shippingCountry: addr?.country ?? "",
       },
-    });
+    };
+
+    const paymentIntent = await stripe.paymentIntents.create(piParams);
+
+    // Stripe Tax adds computed tax to the amount field when automatic_tax.status = "complete".
+    // taxCents = 0 if tax-exempt, not computed, or Stripe Tax not configured.
+    const taxCents = Math.max(0, paymentIntent.amount - sentCents);
+    const taxAmount = taxCents / 100;
+    const totalWithTax = paymentIntent.amount / 100;
+
+    // Patch metadata with final tax + total so /api/confirm-and-email can include it
+    if (taxCents > 0) {
+      await stripe.paymentIntents.update(paymentIntent.id, {
+        metadata: {
+          taxAmount: taxAmount.toString(),
+          total: totalWithTax.toString(),
+        },
+      });
+    }
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
       orderNumber,
+      taxAmount,      // 0 if tax-exempt or Stripe Tax not active
+      totalWithTax,   // authoritative total from Stripe (includes tax)
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";

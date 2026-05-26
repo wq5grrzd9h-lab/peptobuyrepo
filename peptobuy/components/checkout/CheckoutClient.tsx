@@ -541,6 +541,8 @@ export default function CheckoutClient() {
   const [intentError, setIntentError] = useState<string | null>(null);
   // Stored when PI is created so prepareStripeOrder reuses the same order number
   const [stripeOrderNumber, setStripeOrderNumber] = useState<string | null>(null);
+  // Tax computed by Stripe Tax (null = not yet known, 0 = exempt, >0 = actual)
+  const [taxAmount, setTaxAmount] = useState<number | null>(null);
 
   // Crypto
   const [cryptoSubmitting, setCryptoSubmitting] = useState(false);
@@ -556,7 +558,10 @@ export default function CheckoutClient() {
     ? 0
     : 9.99;
   const discountedSubtotal = subtotal - discountAmount;
-  const total = discountedSubtotal + shippingCost;
+  // preTaxTotal is sent to Stripe; Stripe adds tax and returns totalWithTax
+  const preTaxTotal = discountedSubtotal + shippingCost;
+  // total = what the customer actually pays (includes tax once computed)
+  const total = preTaxTotal + (taxAmount ?? 0);
 
   // Fire InitiateCheckout with value when user reaches payment step
   useEffect(() => {
@@ -606,15 +611,16 @@ export default function CheckoutClient() {
   // Fetch Stripe intent only when card is selected at step 3.
   // We pass full metadata (email, name, items, address) so /api/confirm-and-email
   // can reconstruct the order from Stripe if a redirect happens (3DS etc).
+  // We send preTaxTotal — Stripe Tax adds the computed tax, returning totalWithTax.
   useEffect(() => {
-    if (step !== 3 || paymentMethod !== "card" || clientSecret || intentLoading || total <= 0) return;
+    if (step !== 3 || paymentMethod !== "card" || clientSecret || intentLoading || preTaxTotal <= 0) return;
     setIntentLoading(true);
     setIntentError(null);
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: total,
+        amount: preTaxTotal, // pre-tax; Stripe adds tax automatically
         customerEmail: contact.email,
         customerName: `${shipping.firstName} ${shipping.lastName}`.trim(),
         // Compact format to stay under Stripe's 500-char metadata limit per value
@@ -636,10 +642,12 @@ export default function CheckoutClient() {
         setClientSecret(data.clientSecret);
         // Store server-generated order number — reused in prepareStripeOrder
         if (data.orderNumber) setStripeOrderNumber(data.orderNumber);
+        // Store Stripe-computed tax (0 if tax-exempt or Stripe Tax not active)
+        setTaxAmount(typeof data.taxAmount === "number" ? data.taxAmount : 0);
       })
       .catch((err: Error) => setIntentError(err.message))
       .finally(() => setIntentLoading(false));
-  }, [step, paymentMethod, clientSecret, intentLoading, total]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, paymentMethod, clientSecret, intentLoading, preTaxTotal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearFieldError = (f: string) => setErrors((e) => { const n = { ...e }; delete n[f]; return n; });
   const updateContact = (f: string, v: string) => { setContact((p) => ({ ...p, [f]: v } as ContactForm)); clearFieldError(f); };
@@ -723,7 +731,8 @@ export default function CheckoutClient() {
           discountCode: promoCode ?? undefined,
           discountAmount: discountAmount > 0 ? discountAmount : undefined,
           shipping: shippingCost,
-          total,
+          taxAmount: taxAmount ?? 0,
+          total, // includes tax for card payments
           paymentMethod: method,
           shippingAddress: shipping,
         }),
@@ -785,7 +794,8 @@ export default function CheckoutClient() {
         discountAmount,
         promoCode,
         shippingCost,
-        total,
+        taxAmount: taxAmount ?? 0,
+        total, // includes tax
         shippingAddress: shipping,
         shippingMethod,
         paymentMethod: "card",
@@ -951,7 +961,7 @@ export default function CheckoutClient() {
         </div>
 
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <CheckoutSummary shippingCost={shippingCost} />
+          <CheckoutSummary shippingCost={shippingCost} taxAmount={step === 3 && paymentMethod === "card" ? taxAmount : null} />
         </div>
       </div>
     </div>
