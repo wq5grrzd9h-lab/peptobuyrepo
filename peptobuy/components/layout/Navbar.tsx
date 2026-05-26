@@ -35,7 +35,7 @@ function MemorialDayCountdown() {
       style={{ background: "#8B0000" }}
       aria-label="Memorial Day Sale countdown"
     >
-      <span>🇺🇸 Memorial Day Sale</span>
+      <span>🇺🇸 Memorial Day Weekend Sale</span>
       {time.expired ? (
         <span className="rounded-full bg-white/20 px-3 py-0.5 text-[12px]">SALE ENDED</span>
       ) : (
@@ -49,7 +49,7 @@ function MemorialDayCountdown() {
           <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.secs)}s</span>
         </span>
       )}
-      <span className="hidden sm:inline">· Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 11 Left!</span>) — While Supplies Last</span>
+      <span className="hidden sm:inline">· Ends Monday May 26 at Midnight · Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 11 Left!</span>)</span>
     </div>
   );
 }

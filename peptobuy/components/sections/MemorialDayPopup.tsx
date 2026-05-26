@@ -94,7 +94,7 @@ export default function MemorialDayPopup() {
             Memorial Day Sale
           </h2>
           <p className="mt-1 text-sm font-medium opacity-80">
-            Ends Monday May 26, 2026 · 11:59 PM EST
+            Memorial Day Weekend Sale · Ends Monday May 26 at Midnight
           </p>
         </div>
 

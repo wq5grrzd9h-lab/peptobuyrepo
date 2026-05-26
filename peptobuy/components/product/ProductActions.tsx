@@ -233,7 +233,7 @@ export default function ProductActions({ product }: { product: Product }) {
             ⚠️ Only 11 BAC Water kits remaining
           </p>
           <p className="mt-0.5 text-[11px] text-red-700 opacity-80">
-            Ends Monday May 26, 2026 at 11:59 PM EST
+            Memorial Day Weekend Sale · Ends Monday May 26 at Midnight
           </p>
         </div>
       )}
