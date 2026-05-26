@@ -30,12 +30,18 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function MiniCountdown() {
   const [time, setTime] = useState<TimeRemaining>(() => getTimeRemaining());
+  const [active, setActive] = useState(() => isPromoActive());
   useEffect(() => {
-    if (time.expired) return;
-    const id = setInterval(() => setTime(getTimeRemaining()), 1000);
+    if (!active) return;
+    const id = setInterval(() => {
+      const t = getTimeRemaining();
+      setTime(t);
+      // t.expired is true only after May 31 (timer rolls over at midnight)
+      if (t.expired) setActive(false);
+    }, 1000);
     return () => clearInterval(id);
-  }, [time.expired]);
-  if (time.expired) return <span className="font-bold text-red-700">SALE ENDED</span>;
+  }, [active]);
+  if (!active) return <span className="font-bold text-red-700">SALE ENDED</span>;
   return (
     <span className="font-black tabular-nums text-red-800">
       {pad(time.days)}d {pad(time.hours)}h {pad(time.mins)}m {pad(time.secs)}s
@@ -234,7 +240,7 @@ function CartEmailGate({ onCapture }: { onCapture: () => void }) {
             {isPromoActive() && (
               <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center">
                 <p className="text-[13px] font-bold text-red-700">
-                  ⚡ Memorial Day sale active — Free gifts with your order.
+                  ⚡ Flash Sale active — Free gifts with your order.
                 </p>
                 <p className="mt-0.5 text-[12px] text-red-600">
                   Enter your email to claim yours.
@@ -360,7 +366,7 @@ export default function CartClient() {
             <p className="text-sm font-bold text-emerald-700">
               FREE SHIPPING applied — Ends TONIGHT at midnight EST!
             </p>
-            <p className="text-[12px] text-emerald-600">Tuesday May 26 — no extensions.</p>
+            <p className="text-[12px] text-emerald-600">Flash Sale through May 31 — resets daily at midnight.</p>
           </div>
         </div>
       )}
@@ -389,7 +395,7 @@ export default function CartClient() {
             className="flex items-center justify-between px-5 py-3"
             style={{ background: "linear-gradient(135deg,#8B0000 0%,#c0392b 100%)" }}
           >
-            <span className="text-sm font-black text-white">🇺🇸 Memorial Day Sale — Active</span>
+            <span className="text-sm font-black text-white">⚡ Flash Sale — Active</span>
             <span className="text-[12px] font-bold text-white/80">
               Ends in: <MiniCountdown />
             </span>
@@ -400,7 +406,7 @@ export default function CartClient() {
               <div>
                 <p className="text-sm font-bold text-emerald-700">✅ Free BAC Water &amp; Syringes — added automatically</p>
                 <p className="text-[12px] text-zinc-500">
-                  <span style={{ color: "#cc0000", fontWeight: 700 }}>⚠️ Only 11 remaining!</span>
+                  <span style={{ color: "#cc0000", fontWeight: 700 }}>⚠️ Only 6 remaining!</span>
                 </p>
               </div>
             </div>
@@ -437,8 +443,8 @@ export default function CartClient() {
             {items.map((item) => <CartItemRow key={item.product.id} item={item} />)}
             {promoActive && (
               <FreeGiftRow
-                label="BAC Water (10ml) + Syringes — Memorial Day Gift"
-                urgency="⚠️ Only 11 left!"
+                label="BAC Water (10ml) + Syringes — Flash Sale Gift"
+                urgency="⚠️ Only 6 left!"
               />
             )}
             {promoActive && hasGhkCu && <FreeGiftRow label="GHK-Cu (100mg)" />}

@@ -6,15 +6,16 @@ import { Search, ShoppingCart, Menu, X, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import PeptoBuyLogo from "@/components/ui/PeptoBuyLogo";
 import { useSearch } from "@/context/SearchContext";
-import { getTimeRemaining, isPromoActive, isFreeShippingWeekend, pad } from "@/lib/memorialDay";
+import { getTimeRemaining, getUrgencyText, isPromoActive, isFreeShippingWeekend, pad } from "@/lib/memorialDay";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/shop" },
   { label: "About", href: "/about" },
 ];
 
-function MemorialDayCountdown() {
+function FlashSaleCountdown() {
   const [time, setTime] = useState(() => getTimeRemaining());
+  const [urgency, setUrgency] = useState(() => getUrgencyText());
   const [active, setActive] = useState(() => isPromoActive());
 
   useEffect(() => {
@@ -22,34 +23,40 @@ function MemorialDayCountdown() {
     const id = setInterval(() => {
       const t = getTimeRemaining();
       setTime(t);
+      setUrgency(getUrgencyText());
+      // t.expired is true only after May 31 (getSaleEndDate rolls over at midnight)
       if (t.expired) setActive(false);
     }, 1000);
     return () => clearInterval(id);
   }, [active]);
 
-  if (!active && !time.expired) return null; // not yet mounted (SSR)
+  // Hide after final end date; suppress SSR flash
+  if (!active) return null;
 
   return (
     <div
       className="z-50 flex items-center justify-center gap-3 px-4 py-1.5 text-center text-[13px] font-bold text-white"
       style={{ background: "#8B0000" }}
-      aria-label="Memorial Day Sale countdown"
+      aria-label="Flash Sale countdown"
     >
-      <span>🇺🇸 Memorial Day Weekend Sale</span>
+      <span>⚡ FLASH SALE</span>
       {time.expired ? (
         <span className="rounded-full bg-white/20 px-3 py-0.5 text-[12px]">SALE ENDED</span>
       ) : (
-        <span className="flex items-center gap-1 font-black tabular-nums">
-          <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.days)}d</span>
-          <span className="opacity-60">:</span>
-          <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.hours)}h</span>
-          <span className="opacity-60">:</span>
-          <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.mins)}m</span>
-          <span className="opacity-60">:</span>
-          <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.secs)}s</span>
-        </span>
+        <>
+          <span className="hidden sm:inline text-white/80 text-[12px] font-semibold">{urgency}</span>
+          <span className="flex items-center gap-1 font-black tabular-nums">
+            <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.days)}d</span>
+            <span className="opacity-60">:</span>
+            <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.hours)}h</span>
+            <span className="opacity-60">:</span>
+            <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.mins)}m</span>
+            <span className="opacity-60">:</span>
+            <span className="rounded bg-white/15 px-1.5 py-0.5">{pad(time.secs)}s</span>
+          </span>
+        </>
       )}
-      <span className="hidden sm:inline">· Ends TONIGHT May 26 at Midnight EST · Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 11 Left!</span>)</span>
+      <span className="hidden sm:inline">· Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 6 Left!</span>)</span>
     </div>
   );
 }
@@ -103,7 +110,7 @@ export default function Navbar() {
               <span>COA On Request</span>
               <span className="opacity-60">·</span>
               {isFreeShippingWeekend()
-                ? <span className="font-black">🎖️ FREE SHIPPING — Memorial Day Sale · Ends TONIGHT at Midnight EST</span>
+                ? <span className="font-black">⚡ FLASH SALE — Ends TONIGHT at Midnight · Free GHK-Cu + Free BAC Water &amp; Syringes · While Supplies Last</span>
                 : <span>Free Shipping Over $300</span>
               }
               <span className="opacity-60">·</span>
@@ -112,8 +119,8 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Memorial Day countdown bar */}
-      <MemorialDayCountdown />
+      {/* Flash Sale countdown bar */}
+      <FlashSaleCountdown />
 
       {/* Research-use-only banner */}
       <div className="z-50 border-b border-amber-200 bg-amber-50 px-4 py-1.5 text-center text-[11px] font-medium text-amber-800">

@@ -6,7 +6,7 @@ import { ShoppingCart, Zap, Minus, Plus, Check, Info } from "lucide-react";
 import { Product } from "@/lib/products";
 import { useCart, RECONSTITUTION_PRICE, lineUnitPrice } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
-import { isPromoActive, isFreeShippingWeekend } from "@/lib/memorialDay";
+import { isPromoActive, isFreeShippingWeekend, getUrgencyText } from "@/lib/memorialDay";
 
 const RECON_TOOLTIP =
   "Your vial will arrive reconstituted and labeled with per-dose markings. For research use only.";
@@ -40,6 +40,7 @@ export default function ProductActions({ product }: { product: Product }) {
   const [recon, setRecon] = useState(false);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [urgencyText, setUrgencyText] = useState(() => getUrgencyText());
 
   // Sticky bar visibility — show when main CTA buttons scroll off screen
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -54,6 +55,13 @@ export default function ProductActions({ product }: { product: Product }) {
     );
     obs.observe(el);
     return () => obs.disconnect();
+  }, []);
+
+  // Refresh urgency text every 30s so "X hours left" stays accurate
+  useEffect(() => {
+    if (!isPromoActive()) return;
+    const id = setInterval(() => setUrgencyText(getUrgencyText()), 30_000);
+    return () => clearInterval(id);
   }, []);
 
   const isEssentials = product.category === "Essentials";
@@ -209,32 +217,34 @@ export default function ProductActions({ product }: { product: Product }) {
       {product.inStock && (
         <p className="text-center text-xs text-zinc-400">
           {isFreeShippingWeekend()
-            ? "🎖️ FREE SHIPPING — Memorial Day Sale ends TONIGHT at midnight EST"
+            ? "🎖️ FREE SHIPPING — Flash Sale ends TONIGHT at midnight EST"
             : "Free shipping on orders over $300"}
         </p>
       )}
 
-      {/* Memorial Day urgency banner */}
+      {/* Flash Sale urgency banner */}
       {product.inStock && isPromoActive() && (
         <div
           className="rounded-xl border border-red-200 px-4 py-3 text-center"
           style={{ background: "linear-gradient(135deg,#fff5f5 0%,#fff8f8 100%)" }}
         >
           <p className="text-[12px] font-bold text-red-800">
-            🇺🇸 Memorial Day Sale — Free gifts with every order
+            ⚡ Flash Sale — Free gifts with every order
           </p>
           <p className="mt-0.5 text-[11px] text-red-600">
             Free BAC Water + Syringes included · Free GHK-Cu on $250+ orders
           </p>
           <p className="mt-0.5 text-[11px] font-bold text-emerald-700">
-            🎖️ Free shipping on all orders this weekend
+            🎖️ Free shipping on all orders through May 31
           </p>
           <p className="mt-1 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ⚠️ Only 11 BAC Water kits remaining
+            ⚠️ Only 6 BAC Water kits remaining
           </p>
-          <p className="mt-0.5 text-[11px] text-red-700 opacity-80">
-            Ends TONIGHT — Tuesday May 26 at Midnight EST. No Extensions.
-          </p>
+          {urgencyText && (
+            <p className="mt-0.5 text-[11px] font-bold text-red-700">
+              ⏰ {urgencyText} — Ends at Midnight EST
+            </p>
+          )}
         </div>
       )}
 

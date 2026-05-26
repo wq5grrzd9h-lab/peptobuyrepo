@@ -63,14 +63,20 @@ const BEST_SELLERS = BEST_SELLER_IDS.map((id) => products.find((p) => p.id === i
 
 function ShopMemorialBanner() {
   const [time, setTime] = useState<TimeRemaining>(() => getTimeRemaining());
+  const [active, setActive] = useState(() => isPromoActive());
 
   useEffect(() => {
-    if (time.expired) return;
-    const id = setInterval(() => setTime(getTimeRemaining()), 1000);
+    if (!active) return;
+    const id = setInterval(() => {
+      const t = getTimeRemaining();
+      setTime(t);
+      // t.expired only after May 31 — timer rolls over at midnight before that
+      if (t.expired) setActive(false);
+    }, 1000);
     return () => clearInterval(id);
-  }, [time.expired]);
+  }, [active]);
 
-  if (time.expired) return null;
+  if (!active) return null;
 
   return (
     <div
@@ -80,14 +86,14 @@ function ShopMemorialBanner() {
       <div className="px-5 py-6 text-center sm:px-8">
         {/* Title */}
         <div className="mb-1 flex items-center justify-center gap-2">
-          <span className="text-2xl sm:text-3xl">🇺🇸</span>
+          <span className="text-2xl sm:text-3xl">⚡</span>
           <h2 className="text-xl font-black tracking-tight text-white sm:text-3xl">
-            Memorial Day Sale
+            🔥 FLASH SALE — TODAY ONLY
           </h2>
-          <span className="text-2xl sm:text-3xl">🇺🇸</span>
+          <span className="text-2xl sm:text-3xl">⚡</span>
         </div>
         <p className="mb-4 text-sm font-semibold text-white/70 sm:text-base">
-          Biggest sale of the year — free gifts on every order
+          Resets daily at midnight · Free gifts on every order · Through May 31
         </p>
 
         {/* Countdown */}
@@ -124,7 +130,7 @@ function ShopMemorialBanner() {
           {[
             { emoji: "🎁", text: "Free BAC Water + Syringes", sub: "every order" },
             { emoji: "💛", text: "Free GHK-Cu (100mg)", sub: "orders $250+" },
-            { emoji: "⚠️", text: "Only 11 kits left", sub: "while supplies last", urgent: true },
+            { emoji: "⚠️", text: "Only 6 kits left", sub: "while supplies last", urgent: true },
           ].map(({ emoji, text, sub, urgent }) => (
             <div
               key={text}

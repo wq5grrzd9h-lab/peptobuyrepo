@@ -201,7 +201,7 @@ const PROMO_BLOCK = `
         <tr><td style="padding:8px 0;border-bottom:1px solid #fde8ef;">
           <p style="margin:0;font-size:14px;font-weight:800;color:#18181b;">🎁 FREE BAC Water + Syringes</p>
           <p style="margin:3px 0 0;font-size:12px;color:#52525b;">Every single order. Automatically added.</p>
-          <p style="margin:4px 0 0;font-size:12px;font-weight:700;color:#cc0000;">⚠️ Only 11 kits left — first come, first served</p>
+          <p style="margin:4px 0 0;font-size:12px;font-weight:700;color:#cc0000;">⚠️ Only 6 kits left — first come, first served</p>
         </td></tr>
         <tr><td style="padding:8px 0;border-bottom:1px solid #fde8ef;">
           <p style="margin:0;font-size:14px;font-weight:800;color:#18181b;">🎁 FREE GHK-Cu (100mg — $91.99 value)</p>

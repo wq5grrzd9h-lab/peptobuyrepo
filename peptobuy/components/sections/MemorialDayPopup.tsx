@@ -88,13 +88,13 @@ export default function MemorialDayPopup() {
           className="px-6 py-5 text-center text-white"
         >
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] opacity-80">
-            🇺🇸 Limited Time
+            ⚡ Limited Time
           </p>
           <h2 className="mt-1 text-2xl font-black tracking-tight">
-            Memorial Day Sale
+            🔥 FLASH SALE — TODAY ONLY
           </h2>
           <p className="mt-1 text-sm font-medium opacity-80">
-            Ends TONIGHT — Tuesday May 26 at Midnight EST
+            Ends TONIGHT at Midnight EST · Resets daily through May 31
           </p>
         </div>
 
@@ -119,7 +119,7 @@ export default function MemorialDayPopup() {
               Included free with every order during the Memorial Day weekend sale.
             </p>
             <p className="mt-2 text-[12px] font-bold" style={{ color: "#cc0000" }}>
-              ⚠️ Only 11 left — claim yours now
+              ⚠️ Only 6 left — claim yours now
             </p>
           </div>
 
@@ -144,7 +144,7 @@ export default function MemorialDayPopup() {
               <div>
                 <p className="text-sm font-black text-sky-800">FREE Shipping All Weekend</p>
                 <p className="mt-0.5 text-[12px] text-sky-700">
-                  No minimum required — free shipping on every order. Ends TONIGHT at midnight EST.
+                  No minimum required — free shipping on every order. Resets daily through May 31.
                 </p>
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function MemorialDayPopup() {
             className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-black text-white transition-all hover:opacity-90 active:scale-[0.98]"
             style={{ background: "linear-gradient(135deg,#8B0000 0%,#c0392b 100%)" }}
           >
-            🇺🇸 Shop the Memorial Day Sale →
+            🔥 Shop the Flash Sale →
           </Link>
           <button
             onClick={dismiss}
