@@ -1,15 +1,15 @@
-// Flash Sale — rolls over at midnight EST each night through May 31 2026
-// After May 31 23:59:59 EDT — permanently over, all promo UI removed
+// Flash Sale — ends TONIGHT May 27 2026 at 11:59:59 PM EST (UTC-5)
+// After midnight — all promo UI removed, $300 free-shipping threshold resumes
 
-// Final hard stop — May 31 2026 11:59:59 PM EDT (UTC-4)
-export const FLASH_SALE_FINAL_END = new Date("2026-05-31T23:59:59-04:00");
+// Hard stop — May 27 2026 11:59:59 PM EST
+export const FLASH_SALE_FINAL_END = new Date("2026-05-27T23:59:59-05:00");
 
 /**
- * Free shipping ends TONIGHT May 26 2026 at 11:59:59 PM EDT.
- * Independent of the flash sale which runs through May 31.
+ * Free shipping ends TONIGHT May 27 2026 at 11:59:59 PM EST.
+ * Matches FLASH_SALE_FINAL_END — both expire together.
  * After midnight: $300 threshold resumes.
  */
-export const FREE_SHIPPING_END = new Date("2026-05-26T23:59:59-04:00");
+export const FREE_SHIPPING_END = new Date("2026-05-27T23:59:59-05:00");
 
 /** @deprecated Use FLASH_SALE_FINAL_END */
 export const MEMORIAL_DAY_END = FLASH_SALE_FINAL_END;
@@ -43,7 +43,7 @@ export function isPromoActive(): boolean {
 }
 
 /**
- * Free shipping active until FREE_SHIPPING_END (tonight May 26 11:59:59 PM EDT).
+ * Free shipping active until FREE_SHIPPING_END (tonight May 27 11:59:59 PM EST).
  * After midnight: falls back to $300 threshold in cart/checkout.
  */
 export function isFreeShippingWeekend(): boolean {
