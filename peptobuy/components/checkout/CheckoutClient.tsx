@@ -13,7 +13,8 @@ import { useCart, lineUnitPrice } from "@/context/CartContext";
 import CheckoutSummary from "./CheckoutSummary";
 import { isFreeShippingWeekend } from "@/lib/memorialDay";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null;
 
 type PaymentMethod = "card" | "crypto" | "zelle";
 
@@ -284,6 +285,19 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [confirmError, setConfirmError] = useState(false);
+  const [elementReady, setElementReady] = useState(false);
+
+  // If PaymentElement doesn't fire onReady within 12 s, something is wrong
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (!elementReady) {
+        setStripeError(
+          "Payment form failed to load. Please refresh the page or switch to Crypto / Zelle.",
+        );
+      }
+    }, 12_000);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePlaceOrder = async () => {
     if (!stripe || !elements) return;
@@ -323,7 +337,17 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
   return (
     <div>
       <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <PaymentElement options={{ layout: "tabs" }} />
+        {!elementReady && (
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 size={20} className="animate-spin text-accent" />
+          </div>
+        )}
+        <div style={elementReady ? undefined : { display: "none" }}>
+          <PaymentElement
+            options={{ layout: "tabs" }}
+            onReady={() => setElementReady(true)}
+          />
+        </div>
       </div>
       {stripeError && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{stripeError}</div>
@@ -539,6 +563,9 @@ export default function CheckoutClient() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [intentLoading, setIntentLoading] = useState(false);
   const [intentError, setIntentError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  // Tracks current PI attempt — stale callbacks from cancelled/superseded fetches are ignored
+  const piAttemptRef = useRef(0);
   // Stored when PI is created so prepareStripeOrder reuses the same order number
   const [stripeOrderNumber, setStripeOrderNumber] = useState<string | null>(null);
   // Tax computed by Stripe Tax (null = not yet known, 0 = exempt, >0 = actual)
@@ -608,22 +635,32 @@ export default function CheckoutClient() {
     };
   }, [contact.email, items, shipping.firstName, shipping.lastName, subtotal, discountAmount]);
 
-  // Fetch Stripe intent only when card is selected at step 3.
-  // We pass full metadata (email, name, items, address) so /api/confirm-and-email
-  // can reconstruct the order from Stripe if a redirect happens (3DS etc).
-  // We send preTaxTotal — Stripe Tax adds the computed tax, returning totalWithTax.
+  // Fetch Stripe PaymentIntent when card is selected at step 3.
+  // – retryCount in deps lets the user retry after an error
+  // – piAttemptRef prevents stale async callbacks from a previous attempt
+  // – 10 s hard timeout surfaces an actionable error instead of spinning forever
   useEffect(() => {
-    if (step !== 3 || paymentMethod !== "card" || clientSecret || intentLoading || preTaxTotal <= 0) return;
+    if (step !== 3 || paymentMethod !== "card" || clientSecret || preTaxTotal <= 0) return;
+
+    const attemptId = ++piAttemptRef.current;
     setIntentLoading(true);
     setIntentError(null);
+
+    const timeoutId = setTimeout(() => {
+      if (piAttemptRef.current !== attemptId) return;
+      setIntentLoading(false);
+      setIntentError(
+        "Payment system timed out. Please refresh the page or use Crypto / Zelle.",
+      );
+    }, 10_000);
+
     fetch("/api/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: preTaxTotal, // pre-tax; Stripe adds tax automatically
+        amount: preTaxTotal,
         customerEmail: contact.email,
         customerName: `${shipping.firstName} ${shipping.lastName}`.trim(),
-        // Compact format to stay under Stripe's 500-char metadata limit per value
         cartItems: items.map((i) => ({
           n: i.product.name,
           d: i.selectedDose.size,
@@ -638,16 +675,27 @@ export default function CheckoutClient() {
     })
       .then((r) => r.json())
       .then((data) => {
+        if (piAttemptRef.current !== attemptId) return; // stale — ignore
+        clearTimeout(timeoutId);
         if (data.error) throw new Error(data.error);
+        if (!data.clientSecret)
+          throw new Error(
+            "Payment initialisation failed — no client secret returned. Please refresh and try again.",
+          );
         setClientSecret(data.clientSecret);
-        // Store server-generated order number — reused in prepareStripeOrder
         if (data.orderNumber) setStripeOrderNumber(data.orderNumber);
-        // Store Stripe-computed tax (0 if tax-exempt or Stripe Tax not active)
         setTaxAmount(typeof data.taxAmount === "number" ? data.taxAmount : 0);
       })
-      .catch((err: Error) => setIntentError(err.message))
-      .finally(() => setIntentLoading(false));
-  }, [step, paymentMethod, clientSecret, intentLoading, preTaxTotal]); // eslint-disable-line react-hooks/exhaustive-deps
+      .catch((err: Error) => {
+        if (piAttemptRef.current !== attemptId) return;
+        clearTimeout(timeoutId);
+        setIntentError(err.message ?? "Payment failed to initialise. Please refresh.");
+      })
+      .finally(() => {
+        if (piAttemptRef.current !== attemptId) return;
+        setIntentLoading(false);
+      });
+  }, [step, paymentMethod, clientSecret, preTaxTotal, retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearFieldError = (f: string) => setErrors((e) => { const n = { ...e }; delete n[f]; return n; });
   const updateContact = (f: string, v: string) => { setContact((p) => ({ ...p, [f]: v } as ContactForm)); clearFieldError(f); };
@@ -924,17 +972,43 @@ export default function CheckoutClient() {
               {/* Card / Stripe */}
               {paymentMethod === "card" && (
                 <>
+                  {/* Missing publishable key — misconfiguration */}
+                  {!STRIPE_PK && !intentLoading && !intentError && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+                      <p className="font-semibold">⚠️ Payment configuration error</p>
+                      <p className="mt-1 text-xs">
+                        Card payments are temporarily unavailable. Please use Crypto or Zelle, or contact{" "}
+                        <a href="mailto:peptobuy@gmail.com" className="underline">peptobuy@gmail.com</a>.
+                      </p>
+                    </div>
+                  )}
+
                   {intentLoading && (
                     <div className="flex h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm">
                       <Loader2 size={24} className="animate-spin text-accent" />
                     </div>
                   )}
+
                   {intentError && (
                     <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
-                      Failed to initialize payment: {intentError}
-                      <button onClick={() => setIntentError(null)} className="ml-2 underline">Retry</button>
+                      <p className="font-semibold">⚠️ Payment failed to load</p>
+                      <p className="mt-1 text-xs text-red-500">{intentError}</p>
+                      <p className="mt-2 text-xs text-red-500">
+                        Please refresh or contact{" "}
+                        <a href="mailto:peptobuy@gmail.com" className="underline font-semibold">
+                          peptobuy@gmail.com
+                        </a>{" "}
+                        — or switch to Crypto / Zelle above.
+                      </p>
+                      <button
+                        onClick={() => { setIntentError(null); setRetryCount((c) => c + 1); }}
+                        className="mt-3 rounded-lg border border-red-300 bg-white px-4 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+                      >
+                        Try Again
+                      </button>
                     </div>
                   )}
+
                   {clientSecret && !intentLoading && (
                     <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
                       <StripePaymentForm

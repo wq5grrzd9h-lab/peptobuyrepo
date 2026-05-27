@@ -2,22 +2,18 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { Redis } from "@upstash/redis";
 
+// Initialise once at module load — not inside the handler
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  apiVersion: "2023-10-16" as any,
+});
+
 interface CompactItem {
   n: string; // name
   d: string; // dose
   q: number; // quantity
   p: number; // price per unit
   r: number; // reconstitution (0 | 1)
-}
-
-interface ShippingAddress {
-  firstName: string;
-  lastName: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-  country: string;
 }
 
 async function generateOrderNumber(): Promise<string> {
@@ -35,106 +31,81 @@ async function generateOrderNumber(): Promise<string> {
 }
 
 export async function POST(request: Request) {
+  console.log("[create-payment-intent] STRIPE_SECRET_KEY exists:", !!process.env.STRIPE_SECRET_KEY);
+
+  // Validate key present — surface misconfiguration immediately
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error("[create-payment-intent] STRIPE_SECRET_KEY is not set");
+    return NextResponse.json({ error: "Payment system not configured" }, { status: 500 });
+  }
+
+  let body: {
+    amount?: unknown;
+    customerEmail?: string;
+    customerName?: string;
+    cartItems?: CompactItem[];
+    subtotal?: number;
+    shipping?: number;
+    shippingAddress?: unknown;
+  };
+
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" as any });
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
-    const {
-      amount,
-      customerEmail,
-      customerName,
-      cartItems,
-      subtotal,
-      shipping: shippingCost,
-      shippingAddress,
-    }: {
-      amount: number;
-      customerEmail?: string;
-      customerName?: string;
-      cartItems?: CompactItem[];
-      subtotal?: number;
-      shipping?: number;
-      shippingAddress?: ShippingAddress;
-    } = await request.json();
+  const { amount, customerEmail, customerName, cartItems, subtotal, shipping: shippingCost } = body;
 
-    // Generate order number server-side so it lands in Stripe metadata
+  // Hard validate amount before touching Stripe
+  const amountNum = typeof amount === "number" ? amount : parseFloat(String(amount ?? "0"));
+  if (!amountNum || amountNum <= 0 || !isFinite(amountNum)) {
+    console.error("[create-payment-intent] Invalid amount:", amount);
+    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
+  const sentCents = Math.round(amountNum * 100);
+  console.log("[create-payment-intent] Creating PI — cents:", sentCents, "email:", customerEmail);
+
+  try {
     const orderNumber = await generateOrderNumber();
-    const addr = shippingAddress;
 
-    const shippingBlock = addr && addr.firstName ? {
-      shipping: {
-        name: `${addr.firstName} ${addr.lastName}`.trim(),
-        address: {
-          line1: addr.address,
-          city: addr.city,
-          state: addr.state,
-          postal_code: addr.zip,
-          country: addr.country || "US",
-        },
-      },
-    } : {};
-
-    const sentCents = Math.round(amount * 100);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const piParams: any = {
+    // Minimal, proven-working PI params — no automatic_tax, no shipping block
+    const paymentIntent = await stripe.paymentIntents.create({
       amount: sentCents,
       currency: "usd",
-      // Card only — eliminates Affirm, Klarna, and all BNPL redirect methods
-      // that bypass the client-side onSuccess handler.
       payment_method_types: ["card"],
-      // Stripe Tax: automatically calculates and adds tax based on shipping address.
-      // Requires Stripe Tax to be activated in the Stripe Dashboard.
-      automatic_tax: { enabled: true },
       receipt_email: customerEmail || undefined,
       description: `PeptoBuy Order ${orderNumber}${customerName ? ` — ${customerName}` : ""}`,
-      ...shippingBlock,
       metadata: {
         orderNumber,
         customerEmail: customerEmail ?? "",
         customerName: customerName ?? "",
-        // Compact JSON array — stays well under Stripe's 500-char limit for typical orders
-        itemsJson: JSON.stringify(cartItems ?? []),
+        // Compact JSON — well under Stripe's 500-char metadata value limit
+        itemsJson: JSON.stringify(cartItems ?? []).slice(0, 490),
         subtotal: (subtotal ?? 0).toString(),
         shipping: (shippingCost ?? 0).toString(),
-        total: amount.toString(),
-        shippingFirstName: addr?.firstName ?? "",
-        shippingLastName: addr?.lastName ?? "",
-        shippingStreet: addr?.address ?? "",
-        shippingCity: addr?.city ?? "",
-        shippingState: addr?.state ?? "",
-        shippingZip: addr?.zip ?? "",
-        shippingCountry: addr?.country ?? "",
+        total: amountNum.toString(),
       },
-    };
+    });
 
-    const paymentIntent = await stripe.paymentIntents.create(piParams);
-
-    // Stripe Tax adds computed tax to the amount field when automatic_tax.status = "complete".
-    // taxCents = 0 if tax-exempt, not computed, or Stripe Tax not configured.
-    const taxCents = Math.max(0, paymentIntent.amount - sentCents);
-    const taxAmount = taxCents / 100;
-    const totalWithTax = paymentIntent.amount / 100;
-
-    // Patch metadata with final tax + total so /api/confirm-and-email can include it
-    if (taxCents > 0) {
-      await stripe.paymentIntents.update(paymentIntent.id, {
-        metadata: {
-          taxAmount: taxAmount.toString(),
-          total: totalWithTax.toString(),
-        },
-      });
-    }
+    console.log("[create-payment-intent] PI created:", paymentIntent.id);
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
       orderNumber,
-      taxAmount,      // 0 if tax-exempt or Stripe Tax not active
-      totalWithTax,   // authoritative total from Stripe (includes tax)
+      taxAmount: 0,
+      totalWithTax: amountNum,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const e = err as { message?: string; type?: string; code?: string };
+    console.error("[create-payment-intent] Stripe error message:", e.message);
+    console.error("[create-payment-intent] Stripe error type:", e.type);
+    console.error("[create-payment-intent] Stripe error code:", e.code);
+    return NextResponse.json(
+      { error: e.message ?? "Payment initialisation failed" },
+      { status: 500 },
+    );
   }
 }
