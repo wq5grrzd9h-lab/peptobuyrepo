@@ -94,7 +94,7 @@ export default function MemorialDayPopup() {
             🔥 FLASH SALE — TODAY ONLY
           </h2>
           <p className="mt-1 text-sm font-medium opacity-80">
-            Ends TONIGHT at Midnight EST · Resets daily through May 31
+            Hurry — this offer expires at midnight tonight
           </p>
         </div>
 

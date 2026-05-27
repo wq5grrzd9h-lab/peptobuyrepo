@@ -366,7 +366,7 @@ export default function CartClient() {
             <p className="text-sm font-bold text-emerald-700">
               FREE SHIPPING applied — Ends TONIGHT at midnight EST!
             </p>
-            <p className="text-[12px] text-emerald-600">Flash Sale through May 31 — resets daily at midnight.</p>
+            <p className="text-[12px] text-emerald-600">Offer expires at midnight tonight — don&apos;t miss out.</p>
           </div>
         </div>
       )}

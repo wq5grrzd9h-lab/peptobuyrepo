@@ -93,7 +93,7 @@ function ShopMemorialBanner() {
           <span className="text-2xl sm:text-3xl">⚡</span>
         </div>
         <p className="mb-4 text-sm font-semibold text-white/70 sm:text-base">
-          Resets daily at midnight · Free gifts on every order · Through May 31
+          Free gifts on every order — Hurry, this offer expires at midnight tonight
         </p>
 
         {/* Countdown */}
