@@ -287,18 +287,6 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
   const [confirmError, setConfirmError] = useState(false);
   const [elementReady, setElementReady] = useState(false);
 
-  // If PaymentElement doesn't fire onReady within 12 s, something is wrong
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (!elementReady) {
-        setStripeError(
-          "Payment form failed to load. Please refresh the page or switch to Crypto / Zelle.",
-        );
-      }
-    }, 12_000);
-    return () => clearTimeout(t);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const handlePlaceOrder = async () => {
     if (!stripe || !elements) return;
     if (!confirmed) { setConfirmError(true); return; }
