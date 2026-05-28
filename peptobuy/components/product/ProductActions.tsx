@@ -216,9 +216,7 @@ export default function ProductActions({ product }: { product: Product }) {
 
       {product.inStock && (
         <p className="text-center text-xs text-zinc-400">
-          {isFreeShippingWeekend()
-            ? "🎖️ FREE SHIPPING — Flash Sale ends TONIGHT at midnight EST"
-            : "Free shipping on orders over $300"}
+          {"🚚 FREE SHIPPING on orders $250+"}
         </p>
       )}
 

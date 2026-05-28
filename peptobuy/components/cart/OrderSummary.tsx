@@ -6,10 +6,7 @@ import { ArrowLeft, ShieldCheck, Tag, X, Check, ArrowRight } from "lucide-react"
 import { useCart } from "@/context/CartContext";
 import EmailCapturePopup, { getStoredCheckoutEmail, useCheckoutNavigate } from "@/components/cart/EmailCapturePopup";
 import ExpressCheckout from "@/components/cart/ExpressCheckout";
-import { isFreeShippingWeekend } from "@/lib/memorialDay";
-
-const SHIPPING_THRESHOLD = 300;
-const SHIPPING_COST = 9.99;
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/memorialDay";
 
 const TRUST_BADGES = [
   { emoji: "🔒", label: "Secure Checkout" },
@@ -48,12 +45,11 @@ export default function OrderSummary() {
     } catch { /* ignore */ }
   }, []);
 
-  const freeWeekend = isFreeShippingWeekend();
-  const isFreeShipping = freeWeekend || subtotal >= SHIPPING_THRESHOLD;
-  const shipping = isFreeShipping ? 0 : SHIPPING_COST;
   const discountedSubtotal = subtotal - discountAmount;
+  const isFreeShipping = discountedSubtotal >= FREE_SHIPPING_THRESHOLD;
+  const shipping = isFreeShipping ? 0 : 9.99;
   const total = discountedSubtotal + shipping;
-  const toFreeShipping = Math.max(0, SHIPPING_THRESHOLD - subtotal);
+  const toFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - discountedSubtotal);
 
   const handleApplyPromo = () => {
     setPromoError(null);
@@ -94,11 +90,9 @@ export default function OrderSummary() {
             label="Shipping"
             value={isFreeShipping ? "Free" : `$${shipping.toFixed(2)}`}
             sub={
-              freeWeekend
-                ? "🎖️ Flash Sale Free Shipping — Ends TONIGHT"
-                : !isFreeShipping
-                ? `Add $${toFreeShipping.toFixed(2)} more for free shipping`
-                : undefined
+              isFreeShipping
+                ? "🚚 FREE SHIPPING — Orders $250+"
+                : `⚡ Add $${toFreeShipping.toFixed(2)} more to unlock FREE SHIPPING`
             }
             accent={isFreeShipping}
           />

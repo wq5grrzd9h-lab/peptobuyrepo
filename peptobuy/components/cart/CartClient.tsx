@@ -22,7 +22,7 @@ import { useExitDetection } from "@/hooks/useExitDetection";
 const LS_CART_EMAIL_KEY = "cartEmail";
 const LS_CART_SNAPSHOT_KEY = "cartEmailSnapshot";
 const SS_ABANDONMENT_SENT = "cartAbandonmentSent";
-const SHIPPING_THRESHOLD = 300;
+const SHIPPING_THRESHOLD = 250;
 const SHIPPING_COST = 9.99;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -262,8 +262,8 @@ function StickyMobileCheckoutBar() {
   const { navigateToCheckout } = useCheckoutNavigate();
 
   const discountedSub = subtotal - (discountAmount ?? 0);
-  const freeWeekend = isFreeShippingWeekend();
-  const shipping = freeWeekend || discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const freeWeekend = false;
+  const shipping = discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = discountedSub + shipping;
 
   return (
@@ -346,7 +346,8 @@ export default function CartClient() {
 
   const hasGhkCu = subtotal >= FREE_GHKCU_THRESHOLD;
   const toUnlock = Math.max(0, FREE_GHKCU_THRESHOLD - subtotal);
-  const freeWeekend = isFreeShippingWeekend();
+  const hasFreeShipping = subtotal >= SHIPPING_THRESHOLD;
+  const toFreeShipping = Math.max(0, SHIPPING_THRESHOLD - subtotal);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 pb-28 sm:px-6 lg:px-8 lg:pb-10">
@@ -358,15 +359,25 @@ export default function CartClient() {
         </p>
       </div>
 
-      {/* ── Free shipping weekend banner ───────────────────── */}
-      {freeWeekend && (
+      {/* ── Free shipping banner / urgency nudge ──────────────── */}
+      {hasFreeShipping ? (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <span className="text-base">🎖️</span>
+          <span className="text-base">🚚</span>
           <div>
             <p className="text-sm font-bold text-emerald-700">
-              FREE SHIPPING applied — Ends TONIGHT at midnight EST!
+              FREE SHIPPING unlocked — Orders $250+
             </p>
-            <p className="text-[12px] text-emerald-600">Offer expires at midnight tonight — don&apos;t miss out.</p>
+            <p className="text-[12px] text-emerald-600">Standard shipping included free on your order.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
+          <span className="text-base">⚡</span>
+          <div>
+            <p className="text-sm font-bold text-accent">
+              Add ${toFreeShipping.toFixed(2)} more to unlock FREE SHIPPING!
+            </p>
+            <p className="text-[12px] text-zinc-500">Only ${toFreeShipping.toFixed(2)} away — free shipping on orders $250+</p>
           </div>
         </div>
       )}

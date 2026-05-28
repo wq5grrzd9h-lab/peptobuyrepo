@@ -27,9 +27,16 @@ export function isPromoActive(): boolean {
   return SALE_ENABLED;
 }
 
-/** Always true — free shipping on every order while sale is enabled. */
+/**
+ * Free shipping threshold — orders $250+ always get free standard shipping.
+ * isFreeShippingWeekend() is retained for import compatibility but returns false;
+ * all shipping logic should check subtotal >= FREE_SHIPPING_THRESHOLD instead.
+ */
+export const FREE_SHIPPING_THRESHOLD = 250;
+
+/** @deprecated Not a time-limited period anymore. Use subtotal >= FREE_SHIPPING_THRESHOLD. */
 export function isFreeShippingWeekend(): boolean {
-  return SALE_ENABLED;
+  return false;
 }
 
 export interface TimeRemaining {

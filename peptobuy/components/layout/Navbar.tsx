@@ -109,10 +109,7 @@ export default function Navbar() {
               <span className="opacity-60">·</span>
               <span>COA On Request</span>
               <span className="opacity-60">·</span>
-              {isFreeShippingWeekend()
-                ? <span className="font-black">⚡ FLASH SALE — 🎖️ FREE SHIPPING TONIGHT ONLY · Free GHK-Cu + Free BAC Water &amp; Syringes · Ends at Midnight</span>
-                : <span>Free Shipping Over $300</span>
-              }
+              <span className="font-black">⚡ FLASH SALE — 🚚 FREE SHIPPING on orders $250+ · Free GHK-Cu on $250+ · Free BAC Water &amp; Syringes Every Order</span>
               <span className="opacity-60">·</span>
             </span>
           ))}

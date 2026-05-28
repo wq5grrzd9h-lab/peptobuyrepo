@@ -8,7 +8,7 @@ import { useCart, lineUnitPrice } from "@/context/CartContext";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-const SHIPPING_THRESHOLD = 300;
+const SHIPPING_THRESHOLD = 250;
 const STANDARD_SHIPPING = 9.99;
 
 function ExpressCheckoutInner() {
