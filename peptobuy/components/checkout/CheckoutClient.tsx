@@ -331,11 +331,22 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
         )}
         <div style={elementReady ? undefined : { display: "none" }}>
           <PaymentElement
-            options={{ layout: "tabs" }}
+            options={{
+              layout: "tabs",
+              wallets: {
+                applePay: "auto",
+                googlePay: "auto",
+              },
+            }}
             onReady={() => setElementReady(true)}
           />
         </div>
       </div>
+      <p className="mt-3 text-center text-xs text-zinc-400">
+        💳 Pay by card, or use <strong className="text-zinc-600">Affirm</strong> /{" "}
+        <strong className="text-zinc-600">Klarna</strong> to split your order into installments.
+      </p>
+
       {stripeError && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{stripeError}</div>
       )}

@@ -70,11 +70,13 @@ export async function POST(request: Request) {
   try {
     const orderNumber = await generateOrderNumber();
 
-    // Minimal, proven-working PI params — no automatic_tax, no shipping block
+    // Card + Affirm + Klarna — no automatic_tax, no shipping block.
+    // Affirm/Klarna are redirect-based; return_url sends users to /order-confirmation
+    // where payment_intent + redirect_status params trigger confirm-and-email.
     const paymentIntent = await stripe.paymentIntents.create({
       amount: sentCents,
       currency: "usd",
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "affirm", "klarna"],
       receipt_email: customerEmail || undefined,
       description: `PeptoBuy Order ${orderNumber}${customerName ? ` — ${customerName}` : ""}`,
       metadata: {
