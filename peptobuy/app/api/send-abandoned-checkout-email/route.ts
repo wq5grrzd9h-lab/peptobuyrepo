@@ -86,7 +86,7 @@ function buildHtml(items: CartItem[], cartTotal: number): string {
     <div style="background:#8B0000;border-radius:10px;padding:14px 18px;margin-bottom:20px;text-align:center;">
       <p style="margin:0;font-size:13px;font-weight:800;color:#fff;">🇺🇸 Memorial Day Sale — Ends Monday Midnight</p>
       <p style="margin:6px 0 0;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.5;">
-        Free BAC Water + Syringes still available — <strong>only 6 kits left!</strong><br/>Plus free GHK-Cu (100mg) on orders $250+.
+        Free BAC Water + Syringes still available — <strong>only 4 kits left!</strong><br/>Plus free GHK-Cu (100mg) on orders $250+.
       </p>
     </div>` : ""}
 

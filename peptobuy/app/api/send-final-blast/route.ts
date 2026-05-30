@@ -81,7 +81,7 @@ const HTML = `<!DOCTYPE html>
           🎁 FREE BAC Water + Syringes — Every order automatically
         </p>
         <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#cc0000;border-top:1px solid #ffd6e5;padding-top:12px;">
-          ⚠️ Only 6 kits left — first come first served
+          ⚠️ Only 4 kits left — first come first served
         </p>
         <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#18181b;border-top:1px solid #ffd6e5;padding-top:12px;">
           🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+

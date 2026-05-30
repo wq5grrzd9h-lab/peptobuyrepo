@@ -116,7 +116,11 @@ export default function OrderSummary() {
             <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <Check size={14} className="text-emerald-600" />
-                <span className="text-sm font-semibold text-emerald-700">Code applied — 20% off your first order!</span>
+                <span className="text-sm font-semibold text-emerald-700">
+                  {promoCode === "RETURN10"
+                    ? "10% discount applied ✓"
+                    : "Code applied — 20% off your first order!"}
+                </span>
               </div>
               <button onClick={handleRemovePromo} className="rounded p-0.5 text-emerald-500 hover:text-emerald-700">
                 <X size={14} />

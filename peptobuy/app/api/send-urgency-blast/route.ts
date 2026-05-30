@@ -49,7 +49,7 @@ function buildHtml(): string {
         <div style="margin-bottom:14px;">
           <p style="margin:0;font-size:15px;font-weight:800;color:#18181b;">🎁 FREE BAC Water + Syringes</p>
           <p style="margin:4px 0 0;font-size:13px;color:#52525b;">Every order. Auto-added at checkout.</p>
-          <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#cc0000;">⚠️ Only 6 kits left — going fast</p>
+          <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#cc0000;">⚠️ Only 4 kits left — going fast</p>
         </div>
         <div style="border-top:1px solid #e5e5e5;padding-top:14px;margin-bottom:14px;">
           <p style="margin:0;font-size:15px;font-weight:800;color:#18181b;">🎁 FREE GHK-Cu (100mg — $91.99 value)</p>

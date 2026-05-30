@@ -204,23 +204,43 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Subtotal uses the actual unit price per item (dose price + reconstitution)
   const subtotal = items.reduce((sum, i) => sum + lineUnitPrice(i) * i.quantity, 0);
 
-  // Discount: FIRST20 = 20% off subtotal
-  const discountAmount = promoCode === "FIRST20" ? Math.round(subtotal * 0.2 * 100) / 100 : 0;
+  // Discount: FIRST20 = 20% off subtotal | RETURN10 = 10% off subtotal (secret, unlimited)
+  const discountAmount =
+    promoCode === "FIRST20"
+      ? Math.round(subtotal * 0.2 * 100) / 100
+      : promoCode === "RETURN10"
+        ? Math.round(subtotal * 0.1 * 100) / 100
+        : 0;
 
   const applyPromo = useCallback((code: string): { success: boolean; error?: string } => {
     const normalized = code.trim().toUpperCase();
-    if (normalized !== "FIRST20") {
-      return { success: false, error: "Invalid discount code." };
-    }
-    try {
-      const used: string[] = JSON.parse(localStorage.getItem("usedDiscountCodes") || "[]");
-      if (used.includes("FIRST20")) {
-        return { success: false, error: "This code has already been used. FIRST20 is valid for first orders only." };
+
+    if (normalized === "RETURN10") {
+      // Cannot stack with FIRST20
+      if (promoCode === "FIRST20") {
+        return { success: false, error: "Only one discount code can be used per order." };
       }
-    } catch { /* ignore */ }
-    setPromoCode("FIRST20");
-    return { success: true };
-  }, []);
+      setPromoCode("RETURN10");
+      return { success: true };
+    }
+
+    if (normalized === "FIRST20") {
+      // Cannot stack with RETURN10
+      if (promoCode === "RETURN10") {
+        return { success: false, error: "Only one discount code can be used per order." };
+      }
+      try {
+        const used: string[] = JSON.parse(localStorage.getItem("usedDiscountCodes") || "[]");
+        if (used.includes("FIRST20")) {
+          return { success: false, error: "This code has already been used. FIRST20 is valid for first orders only." };
+        }
+      } catch { /* ignore */ }
+      setPromoCode("FIRST20");
+      return { success: true };
+    }
+
+    return { success: false, error: "Invalid discount code." };
+  }, [promoCode]);
 
   const removePromo = useCallback(() => {
     setPromoCode(null);

@@ -236,7 +236,7 @@ export default function ProductActions({ product }: { product: Product }) {
             🎖️ Free shipping on all orders — tonight only
           </p>
           <p className="mt-1 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ⚠️ Only 6 BAC Water kits remaining
+            ⚠️ Only 4 BAC Water kits remaining
           </p>
           {urgencyText && (
             <p className="mt-0.5 text-[11px] font-bold text-red-700">

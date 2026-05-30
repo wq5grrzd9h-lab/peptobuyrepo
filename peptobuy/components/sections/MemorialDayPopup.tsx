@@ -119,7 +119,7 @@ export default function MemorialDayPopup() {
               Included free with every order during the Memorial Day weekend sale.
             </p>
             <p className="mt-2 text-[12px] font-bold" style={{ color: "#cc0000" }}>
-              ⚠️ Only 6 left — claim yours now
+              ⚠️ Only 4 left — claim yours now
             </p>
           </div>
 

@@ -56,7 +56,7 @@ function FlashSaleCountdown() {
           </span>
         </>
       )}
-      <span className="hidden sm:inline">· Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 6 Left!</span>)</span>
+      <span className="hidden sm:inline">· Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 4 Left!</span>)</span>
     </div>
   );
 }

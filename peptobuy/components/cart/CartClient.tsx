@@ -417,7 +417,7 @@ export default function CartClient() {
               <div>
                 <p className="text-sm font-bold text-emerald-700">✅ Free BAC Water &amp; Syringes — added automatically</p>
                 <p className="text-[12px] text-zinc-500">
-                  <span style={{ color: "#cc0000", fontWeight: 700 }}>⚠️ Only 6 remaining!</span>
+                  <span style={{ color: "#cc0000", fontWeight: 700 }}>⚠️ Only 4 remaining!</span>
                 </p>
               </div>
             </div>
@@ -455,7 +455,7 @@ export default function CartClient() {
             {promoActive && (
               <FreeGiftRow
                 label="BAC Water (10ml) + Syringes — Flash Sale Gift"
-                urgency="⚠️ Only 6 left!"
+                urgency="⚠️ Only 4 left!"
               />
             )}
             {promoActive && hasGhkCu && <FreeGiftRow label="GHK-Cu (100mg)" />}
