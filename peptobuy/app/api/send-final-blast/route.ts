@@ -81,7 +81,7 @@ const HTML = `<!DOCTYPE html>
           🎁 FREE BAC Water + Syringes — Every order automatically
         </p>
         <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#cc0000;border-top:1px solid #ffd6e5;padding-top:12px;">
-          ⚠️ Only 4 kits left — first come first served
+          ⚠️ Only 3 more free GHK-Cu vials — orders $250+
         </p>
         <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#18181b;border-top:1px solid #ffd6e5;padding-top:12px;">
           🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+
@@ -126,7 +126,7 @@ const HTML = `<!DOCTYPE html>
         <p style="margin:0;font-size:12px;font-weight:700;color:#71717a;letter-spacing:.05em;text-transform:uppercase;">Available Now</p>
         <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:#18181b;line-height:1.8;">
           BPC-157 &nbsp;·&nbsp; TB-500 &nbsp;·&nbsp; RTGLP3 (Reta 🐀) &nbsp;·&nbsp; MOTS-C<br/>
-          NAD+ &nbsp;·&nbsp; Tesamorelin &nbsp;·&nbsp; GHK-Cu
+          Tesamorelin &nbsp;·&nbsp; GHK-Cu
         </p>
       </div>
 

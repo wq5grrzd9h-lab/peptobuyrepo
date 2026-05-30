@@ -118,24 +118,6 @@ const PRODUCT_DETAILS: Record<string, ProductDetail> = {
       ...PEPTIDE_BASE,
     ],
   },
-  // ── Essentials ───────────────────────────────────────────────────────────────
-  "nad-plus": {
-    overview: [
-      "NAD+ (Nicotinamide Adenine Dinucleotide) is a critical coenzyme found in all living cells, functioning as an electron carrier in metabolic redox reactions and as a substrate for enzymes involved in cellular signaling and DNA repair.",
-      "Research applications include studies on sirtuin (SIRT1–SIRT7) activation pathways, PARP-1 dependent DNA repair assays, mitochondrial biogenesis pathway investigations, and NAD+-dependent metabolism in aging models.",
-      "Supplied as lyophilized powder. Store at -20 °C protected from light. For research use only.",
-    ],
-    compoundData: [
-      { label: "Full Name",         value: "Nicotinamide Adenine Dinucleotide (oxidized)" },
-      { label: "Molecular Formula", value: "C21H27N7O14P2" },
-      { label: "Molecular Weight",  value: "663.43 Da" },
-      { label: "CAS Number",        value: "53-84-9" },
-      { label: "Form",              value: "Lyophilized Powder" },
-      { label: "Purity",            value: "≥98% (HPLC)" },
-      { label: "Storage",           value: "-20 °C — protect from light, desiccate" },
-      { label: "Reconstitution",    value: "Sterile water or PBS" },
-    ],
-  },
   "bac-water": {
     overview: [
       "Bacteriostatic Water is a 0.9% benzyl alcohol solution in sterile water for injection (WFI grade). The benzyl alcohol preservative allows multi-dose use from a single vial without microbial contamination risk — making it the standard solvent for peptide reconstitution in laboratory settings.",

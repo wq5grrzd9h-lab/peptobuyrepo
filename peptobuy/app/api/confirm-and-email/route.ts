@@ -327,6 +327,40 @@ export async function POST(request: Request) {
       }
     }
 
+    // ── 6. Decrement RETA stock if RTGLP3 ordered ────────────────────────────
+    if (redis) {
+      const retaItems = emailItems.filter(
+        (i) => i.name.toLowerCase().includes("rtglp3") || i.name.toLowerCase().includes("reta")
+      );
+      if (retaItems.length > 0) {
+        const retaQty = retaItems.reduce((sum, i) => sum + i.quantity, 0);
+        try {
+          const RETA_STOCK_KEY = "reta-stock";
+          const current = await redis.get<number>(RETA_STOCK_KEY);
+          if (current === null) await redis.set(RETA_STOCK_KEY, 13);
+          const newStock = await redis.decrby(RETA_STOCK_KEY, retaQty);
+          const clampedStock = Math.max(0, newStock);
+          if (newStock < 0) await redis.set(RETA_STOCK_KEY, 0);
+          console.log(`[confirm-and-email] RETA stock decremented by ${retaQty}, now: ${clampedStock}`);
+
+          if (clampedStock === 0) {
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            await resend.emails.send({
+              from: RESEND_FROM,
+              to: INTERNAL_EMAIL,
+              subject: "⚠️ RETA OUT OF STOCK — all 13 units sold",
+              html: `<p style="font-family:sans-serif;font-size:15px;color:#18181b;">
+                <strong>RTGLP3 (Reta) is now out of stock.</strong><br><br>
+                All 13 units have been sold. Last order: <strong>${orderNumber}</strong> (${customerName}).
+              </p>`,
+            }).catch((e: unknown) => console.error("[confirm-and-email] reta out-of-stock email failed:", e));
+          }
+        } catch (e) {
+          console.error("[confirm-and-email] reta stock decrement failed:", e);
+        }
+      }
+    }
+
     return NextResponse.json({ ok: true, orderNumber });
   } catch (err) {
     console.error("[confirm-and-email] unhandled error:", err);

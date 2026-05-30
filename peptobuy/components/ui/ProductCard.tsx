@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingCart, CheckCircle2, XCircle, Check, ChevronDown } from "lucide-react";
 import { Product } from "@/lib/products";
@@ -16,15 +16,27 @@ export default function ProductCard({ product }: { product: Product }) {
   const [doseIdx, setDoseIdx] = useState(0);
   const [recon, setRecon] = useState(false);
   const [added, setAdded] = useState(false);
+  const [retaStock, setRetaStock] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (product.id !== "rtglp3") return;
+    fetch("/api/get-reta-stock")
+      .then((r) => r.json())
+      .then((d) => { if (typeof d.stock === "number") setRetaStock(d.stock); })
+      .catch(() => {});
+  }, [product.id]);
 
   const isEssentials = product.category === "Essentials";
   const selectedDose = product.doses[doseIdx];
   const unitPrice = selectedDose.price + (recon && !isEssentials ? RECONSTITUTION_PRICE : 0);
 
+  const effectiveInStock =
+    product.id === "rtglp3" && retaStock !== null ? retaStock > 0 : product.inStock;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!product.inStock || added) return;
+    if (!effectiveInStock || added) return;
     addItem(product, selectedDose, 1, !isEssentials && recon);
     toast.cart(
       "Added to cart",
@@ -142,10 +154,30 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="text-xs text-zinc-400">/ {selectedDose.size}</span>
         </div>
 
+        {/* ── RETA live stock badge ─────────────────────────── */}
+        {product.id === "rtglp3" && retaStock !== null && (
+          <div
+            className={[
+              "rounded-lg px-3 py-1.5 text-center text-[11px] font-bold",
+              retaStock === 0
+                ? "bg-zinc-100 text-zinc-500"
+                : retaStock <= 5
+                  ? "animate-pulse bg-red-50 text-red-700"
+                  : "bg-orange-50 text-orange-700",
+            ].join(" ")}
+          >
+            {retaStock === 0
+              ? "Out of Stock"
+              : retaStock <= 5
+                ? `🚨 Only ${retaStock} left — selling fast!`
+                : `⚠️ Only ${retaStock} left in stock!`}
+          </div>
+        )}
+
         {/* ── Stock + CTA ──────────────────────────────────── */}
         <div className="mt-auto flex flex-col gap-2 pt-0.5">
           <div className="flex items-center gap-1.5">
-            {product.inStock ? (
+            {effectiveInStock ? (
               <>
                 <CheckCircle2 size={13} className="text-emerald-600" />
                 <span className="text-[12px] text-emerald-600">In stock</span>
@@ -161,7 +193,7 @@ export default function ProductCard({ product }: { product: Product }) {
           {/* Taller button on mobile — 56px vs 42px on desktop */}
           <button
             onClick={handleAddToCart}
-            disabled={!product.inStock}
+            disabled={!effectiveInStock}
             className={[
               "relative z-[1] flex w-full items-center justify-center gap-2 rounded-lg py-3.5 text-[15px] font-bold transition-all duration-200 active:scale-[0.97] sm:py-2.5 sm:text-sm sm:font-semibold",
               added
@@ -172,7 +204,7 @@ export default function ProductCard({ product }: { product: Product }) {
             {added ? (
               <><Check size={15} /> Added!</>
             ) : (
-              <><ShoppingCart size={15} />{product.inStock ? "Add to Cart" : "Out of Stock"}</>
+              <><ShoppingCart size={15} />{effectiveInStock ? "Add to Cart" : "Out of Stock"}</>
             )}
           </button>
         </div>

@@ -23,7 +23,7 @@ function buildHtml(to: string): string {
       <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:10px;padding:14px 18px;margin-bottom:24px;">
         <p style="margin:0;font-size:13px;font-weight:700;color:#0c4a6e;">📋 Your Recent Cart</p>
         <p style="margin:8px 0 0;font-size:13px;color:#075985;line-height:1.6;">
-          We noticed you had a significant order ready — NAD+, Tesamorelin, and RTGLP3. That&apos;s a
+          We noticed you had a significant order ready — Tesamorelin and RTGLP3. That&apos;s a
           <strong>$1,219.87 order with your 20% discount already applied</strong>. We&apos;d hate for
           you to miss out on the free shipping on top of that.
         </p>
@@ -65,7 +65,7 @@ function buildHtml(to: string): string {
       <!-- Promo box -->
       <div style="border:3px solid #18181b;border-radius:12px;padding:18px 22px;margin-bottom:24px;background:#fafafa;">
         <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;">🚚 FREE SHIPPING — Every order. Ends tonight.</p>
-        <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🎁 FREE BAC Water + Syringes — Every order <span style="color:#cc0000;">(Only 4 kits left!)</span></p>
+        <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🎁 FREE BAC Water + Syringes — Every order <span style="color:#cc0000;">(Only 3 more free GHK-Cu vials! — orders $250+)</span></p>
         <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+</p>
         <p style="margin:0;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🧪 20% OFF FIRST ORDER — Code: <span style="font-family:monospace;font-size:15px;letter-spacing:.06em;color:#ff2d78;">FIRST20</span></p>
       </div>
@@ -90,7 +90,7 @@ function buildHtml(to: string): string {
         <p style="margin:0;font-size:12px;font-weight:700;color:#71717a;letter-spacing:.04em;text-transform:uppercase;">Available Now</p>
         <p style="margin:8px 0 0;font-size:13px;font-weight:600;color:#18181b;line-height:1.8;">
           BPC-157 &nbsp;·&nbsp; TB-500 &nbsp;·&nbsp; RTGLP3 (Reta 🐀) &nbsp;·&nbsp; MOTS-C<br/>
-          NAD+ &nbsp;·&nbsp; Tesamorelin &nbsp;·&nbsp; GHK-Cu
+          Tesamorelin &nbsp;·&nbsp; GHK-Cu
         </p>
       </div>
 

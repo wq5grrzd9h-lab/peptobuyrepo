@@ -130,7 +130,7 @@ function ShopMemorialBanner() {
           {[
             { emoji: "🎁", text: "Free BAC Water + Syringes", sub: "every order" },
             { emoji: "💛", text: "Free GHK-Cu (100mg)", sub: "orders $250+" },
-            { emoji: "⚠️", text: "Only 4 kits left", sub: "while supplies last", urgent: true },
+            { emoji: "⚠️", text: "Only 3 GHK-Cu left", sub: "orders $250+ only", urgent: true },
           ].map(({ emoji, text, sub, urgent }) => (
             <div
               key={text}

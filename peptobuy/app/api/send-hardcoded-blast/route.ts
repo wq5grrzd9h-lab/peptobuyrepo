@@ -55,7 +55,7 @@ const PROMO_BOX = `
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff5f5;border:2px solid #cc0000;border-radius:12px;margin:24px 0;">
     <tr><td style="padding:20px 24px;">
       <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:#cc0000;">🎁 FREE BAC Water + Syringes — Every order. Auto-added.</p>
-      <p style="margin:0 0 10px;font-size:13px;color:#cc0000;font-weight:600;">⚠️ Only 4 kits left — going fast</p>
+      <p style="margin:0 0 10px;font-size:13px;color:#cc0000;font-weight:600;">⚠️ Only 3 more free GHK-Cu vials — orders $250+</p>
       <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:#cc0000;">🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+</p>
       <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:#16a34a;">🚚 FREE SHIPPING — Every order. No minimum.</p>
       <p style="margin:0;font-size:15px;font-weight:700;color:#be185d;">🧪 20% OFF FIRST ORDER — Code: FIRST20</p>
@@ -65,7 +65,7 @@ const PROMO_BOX = `
 
 const PRODUCT_LIST = `
   <p style="font-size:13px;color:#555;margin:16px 0 4px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Available Now:</p>
-  <p style="font-size:14px;color:#333;margin:0;">BPC-157 · TB-500 · RTGLP3 (Reta 🐀) · MOTS-C · NAD+ · Tesamorelin · GHK-Cu</p>
+  <p style="font-size:14px;color:#333;margin:0;">BPC-157 · TB-500 · RTGLP3 (Reta 🐀) · MOTS-C · Tesamorelin · GHK-Cu</p>
 `;
 
 const TRUST_BADGES = `

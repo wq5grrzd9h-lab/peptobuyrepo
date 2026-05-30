@@ -139,20 +139,6 @@ export const products: Product[] = [
       { size: "30ml", price: 51.99 },
     ],
   },
-  {
-    id: "nad-plus",
-    name: "NAD+",
-    slug: "nad-plus",
-    price: 91.99,
-    description:
-      "Nicotinamide Adenine Dinucleotide — a coenzyme central to cellular energy metabolism and redox signaling research. Investigated in models of mitochondrial function, sirtuin activation, and DNA repair pathway studies. For research use only.",
-    category: "Essentials",
-    inStock: true,
-    image: "/products/NAD_new_pic.png",
-    doses: [
-      { size: "500mg", price: 91.99 },
-    ],
-  },
 ];
 
 // ─── Category lists ───────────────────────────────────────────────────────────

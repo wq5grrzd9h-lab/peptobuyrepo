@@ -41,6 +41,7 @@ export default function ProductActions({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [urgencyText, setUrgencyText] = useState(() => getUrgencyText());
+  const [retaStock, setRetaStock] = useState<number | null>(null);
 
   // Sticky bar visibility — show when main CTA buttons scroll off screen
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -64,11 +65,23 @@ export default function ProductActions({ product }: { product: Product }) {
     return () => clearInterval(id);
   }, []);
 
+  // Fetch live RETA stock for RTGLP3 product page
+  useEffect(() => {
+    if (product.id !== "rtglp3") return;
+    fetch("/api/get-reta-stock")
+      .then((r) => r.json())
+      .then((d) => { if (typeof d.stock === "number") setRetaStock(d.stock); })
+      .catch(() => {});
+  }, [product.id]);
+
   const isEssentials = product.category === "Essentials";
   const unitPrice = selectedDose.price + (recon && !isEssentials ? RECONSTITUTION_PRICE : 0);
+  // For RTGLP3: treat stock=0 as out of stock; stock=null means still loading (assume in-stock)
+  const effectiveInStock =
+    product.id === "rtglp3" && retaStock !== null ? retaStock > 0 : product.inStock;
 
   const handleAddToCart = () => {
-    if (!product.inStock || added) return;
+    if (!effectiveInStock || added) return;
     addItem(product, selectedDose, qty, !isEssentials && recon);
     toast.cart("Added to cart", `${product.name} · ${selectedDose.size}${recon && !isEssentials ? " · Pre-mixed" : ""}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,7 +94,7 @@ export default function ProductActions({ product }: { product: Product }) {
   };
 
   const handleBuyNow = () => {
-    if (!product.inStock) return;
+    if (!effectiveInStock) return;
     addItem(product, selectedDose, qty, !isEssentials && recon);
     router.push("/cart");
   };
@@ -191,11 +204,31 @@ export default function ProductActions({ product }: { product: Product }) {
         </div>
       </div>
 
+      {/* ── RETA live stock badge ───────────────────────────── */}
+      {product.id === "rtglp3" && retaStock !== null && (
+        <div
+          className={[
+            "rounded-xl border px-4 py-2.5 text-center text-sm font-bold",
+            retaStock === 0
+              ? "border-zinc-300 bg-zinc-100 text-zinc-500"
+              : retaStock <= 5
+                ? "animate-pulse border-red-300 bg-red-50 text-red-700"
+                : "border-orange-200 bg-orange-50 text-orange-700",
+          ].join(" ")}
+        >
+          {retaStock === 0
+            ? "Out of Stock"
+            : retaStock <= 5
+              ? `🚨 Only ${retaStock} left — selling fast!`
+              : `⚠️ Only ${retaStock} left in stock!`}
+        </div>
+      )}
+
       {/* ── CTA buttons ──────────────────────────────────────── */}
       <div ref={ctaRef} className="flex gap-3">
         <button
           onClick={handleAddToCart}
-          disabled={!product.inStock}
+          disabled={!effectiveInStock}
           className={[
             "flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none",
             added
@@ -203,25 +236,25 @@ export default function ProductActions({ product }: { product: Product }) {
               : "bg-accent text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] disabled:bg-zinc-200 disabled:text-zinc-400",
           ].join(" ")}
         >
-          {added ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> Add to Cart</>}
+          {added ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> {effectiveInStock ? "Add to Cart" : "Out of Stock"}</>}
         </button>
         <button
           onClick={handleBuyNow}
-          disabled={!product.inStock}
+          disabled={!effectiveInStock}
           className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 py-3.5 text-sm font-bold text-zinc-700 transition-all duration-150 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30"
         >
           <Zap size={16} /> Order Now
         </button>
       </div>
 
-      {product.inStock && (
+      {effectiveInStock && (
         <p className="text-center text-xs text-zinc-400">
           {"🚚 FREE SHIPPING on orders $250+"}
         </p>
       )}
 
       {/* Flash Sale urgency banner */}
-      {product.inStock && isPromoActive() && (
+      {effectiveInStock && isPromoActive() && (
         <div
           className="rounded-xl border border-red-200 px-4 py-3 text-center"
           style={{ background: "linear-gradient(135deg,#fff5f5 0%,#fff8f8 100%)" }}
@@ -236,7 +269,7 @@ export default function ProductActions({ product }: { product: Product }) {
             🎖️ Free shipping on all orders — tonight only
           </p>
           <p className="mt-1 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ⚠️ Only 4 BAC Water kits remaining
+            ⚠️ Only 3 more free GHK-Cu vials available — orders $250+
           </p>
           {urgencyText && (
             <p className="mt-0.5 text-[11px] font-bold text-red-700">
@@ -285,7 +318,7 @@ export default function ProductActions({ product }: { product: Product }) {
             {/* Add to cart */}
             <button
               onClick={handleAddToCart}
-              disabled={!product.inStock}
+              disabled={!effectiveInStock}
               className={[
                 "flex h-[52px] min-w-[140px] items-center justify-center gap-2 rounded-xl text-[15px] font-black text-white transition-all active:scale-[0.97] disabled:opacity-40",
                 added

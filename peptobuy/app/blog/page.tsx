@@ -6,7 +6,7 @@ import { posts } from "@/lib/blog";
 export const metadata: Metadata = {
   title: "Research Blog | PeptoBuy",
   description:
-    "In-depth research guides covering BPC-157, TB-500, RTGLP3, MOTS-C, NAD+, and other research peptides. For qualified researchers and laboratory professionals.",
+    "In-depth research guides covering BPC-157, TB-500, RTGLP3, MOTS-C, and other research peptides. For qualified researchers and laboratory professionals.",
   openGraph: {
     title: "Research Blog | PeptoBuy",
     description: "Research guides on peptides for qualified researchers.",

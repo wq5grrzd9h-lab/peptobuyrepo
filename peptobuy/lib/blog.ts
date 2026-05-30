@@ -145,39 +145,6 @@ export const posts: BlogPost[] = [
     ],
   },
 
-  {
-    slug: "what-is-nad-plus",
-    title: "NAD+: Cellular Energy Research Overview",
-    metaDescription:
-      "A research overview of NAD+ (Nicotinamide Adenine Dinucleotide), its role in cellular energy metabolism, sirtuin activation, and DNA repair pathway research.",
-    publishedAt: "2025-03-01",
-    category: "Essentials",
-    productId: "nad-plus",
-    sections: [
-      {
-        body: "Nicotinamide Adenine Dinucleotide (NAD+) is a coenzyme found in every living cell, where it plays an indispensable role in redox reactions central to energy metabolism. As an electron carrier, NAD+ accepts hydride ions to form NADH during glycolysis, the TCA cycle, and fatty acid oxidation — then transfers those electrons to the respiratory chain for ATP synthesis. Beyond its classical metabolic role, NAD+ serves as a substrate for several regulatory enzyme classes, making it one of the most extensively researched small molecules in modern biochemistry.",
-      },
-      {
-        heading: "Sirtuin Research",
-        body: "Sirtuins (SIRT1–7) are NAD+-dependent deacylase enzymes that catalyze removal of acyl groups from lysine residues on target proteins. SIRT1, the most studied, regulates transcription factors including PGC-1α, FOXO, and NF-κB — linking NAD+ availability to gene expression programs governing mitochondrial biogenesis, inflammation, and apoptosis. SIRT3, localized to the mitochondrial matrix, regulates the acetylation state of key metabolic enzymes including isocitrate dehydrogenase and complex I subunits. NAD+ is consumed stoichiometrically in these reactions, making cellular NAD+ concentration a limiting variable in sirtuin activity research.",
-      },
-      {
-        heading: "PARP and DNA Repair",
-        body: "Poly(ADP-ribose) polymerases (PARPs) represent a second major class of NAD+-consuming enzymes. PARP-1, the primary family member, is recruited to sites of DNA single-strand breaks where it synthesizes poly(ADP-ribose) chains using NAD+ as substrate. This modification of repair scaffolding proteins facilitates base excision repair and other DNA damage response pathways. Under conditions of high genotoxic stress, PARP-1 hyperactivation can rapidly deplete cellular NAD+ pools — a phenomenon studied in models of ischemia-reperfusion injury, inflammatory cell death, and cancer biology.",
-      },
-      {
-        heading: "NAD+ Decline and Aging Models",
-        body: "Tissue NAD+ levels decline with age in multiple model organisms, including mice, nematodes, and — in observational studies — humans. This decline has been attributed to reduced biosynthetic flux, increased PARP and CD38 consumption, and decreased salvage pathway efficiency. Research into NAD+ precursors and direct NAD+ supplementation in model organisms has explored whether restoring NAD+ levels can reverse age-associated metabolic decline. Studies in aged mouse models have reported improvements in mitochondrial function, endurance capacity, and insulin sensitivity — all endpoints that require replication in controlled human trials.",
-      },
-      {
-        heading: "In Vitro Research Applications",
-        body: "NAD+ is widely used in biochemical assays requiring redox-active coenzyme. Common applications include enzymatic activity measurements for dehydrogenases, PARP activity assays, sirtuin deacetylase assays, and cell viability studies using NAD+-dependent metabolic readouts (MTT, WST-1). For cell culture work, NAD+ is typically added to media or used in cell lysate preparations at defined concentrations. Stock solutions should be prepared fresh in cold PBS and kept on ice to minimize degradation, as NAD+ is susceptible to hydrolysis at neutral and acidic pH.",
-      },
-      {
-        body: "PeptoBuy supplies research-grade NAD+ (500 mg per vial) for qualified researchers and laboratories. Each batch is independently third-party tested with COA available on request. For in vitro research use only — not for human or animal consumption.",
-      },
-    ],
-  },
 ];
 
 export function getPost(slug: string): BlogPost | undefined {

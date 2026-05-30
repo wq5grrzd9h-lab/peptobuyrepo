@@ -101,7 +101,7 @@ function buildHtml(email: string, items: CartItem[], cartTotal: number): string 
           ⚡ Memorial Day Sale Still Active
         </p>
         <p style="margin:6px 0 0;font-size:12px;color:#9a3412;line-height:1.5;">
-          Free BAC Water + Syringes still available — <strong>only 4 kits left</strong>. Plus free GHK-Cu (100mg) on orders $250+.<br/>Offer expires tonight at midnight EST.
+          Free BAC Water + Syringes still available. <strong>Only 3 more free GHK-Cu vials — orders $250+.</strong><br/>Offer expires tonight at midnight EST.
         </p>
       </div>`
           : ""
