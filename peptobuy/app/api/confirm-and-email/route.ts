@@ -23,6 +23,23 @@ interface CompactItem {
   r: number; // reconstitution 0|1
 }
 
+interface PendingOrderRecord {
+  orderNumber?: string;
+  customerEmail?: string;
+  customerName?: string;
+  shippingAddress?: {
+    firstName?: string; lastName?: string; address?: string;
+    city?: string; state?: string; zip?: string; country?: string;
+  };
+  items?: CompactItem[];
+  subtotal?: number;
+  shippingCost?: number;
+  total?: number;
+  taxAmount?: number;
+  discountCode?: string;
+  discountAmount?: number;
+}
+
 interface EmailItem {
   name: string;
   dose: string;
@@ -190,37 +207,58 @@ export async function POST(request: Request) {
     }
 
     const meta = pi.metadata ?? {};
-    const orderNumber = meta.orderNumber || paymentIntentId;
-    const customerEmail = meta.customerEmail;
 
-    if (!customerEmail) {
-      console.error("[confirm-and-email] No customerEmail in metadata — PI may be missing metadata");
-      return NextResponse.json({ error: "No customer email in payment intent metadata" }, { status: 400 });
-    }
-
-    // ── 2. Redis dedup ────────────────────────────────────────────────────────
+    // ── 2. Redis: dedup + pending-order lookup ────────────────────────────────
     let redis: Redis | null = null;
+    let pendingOrder: PendingOrderRecord | null = null;
+
     if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
       redis = new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL,
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
       });
+
+      // Dedup: prevent resend on page refresh / duplicate webhook
       const dedupKey = `order-email-sent:${paymentIntentId}`;
       const alreadySent = await redis.get(dedupKey);
       if (alreadySent) {
         console.log("[confirm-and-email] already sent — skipping");
         return NextResponse.json({ ok: true, skipped: true, reason: "already sent" });
       }
-      // Mark BEFORE sending to prevent duplicate concurrent calls
       await redis.set(dedupKey, "1", { ex: 86400 });
+
+      // Pending order: rich record saved just before confirmPayment (Affirm/Klarna/3DS)
+      const pendingKey = `pending-order:${paymentIntentId}`;
+      try {
+        pendingOrder = await redis.get<PendingOrderRecord>(pendingKey);
+        if (pendingOrder) {
+          console.log("[confirm-and-email] found pending-order for", paymentIntentId);
+          // Clean up — one-time use
+          await redis.del(pendingKey);
+        }
+      } catch (e) {
+        console.warn("[confirm-and-email] pending-order lookup failed:", e);
+      }
     }
 
-    // ── 3. Parse items from metadata ─────────────────────────────────────────
-    let compactItems: CompactItem[] = [];
-    try {
-      compactItems = JSON.parse(meta.itemsJson || "[]");
-    } catch {
-      console.warn("[confirm-and-email] Failed to parse itemsJson:", meta.itemsJson);
+    // ── 3. Build order data — pending-order (Redis) takes priority over Stripe metadata ──
+    const orderNumber = pendingOrder?.orderNumber || meta.orderNumber || paymentIntentId;
+    const customerEmail = pendingOrder?.customerEmail || meta.customerEmail || "";
+    const customerName  = pendingOrder?.customerName  || meta.customerName  || "";
+
+    if (!customerEmail) {
+      console.error("[confirm-and-email] No customerEmail — not in pending-order or metadata");
+      return NextResponse.json({ error: "No customer email found" }, { status: 400 });
+    }
+
+    // Items — prefer full pending-order record; fall back to compact Stripe metadata
+    let compactItems: CompactItem[] = pendingOrder?.items ?? [];
+    if (!compactItems.length) {
+      try {
+        compactItems = JSON.parse(meta.itemsJson || "[]");
+      } catch {
+        console.warn("[confirm-and-email] Failed to parse itemsJson:", meta.itemsJson);
+      }
     }
     const emailItems: EmailItem[] = compactItems.map((i) => ({
       name: i.n,
@@ -230,19 +268,20 @@ export async function POST(request: Request) {
       reconstitution: i.r === 1,
     }));
 
-    const subtotal = parseFloat(meta.subtotal || "0");
-    const shipping = parseFloat(meta.shipping || "0");
-    const total = parseFloat(meta.total || "0");
+    const subtotal = pendingOrder?.subtotal  ?? parseFloat(meta.subtotal  || "0");
+    const shipping = pendingOrder?.shippingCost ?? parseFloat(meta.shipping || "0");
+    const total    = pendingOrder?.total     ?? parseFloat(meta.total     || "0");
+
+    const pa = pendingOrder?.shippingAddress;
     const shippingAddress = {
-      firstName: meta.shippingFirstName || "",
-      lastName: meta.shippingLastName || "",
-      address: meta.shippingStreet || "",
-      city: meta.shippingCity || "",
-      state: meta.shippingState || "",
-      zip: meta.shippingZip || "",
-      country: meta.shippingCountry || "",
+      firstName: pa?.firstName || meta.shippingFirstName || "",
+      lastName:  pa?.lastName  || meta.shippingLastName  || "",
+      address:   pa?.address   || meta.shippingStreet    || "",
+      city:      pa?.city      || meta.shippingCity      || "",
+      state:     pa?.state     || meta.shippingState     || "",
+      zip:       pa?.zip       || meta.shippingZip       || "",
+      country:   pa?.country   || meta.shippingCountry   || "",
     };
-    const customerName = meta.customerName || "";
 
     // ── 4. Send emails ────────────────────────────────────────────────────────
     const resend = new Resend(process.env.RESEND_API_KEY);

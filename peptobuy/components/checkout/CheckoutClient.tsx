@@ -564,6 +564,8 @@ export default function CheckoutClient() {
   const [retryCount, setRetryCount] = useState(0);
   // Tracks current PI attempt — stale callbacks from cancelled/superseded fetches are ignored
   const piAttemptRef = useRef(0);
+  // PI ID — stored at creation time, used to key the pending-order Redis record
+  const [stripePaymentIntentId, setStripePaymentIntentId] = useState<string | null>(null);
   // Stored when PI is created so prepareStripeOrder reuses the same order number
   const [stripeOrderNumber, setStripeOrderNumber] = useState<string | null>(null);
   // Tax computed by Stripe Tax (null = not yet known, 0 = exempt, >0 = actual)
@@ -682,6 +684,7 @@ export default function CheckoutClient() {
           );
         setClientSecret(data.clientSecret);
         if (data.orderNumber) setStripeOrderNumber(data.orderNumber);
+        if (data.paymentIntentId) setStripePaymentIntentId(data.paymentIntentId);
         setTaxAmount(typeof data.taxAmount === "number" ? data.taxAmount : 0);
       })
       .catch((err: Error) => {
@@ -813,14 +816,44 @@ export default function CheckoutClient() {
     } catch { /* ignore */ }
   };
 
-  // Called BEFORE stripe.confirmPayment — pre-saves order to localStorage so the
-  // order-confirmation page can recover it if Stripe redirects (3DS etc) and
-  // onSuccess never fires. Reuses the order number from PI creation so it matches
-  // the one already stored in Stripe metadata (used by /api/confirm-and-email).
+  // Called BEFORE stripe.confirmPayment — pre-saves order to:
+  //   1. Redis (via save-pending-order) — survives redirect away from page,
+  //      used by confirm-and-email for Affirm/Klarna/3DS to recover full shipping info.
+  //   2. localStorage — used by order-confirmation page to render order details in UI.
+  // Reuses the PI-generated order number so it matches Stripe metadata.
   const prepareStripeOrder = async (): Promise<string> => {
-    // Use server-generated order number from PI creation (or fall back to API call)
     const orderNumber = stripeOrderNumber ?? await getOrderNumber();
     cancelAbandonedCart();
+
+    // ── Save to Redis (needed for redirect-based methods: Affirm, Klarna, 3DS) ──
+    if (stripePaymentIntentId) {
+      fetch("/api/save-pending-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentIntentId: stripePaymentIntentId,
+          orderNumber,
+          customerEmail: contact.email,
+          customerName: `${shipping.firstName} ${shipping.lastName}`.trim(),
+          shippingAddress: shipping,
+          items: items.map((i) => ({
+            n: i.product.name,
+            d: i.selectedDose.size,
+            q: i.quantity,
+            p: lineUnitPrice(i),
+            r: i.reconstitution ? 1 : 0,
+          })),
+          subtotal,
+          shippingCost,
+          total,
+          taxAmount: taxAmount ?? 0,
+          discountCode: promoCode ?? undefined,
+          discountAmount: discountAmount > 0 ? discountAmount : undefined,
+        }),
+      }).catch((err) => console.error("[prepareStripeOrder] save-pending-order failed:", err));
+    }
+
+    // ── Save to localStorage (for order-confirmation page UI recovery) ──────────
     try {
       localStorage.setItem("peptobuy-pending-stripe-order", JSON.stringify({
         orderNumber,
@@ -841,7 +874,7 @@ export default function CheckoutClient() {
         promoCode,
         shippingCost,
         taxAmount: taxAmount ?? 0,
-        total, // includes tax
+        total,
         shippingAddress: shipping,
         shippingMethod,
         paymentMethod: "card",
