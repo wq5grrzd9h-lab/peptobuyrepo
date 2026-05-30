@@ -83,6 +83,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const capturedAt = Date.now();
+
     const record: CartAbandonedRecord = {
       email: email.toLowerCase(),
       cartItems,
@@ -92,7 +94,9 @@ export async function POST(request: Request) {
       ...(qstashMessageId ? { qstashMessageId } : {}),
     };
 
-    await redis.set(key, record, { ex: 86400 });
+    await redis.set(key, { ...record, capturedAt }, { ex: 86400 });
+    // Add to time-indexed sorted set for daily-blast window queries (score = Unix ms)
+    await redis.zadd("captured-emails", { score: capturedAt, member: email.toLowerCase() });
     return NextResponse.json({ ok: true, action: "registered", scheduled: !!qstashMessageId });
   } catch (err) {
     console.error("[register-cart-abandonment]", err);

@@ -168,6 +168,7 @@ function sleep(ms: number) {
 }
 
 export async function POST(request: Request) {
+  return NextResponse.json({ error: "Disabled" }, { status: 410 });
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "RESEND_API_KEY not set" }, { status: 500 });
   }

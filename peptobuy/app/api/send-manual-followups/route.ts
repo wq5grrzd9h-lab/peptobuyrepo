@@ -216,6 +216,7 @@ const EMAILS: EmailDef[] = [
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function GET() {
+  return NextResponse.json({ error: "Disabled" }, { status: 410 });
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "RESEND_API_KEY not set" }, { status: 500 });
   }

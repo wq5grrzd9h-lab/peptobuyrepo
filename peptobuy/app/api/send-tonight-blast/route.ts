@@ -116,6 +116,7 @@ function buildHtml(to: string): string {
 }
 
 export async function GET() {
+  return NextResponse.json({ error: "Disabled" }, { status: 410 });
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ ok: false, error: "RESEND_API_KEY not configured" }, { status: 500 });
   }

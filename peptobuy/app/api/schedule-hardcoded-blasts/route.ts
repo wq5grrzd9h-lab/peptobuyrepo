@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { Client as QStash } from "@upstash/qstash";
 
 export async function GET() {
+  return NextResponse.json({ error: "Disabled" }, { status: 410 });
   if (!process.env.QSTASH_TOKEN) {
     return NextResponse.json({ error: "QSTASH_TOKEN not set" }, { status: 500 });
   }

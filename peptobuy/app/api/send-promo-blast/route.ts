@@ -333,6 +333,7 @@ const TEMPLATES: Record<EmailType, { subject: string; html: string }> = {
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  return NextResponse.json({ error: "Disabled" }, { status: 410 });
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     return NextResponse.json({ error: "Redis not configured" }, { status: 500 });
   }
@@ -363,7 +364,7 @@ export async function POST(request: Request) {
   });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const emails = await collectAllEmails(redis, process.env.RESEND_API_KEY);
+  const emails = await collectAllEmails(redis, process.env.RESEND_API_KEY ?? "");
   console.log(`[promo-blast:${emailType}] sending to ${emails.length} emails`);
 
   if (emails.length === 0) {
