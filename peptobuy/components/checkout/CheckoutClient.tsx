@@ -435,24 +435,28 @@ function StepThreeInner({
 
   return (
     <>
-      {/* Express checkout — Apple Pay / Google Pay (only shown on supported devices) */}
-      <div className="mb-2">
-        <ExpressCheckoutElement
-          onClick={handleExpressClick}
-          onConfirm={handleExpressConfirm}
-          options={{
-            buttonType: { applePay: "buy", googlePay: "buy" },
-            buttonHeight: 52,
-          }}
-        />
-      </div>
-
-      {/* "or pay with" divider */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-zinc-200" />
-        <span className="text-xs font-medium text-zinc-400">or pay with</span>
-        <div className="h-px flex-1 bg-zinc-200" />
-      </div>
+      {/* Express checkout — Apple Pay / Google Pay.
+          Only shown when card tab is active (buttons auto-hide on unsupported browsers). */}
+      {paymentMethod === "card" && (
+        <>
+          <div style={{ marginBottom: "16px" }}>
+            <ExpressCheckoutElement
+              onClick={handleExpressClick}
+              onConfirm={handleExpressConfirm}
+              options={{
+                buttonType:  { applePay: "buy",   googlePay: "buy" },
+                buttonTheme: { applePay: "black", googlePay: "black" },
+                layout:      { maxColumns: 1, maxRows: 2 },
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", margin: "16px 0" }}>
+            <hr style={{ flex: 1, borderColor: "#e0e0e0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+            <span style={{ padding: "0 12px", color: "#666", fontSize: "14px" }}>or pay with card</span>
+            <hr style={{ flex: 1, borderColor: "#e0e0e0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+          </div>
+        </>
+      )}
 
       {/* Card / Crypto / Zelle tabs */}
       <PaymentMethodToggle active={paymentMethod} onChange={setPaymentMethod} />
