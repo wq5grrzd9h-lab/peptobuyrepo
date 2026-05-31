@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Fragment } from "react";
+import { useState, useEffect, useRef, useCallback, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -8,7 +8,7 @@ import {
   ArrowRight, Loader2, CreditCard, Bitcoin,
 } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { Elements, PaymentElement, ExpressCheckoutElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart, lineUnitPrice } from "@/context/CartContext";
 import CheckoutSummary from "./CheckoutSummary";
 import { isFreeShippingWeekend } from "@/lib/memorialDay";
@@ -332,11 +332,8 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
         <div style={elementReady ? undefined : { display: "none" }}>
           <PaymentElement
             options={{
-              layout: "tabs",
-              wallets: {
-                applePay: "auto",
-                googlePay: "auto",
-              },
+              layout: { type: "tabs", defaultCollapsed: false },
+              wallets: { applePay: "auto", googlePay: "auto" },
             }}
             onReady={() => setElementReady(true)}
           />
@@ -361,6 +358,115 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
         </button>
       </div>
     </div>
+  );
+}
+
+// ─── Step 3 inner — lives inside <Elements>, renders express checkout + tabs ──
+
+interface StepThreeInnerProps {
+  paymentMethod: PaymentMethod;
+  setPaymentMethod: (m: PaymentMethod) => void;
+  onBack: () => void;
+  onPrepare: () => Promise<string>;
+  onSuccess: (orderNumber: string) => void;
+  onCryptoPay: () => void;
+  cryptoSubmitting: boolean;
+  cryptoError: string | null;
+  onZellePay: () => void;
+  zelleSubmitting: boolean;
+  zelleError: string | null;
+  total: number;
+  cartLineItems: Array<{ name: string; amount: number }>;
+}
+
+function StepThreeInner({
+  paymentMethod, setPaymentMethod,
+  onBack, onPrepare, onSuccess,
+  onCryptoPay, cryptoSubmitting, cryptoError,
+  onZellePay, zelleSubmitting, zelleError,
+  total, cartLineItems,
+}: StepThreeInnerProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  // onClick: populate the Apple Pay / Google Pay sheet with line items
+  const handleExpressClick = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ({ resolve }: any) => {
+      resolve({
+        lineItems: cartLineItems,
+        emailRequired: true,
+      });
+    },
+    [cartLineItems]
+  );
+
+  // onConfirm: user authorized — pre-save order then confirm payment
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleExpressConfirm = useCallback(async (event: any) => {
+    if (!stripe || !elements) {
+      event.paymentFailed?.({ reason: "fail" });
+      return;
+    }
+
+    let orderNumber: string;
+    try {
+      orderNumber = await onPrepare();
+    } catch (err) {
+      console.error("[ExpressCheckout] onPrepare failed:", err);
+      event.paymentFailed?.({ reason: "fail" });
+      return;
+    }
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: `${window.location.origin}/order-confirmation` },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      console.error("[ExpressCheckout] confirmPayment error:", error.message);
+      event.paymentFailed?.({ reason: "fail" });
+      return;
+    }
+
+    onSuccess(orderNumber);
+  }, [stripe, elements, onPrepare, onSuccess]);
+
+  return (
+    <>
+      {/* Express checkout — Apple Pay / Google Pay (only shown on supported devices) */}
+      <div className="mb-2">
+        <ExpressCheckoutElement
+          onClick={handleExpressClick}
+          onConfirm={handleExpressConfirm}
+          options={{
+            buttonType: { applePay: "buy", googlePay: "buy" },
+            buttonHeight: 52,
+          }}
+        />
+      </div>
+
+      {/* "or pay with" divider */}
+      <div className="mb-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-zinc-200" />
+        <span className="text-xs font-medium text-zinc-400">or pay with</span>
+        <div className="h-px flex-1 bg-zinc-200" />
+      </div>
+
+      {/* Card / Crypto / Zelle tabs */}
+      <PaymentMethodToggle active={paymentMethod} onChange={setPaymentMethod} />
+
+      {paymentMethod === "card" && (
+        <StripePaymentForm onBack={onBack} onPrepare={onPrepare} onSuccess={onSuccess} />
+      )}
+      {paymentMethod === "crypto" && (
+        <CryptoPaymentForm onBack={onBack} onPay={onCryptoPay} submitting={cryptoSubmitting} error={cryptoError} />
+      )}
+      {paymentMethod === "zelle" && (
+        <ZellePaymentForm onBack={onBack} onPay={onZellePay} submitting={zelleSubmitting} error={zelleError} total={total} />
+      )}
+    </>
   );
 }
 
@@ -998,68 +1104,80 @@ export default function CheckoutClient() {
           {/* Step 3: Payment */}
           {step === 3 && (
             <>
-              <PaymentMethodToggle active={paymentMethod} onChange={setPaymentMethod} />
+              {/* Missing publishable key — show immediately above everything */}
+              {!STRIPE_PK && !intentLoading && !intentError && (
+                <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+                  <p className="font-semibold">⚠️ Payment configuration error</p>
+                  <p className="mt-1 text-xs">
+                    Card payments are temporarily unavailable. Please use Crypto or Zelle, or contact{" "}
+                    <a href="mailto:peptobuy@gmail.com" className="underline">peptobuy@gmail.com</a>.
+                  </p>
+                </div>
+              )}
 
-              {/* Card / Stripe */}
-              {paymentMethod === "card" && (
+              {/* Loading Stripe PI — show spinner; tabs still accessible below */}
+              {intentLoading && !clientSecret && (
+                <div className="mb-4 flex h-16 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                  <Loader2 size={20} className="animate-spin text-accent" />
+                  <span className="ml-2 text-sm text-zinc-400">Loading payment options…</span>
+                </div>
+              )}
+
+              {/* PI fetch error */}
+              {intentError && !clientSecret && (
+                <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+                  <p className="font-semibold">⚠️ Payment failed to load</p>
+                  <p className="mt-1 text-xs text-red-500">{intentError}</p>
+                  <p className="mt-2 text-xs text-red-500">
+                    Please refresh or contact{" "}
+                    <a href="mailto:peptobuy@gmail.com" className="underline font-semibold">peptobuy@gmail.com</a>
+                    {" "}— or switch to Crypto / Zelle below.
+                  </p>
+                  <button
+                    onClick={() => { setIntentError(null); setRetryCount((c) => c + 1); }}
+                    className="mt-3 rounded-lg border border-red-300 bg-white px-4 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+
+              {/* clientSecret ready — wrap everything in Elements so
+                  ExpressCheckoutElement appears ABOVE the tabs */}
+              {clientSecret && !intentLoading && stripePromise && (
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+                  <StepThreeInner
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                    onBack={handleBack}
+                    onPrepare={prepareStripeOrder}
+                    onSuccess={handleStripeSuccess}
+                    onCryptoPay={handleCryptoPay}
+                    cryptoSubmitting={cryptoSubmitting}
+                    cryptoError={cryptoError}
+                    onZellePay={handleZellePay}
+                    zelleSubmitting={zelleSubmitting}
+                    zelleError={zelleError}
+                    total={total}
+                    cartLineItems={items.map((i) => ({
+                      name: `${i.product.name} (${i.selectedDose.size})`,
+                      amount: Math.round(lineUnitPrice(i) * i.quantity * 100),
+                    }))}
+                  />
+                </Elements>
+              )}
+
+              {/* While PI is loading, still show tabs so user can switch to Crypto / Zelle */}
+              {!clientSecret && (
                 <>
-                  {/* Missing publishable key — misconfiguration */}
-                  {!STRIPE_PK && !intentLoading && !intentError && (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
-                      <p className="font-semibold">⚠️ Payment configuration error</p>
-                      <p className="mt-1 text-xs">
-                        Card payments are temporarily unavailable. Please use Crypto or Zelle, or contact{" "}
-                        <a href="mailto:peptobuy@gmail.com" className="underline">peptobuy@gmail.com</a>.
-                      </p>
-                    </div>
+                  <PaymentMethodToggle active={paymentMethod} onChange={setPaymentMethod} />
+                  {paymentMethod === "crypto" && (
+                    <CryptoPaymentForm onBack={handleBack} onPay={handleCryptoPay} submitting={cryptoSubmitting} error={cryptoError} />
                   )}
-
-                  {intentLoading && (
-                    <div className="flex h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                      <Loader2 size={24} className="animate-spin text-accent" />
-                    </div>
-                  )}
-
-                  {intentError && (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
-                      <p className="font-semibold">⚠️ Payment failed to load</p>
-                      <p className="mt-1 text-xs text-red-500">{intentError}</p>
-                      <p className="mt-2 text-xs text-red-500">
-                        Please refresh or contact{" "}
-                        <a href="mailto:peptobuy@gmail.com" className="underline font-semibold">
-                          peptobuy@gmail.com
-                        </a>{" "}
-                        — or switch to Crypto / Zelle above.
-                      </p>
-                      <button
-                        onClick={() => { setIntentError(null); setRetryCount((c) => c + 1); }}
-                        className="mt-3 rounded-lg border border-red-300 bg-white px-4 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
-                      >
-                        Try Again
-                      </button>
-                    </div>
-                  )}
-
-                  {clientSecret && !intentLoading && (
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-                      <StripePaymentForm
-                        onBack={handleBack}
-                        onPrepare={prepareStripeOrder}
-                        onSuccess={handleStripeSuccess}
-                      />
-                    </Elements>
+                  {paymentMethod === "zelle" && (
+                    <ZellePaymentForm onBack={handleBack} onPay={handleZellePay} submitting={zelleSubmitting} error={zelleError} total={total} />
                   )}
                 </>
-              )}
-
-              {/* Crypto / Plisio */}
-              {paymentMethod === "crypto" && (
-                <CryptoPaymentForm onBack={handleBack} onPay={handleCryptoPay} submitting={cryptoSubmitting} error={cryptoError} />
-              )}
-
-              {/* Zelle */}
-              {paymentMethod === "zelle" && (
-                <ZellePaymentForm onBack={handleBack} onPay={handleZellePay} submitting={zelleSubmitting} error={zelleError} total={total} />
               )}
             </>
           )}
