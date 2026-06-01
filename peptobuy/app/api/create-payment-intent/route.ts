@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
 
-  const sentCents = Math.round(amountNum * 100);
+  const sentCents = Math.max(Math.round(amountNum * 100), 50);
   console.log("[create-payment-intent] Creating PI — cents:", sentCents, "email:", customerEmail);
 
   try {

@@ -372,59 +372,68 @@ function ExpressCheckoutWrapper({
 }) {
   const stripe = useStripe();
   const elements = useElements();
-  const [eceReady, setEceReady] = useState(false);
+  const [showDivider, setShowDivider] = useState(false);
 
   return (
-    <div style={{ marginBottom: "16px", minHeight: "44px", border: "1px solid red" }}>
-      <p style={{ fontSize: "12px", color: "red", margin: "0 0 4px 0" }}>Express checkout area</p>
-      <ExpressCheckoutElement
-        onReady={(e) => {
-          console.log("[ECE] onReady event:", JSON.stringify(e));
-          console.log("[ECE] stripe ready:", !!stripe, "elements ready:", !!elements);
-          setEceReady(true);
-        }}
-        onConfirm={async (event) => {
-          if (!stripe || !elements) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (event as any).paymentFailed?.({ reason: "fail" });
-            return;
-          }
+    <>
+      <div style={{ marginBottom: "16px", minHeight: "60px" }}>
+        <ExpressCheckoutElement
+          onReady={(e) => {
+            const methods = e.availablePaymentMethods;
+            const hasMethod = !!(methods && (methods.applePay || methods.googlePay || methods.link));
+            console.log("[ECE] availablePaymentMethods:", methods, "| showing:", hasMethod);
+            setShowDivider(hasMethod);
+          }}
+          onConfirm={async (event) => {
+            if (!stripe || !elements) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (event as any).paymentFailed?.({ reason: "fail" });
+              return;
+            }
 
-          let orderNumber: string;
-          try {
-            orderNumber = await onPrepare();
-          } catch (err) {
-            console.error("[ECE] onPrepare failed:", err);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (event as any).paymentFailed?.({ reason: "fail" });
-            return;
-          }
+            let orderNumber: string;
+            try {
+              orderNumber = await onPrepare();
+            } catch (err) {
+              console.error("[ECE] onPrepare failed:", err);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (event as any).paymentFailed?.({ reason: "fail" });
+              return;
+            }
 
-          const { error } = await stripe.confirmPayment({
-            elements,
-            confirmParams: {
-              return_url: `${window.location.origin}/order-confirmation`,
-            },
-          });
+            const { error } = await stripe.confirmPayment({
+              elements,
+              confirmParams: {
+                return_url: `${window.location.origin}/order-confirmation`,
+              },
+            });
 
-          if (error) {
-            console.error("[ECE] confirmPayment error:", error);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (event as any).paymentFailed?.({ reason: "fail" });
-            return;
-          }
+            if (error) {
+              console.error("[ECE] confirmPayment error:", error);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (event as any).paymentFailed?.({ reason: "fail" });
+              return;
+            }
 
-          onSuccess(orderNumber);
-        }}
-        options={{
-          buttonType:  { applePay: "buy",   googlePay: "buy" },
-          buttonTheme: { applePay: "black", googlePay: "black" },
-        }}
-      />
-      {eceReady && (
-        <p style={{ fontSize: "11px", color: "green", margin: "4px 0 0 0" }}>ECE mounted ✓</p>
+            onSuccess(orderNumber);
+          }}
+          options={{
+            buttonType:     { applePay: "buy",    googlePay: "buy" },
+            buttonTheme:    { applePay: "black",  googlePay: "black" },
+            paymentMethods: { applePay: "always", googlePay: "always" },
+            layout:         { maxColumns: 1, maxRows: 3, overflow: "auto" },
+          }}
+        />
+      </div>
+
+      {showDivider && (
+        <div style={{ display: "flex", alignItems: "center", margin: "12px 0" }}>
+          <hr style={{ flex: 1, border: "none", borderTop: "1px solid #e0e0e0" }} />
+          <span style={{ padding: "0 12px", color: "#888", fontSize: "13px" }}>or pay with card</span>
+          <hr style={{ flex: 1, border: "none", borderTop: "1px solid #e0e0e0" }} />
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -457,14 +466,7 @@ function StepThreeInner({
       {/* ExpressCheckoutWrapper handles its own useStripe/useElements hooks.
           Only render when card tab is active — ECE auto-hides on unsupported browsers. */}
       {paymentMethod === "card" && (
-        <>
-          <ExpressCheckoutWrapper onPrepare={onPrepare} onSuccess={onSuccess} />
-          <div style={{ display: "flex", alignItems: "center", margin: "16px 0" }}>
-            <hr style={{ flex: 1, border: "none", borderTop: "1px solid #e0e0e0" }} />
-            <span style={{ padding: "0 12px", color: "#666", fontSize: "14px" }}>or pay with card</span>
-            <hr style={{ flex: 1, border: "none", borderTop: "1px solid #e0e0e0" }} />
-          </div>
-        </>
+        <ExpressCheckoutWrapper onPrepare={onPrepare} onSuccess={onSuccess} />
       )}
 
       {/* Card / Crypto / Zelle tabs */}
@@ -1158,7 +1160,7 @@ export default function CheckoutClient() {
               {/* clientSecret ready — wrap everything in Elements so
                   ExpressCheckoutElement appears ABOVE the tabs */}
               {clientSecret && !intentLoading && stripePromise && (
-                <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance, loader: "auto" }}>
                   <StepThreeInner
                     paymentMethod={paymentMethod}
                     setPaymentMethod={setPaymentMethod}
