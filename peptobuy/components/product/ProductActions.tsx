@@ -266,7 +266,7 @@ export default function ProductActions({ product }: { product: Product }) {
             🚨 STOCK ALERT:
           </p>
           <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ❌ BAC Water kits — SOLD OUT
+            ⚠️ BAC Water — Only 2 left — grab it now!
           </p>
           <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
             ⚠️ Syringes — last few remaining

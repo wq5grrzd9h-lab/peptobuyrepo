@@ -385,7 +385,7 @@ export default function CartClient() {
       {/* ── Compact gift strip (mobile) ────────────────────── */}
       {promoActive && (
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 lg:hidden">
-          <span className="text-sm font-bold text-red-700">❌ BAC Water SOLD OUT · ⚠️ Syringes low stock</span>
+          <span className="text-sm font-bold text-red-700">⚠️ BAC Water: Only 2 left! · ⚠️ Syringes low stock</span>
           {hasGhkCu ? (
             <span className="text-sm font-bold text-amber-700">🎁 Free GHK-Cu (100mg) unlocked!</span>
           ) : (
@@ -415,7 +415,7 @@ export default function CartClient() {
             <div className="flex items-start gap-2.5">
               <span className="text-lg">🎁</span>
               <div>
-                <p className="text-sm font-bold text-red-700">❌ BAC Water SOLD OUT · ⚠️ Syringes low stock</p>
+                <p className="text-sm font-bold text-red-700">⚠️ BAC Water: Only 2 left! · ⚠️ Syringes low stock</p>
                 <p className="text-[12px]" style={{ color: "#cc0000", fontWeight: 700 }}>⚠️ Reta: Only 6 left · ⚠️ GHK-Cu: Only 3 left</p>
               </div>
             </div>
@@ -452,8 +452,8 @@ export default function CartClient() {
             {items.map((item) => <CartItemRow key={item.product.id} item={item} />)}
             {promoActive && (
               <FreeGiftRow
-                label="Syringes — Flash Sale Gift (BAC Water: SOLD OUT)"
-                urgency="⚠️ Syringes: low stock"
+                label="BAC Water + Syringes — Flash Sale Gift (⚠️ Only 2 BAC Water left!)"
+                urgency="⚠️ Only 2 left!"
               />
             )}
             {promoActive && hasGhkCu && <FreeGiftRow label="GHK-Cu (100mg)" />}

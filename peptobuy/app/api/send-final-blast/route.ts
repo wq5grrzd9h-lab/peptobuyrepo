@@ -80,7 +80,7 @@ const HTML = `<!DOCTYPE html>
         <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#18181b;">
           🚨 STOCK ALERT:
         </p>
-        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc0000;">❌ BAC Water kits — SOLD OUT</p>
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Only 2 left — grab it now!</p>
         <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Syringes — last few remaining</p>
         <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ RTGLP3 (Reta) — Only 6 left</p>
         <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#cc5500;border-top:1px solid #ffd6e5;padding-top:12px;">

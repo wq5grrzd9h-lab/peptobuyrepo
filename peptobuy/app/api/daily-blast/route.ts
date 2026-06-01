@@ -56,7 +56,7 @@ function windowBoundaries(w: Window): { start: number; end: number } {
 const PROMO_BOX = `
 <div style="border:3px solid #18181b;border-radius:12px;padding:18px 22px;margin-bottom:24px;background:#fafafa;">
   <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#cc0000;">🚨 STOCK ALERT:</p>
-  <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc0000;">❌ BAC Water kits — SOLD OUT</p>
+  <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Only 2 left — grab it now!</p>
   <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Syringes — last few remaining</p>
   <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ RTGLP3 (Reta) — Only 6 left · Free GHK-Cu — Only 3 left (orders $250+)</p>
   <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🚚 FREE SHIPPING — Orders $250+</p>
