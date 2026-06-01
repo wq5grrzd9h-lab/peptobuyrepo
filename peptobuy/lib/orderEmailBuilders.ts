@@ -185,7 +185,7 @@ export function buildCustomerHtml(d: OrderEmailData, zelleBlock = ""): string {
 
 /** Derive free gifts from order totals (flash sale always on). */
 export function deriveFreeGifts(discountedSubtotal: number): string[] {
-  const gifts = ["BAC Water + Syringes"];
+  const gifts = ["Syringes (BAC Water: SOLD OUT)"];
   if (discountedSubtotal >= FREE_GHKCU_THRESHOLD) gifts.push("GHK-Cu 100mg");
   return gifts;
 }

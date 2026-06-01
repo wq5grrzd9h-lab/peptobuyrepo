@@ -56,7 +56,7 @@ function FlashSaleCountdown() {
           </span>
         </>
       )}
-      <span className="hidden sm:inline">· Free GHK-Cu + Free BAC Water &amp; Syringes (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 3 Left!</span>)</span>
+      <span className="hidden sm:inline">· Free GHK-Cu on $250+ (<span style={{ background: "#fff", color: "#cc0000", borderRadius: "4px", padding: "0 4px", fontWeight: 900, fontSize: "11px" }}>Only 3 Left!</span>) · ❌ BAC Water SOLD OUT · ⚠️ Syringes low stock · ⚠️ Reta: Only 6 left</span>
     </div>
   );
 }
@@ -109,7 +109,7 @@ export default function Navbar() {
               <span className="opacity-60">·</span>
               <span>COA On Request</span>
               <span className="opacity-60">·</span>
-              <span className="font-black">⚡ FLASH SALE — 🚚 FREE SHIPPING on orders $250+ · Free GHK-Cu on $250+ · Free BAC Water &amp; Syringes Every Order</span>
+              <span className="font-black">⚡ FLASH SALE — 🚚 FREE SHIPPING on orders $250+ · Free GHK-Cu on $250+ · ❌ BAC Water SOLD OUT · ⚠️ Syringes low stock · ⚠️ Reta: Only 6 left</span>
               <span className="opacity-60">·</span>
             </span>
           ))}

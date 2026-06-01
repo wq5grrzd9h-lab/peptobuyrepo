@@ -63,8 +63,8 @@ function memorialBlock(): string {
 <div style="background:#8B0000;border-radius:10px;padding:14px 18px;margin-bottom:20px;text-align:center;">
   <p style="margin:0;font-size:13px;font-weight:800;color:#fff;">🇺🇸 Memorial Day Sale — Ends Monday Midnight</p>
   <p style="margin:6px 0 0;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.5;">
-    ⚡ Free BAC Water + Syringes still available — <strong>Only 3 more free GHK-Cu vials — orders $250+</strong><br/>
-    Plus free GHK-Cu (100mg) on orders $250+. Sale ends May 26, 2026.
+    🚨 STOCK UPDATE: ❌ BAC Water kits SOLD OUT · ⚠️ Syringes almost gone<br/>
+    ⚠️ RTGLP3 (Reta) — Only 6 left · ⚠️ Free GHK-Cu — Only 3 left (orders $250+)
   </p>
 </div>`;
 }

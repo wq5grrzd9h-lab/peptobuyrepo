@@ -260,16 +260,22 @@ export default function ProductActions({ product }: { product: Product }) {
           style={{ background: "linear-gradient(135deg,#fff5f5 0%,#fff8f8 100%)" }}
         >
           <p className="text-[12px] font-bold text-red-800">
-            ⚡ Flash Sale — Free gifts with every order
-          </p>
-          <p className="mt-0.5 text-[11px] text-red-600">
-            Free BAC Water + Syringes included · Free GHK-Cu on $250+ orders
-          </p>
-          <p className="mt-0.5 text-[11px] font-bold text-emerald-700">
-            🎖️ Free shipping on all orders — tonight only
+            ⚡ Flash Sale Active — 🚚 Free Shipping on $250+
           </p>
           <p className="mt-1 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ⚠️ Only 3 more free GHK-Cu vials available — orders $250+
+            🚨 STOCK ALERT:
+          </p>
+          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc0000" }}>
+            ❌ BAC Water kits — SOLD OUT
+          </p>
+          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
+            ⚠️ Syringes — last few remaining
+          </p>
+          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
+            ⚠️ RTGLP3 (Reta 🐀) — Only 6 left in stock
+          </p>
+          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
+            ⚠️ Free GHK-Cu vials — Only 3 remaining (orders $250+)
           </p>
           {urgencyText && (
             <p className="mt-0.5 text-[11px] font-bold text-red-700">

@@ -128,9 +128,9 @@ function ShopMemorialBanner() {
         {/* Gift pills */}
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           {[
-            { emoji: "🎁", text: "Free BAC Water + Syringes", sub: "every order" },
-            { emoji: "💛", text: "Free GHK-Cu (100mg)", sub: "orders $250+" },
-            { emoji: "⚠️", text: "Only 3 GHK-Cu left", sub: "orders $250+ only", urgent: true },
+            { emoji: "❌", text: "BAC Water — SOLD OUT", sub: "⚠️ Syringes: low stock", urgent: true },
+            { emoji: "💛", text: "Free GHK-Cu (100mg)", sub: "orders $250+ · Only 3 left", urgent: true },
+            { emoji: "⚠️", text: "Reta (RTGLP3) — Only 6 left", sub: "while supplies last", urgent: true },
           ].map(({ emoji, text, sub, urgent }) => (
             <div
               key={text}

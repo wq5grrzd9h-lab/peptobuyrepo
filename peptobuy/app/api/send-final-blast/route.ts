@@ -78,10 +78,13 @@ const HTML = `<!DOCTYPE html>
       <!-- Promo box -->
       <div style="border:3px solid #ff2d78;border-radius:12px;padding:20px 22px;margin-bottom:24px;background:#fff5f8;">
         <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#18181b;">
-          🎁 FREE BAC Water + Syringes — Every order automatically
+          🚨 STOCK ALERT:
         </p>
-        <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#cc0000;border-top:1px solid #ffd6e5;padding-top:12px;">
-          ⚠️ Only 3 more free GHK-Cu vials — orders $250+
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc0000;">❌ BAC Water kits — SOLD OUT</p>
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Syringes — last few remaining</p>
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ RTGLP3 (Reta) — Only 6 left</p>
+        <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#cc5500;border-top:1px solid #ffd6e5;padding-top:12px;">
+          ⚠️ Free GHK-Cu — Only 3 left (orders $250+)
         </p>
         <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#18181b;border-top:1px solid #ffd6e5;padding-top:12px;">
           🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+
@@ -98,7 +101,7 @@ const HTML = `<!DOCTYPE html>
       <!-- What disappears at midnight -->
       <div style="background:#18181b;border-radius:12px;padding:20px 22px;margin-bottom:28px;">
         <p style="margin:0 0 12px;font-size:13px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.06em;">After midnight tonight:</p>
-        <p style="margin:0 0 8px;font-size:13px;color:#f87171;">❌ Free BAC Water kits — <strong style="color:#fca5a5;">GONE</strong></p>
+        <p style="margin:0 0 8px;font-size:13px;color:#f87171;">❌ BAC Water kits — Already <strong style="color:#fca5a5;">SOLD OUT</strong></p>
         <p style="margin:0 0 8px;font-size:13px;color:#f87171;">❌ Free GHK-Cu offer — <strong style="color:#fca5a5;">GONE</strong></p>
         <p style="margin:0 0 8px;font-size:13px;color:#f87171;">❌ Free shipping on $250+ — <strong style="color:#fca5a5;">GONE</strong></p>
         <p style="margin:0 0 12px;font-size:13px;color:#f87171;">❌ All sale pricing — <strong style="color:#fca5a5;">GONE</strong></p>

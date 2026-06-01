@@ -55,9 +55,12 @@ function windowBoundaries(w: Window): { start: number; end: number } {
 
 const PROMO_BOX = `
 <div style="border:3px solid #18181b;border-radius:12px;padding:18px 22px;margin-bottom:24px;background:#fafafa;">
-  <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;">🚚 FREE SHIPPING — Orders $250+</p>
-  <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🎁 FREE BAC Water + Syringes — Every order <span style="color:#cc0000;">(Only 3 more free GHK-Cu vials!)</span></p>
-  <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+</p>
+  <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#cc0000;">🚨 STOCK ALERT:</p>
+  <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc0000;">❌ BAC Water kits — SOLD OUT</p>
+  <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Syringes — last few remaining</p>
+  <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ RTGLP3 (Reta) — Only 6 left · Free GHK-Cu — Only 3 left (orders $250+)</p>
+  <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🚚 FREE SHIPPING — Orders $250+</p>
+  <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+ <span style="color:#cc0000;">(Only 3 left!)</span></p>
   <p style="margin:0;font-size:14px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:10px;">🧪 20% OFF FIRST ORDER — Code: <span style="font-family:monospace;font-size:15px;letter-spacing:.06em;color:#ff2d78;">FIRST20</span></p>
 </div>`;
 
@@ -66,7 +69,7 @@ const PRODUCT_LIST = `
   <p style="margin:0;font-size:12px;font-weight:700;color:#71717a;letter-spacing:.04em;text-transform:uppercase;">Available Now</p>
   <p style="margin:8px 0 0;font-size:13px;font-weight:600;color:#18181b;line-height:1.8;">
     BPC-157 &nbsp;·&nbsp; TB-500 &nbsp;·&nbsp; RTGLP3 (Reta 🐀) &nbsp;·&nbsp; MOTS-C<br/>
-    Tesamorelin &nbsp;·&nbsp; GHK-Cu &nbsp;·&nbsp; BAC Water
+    Tesamorelin &nbsp;·&nbsp; GHK-Cu
   </p>
 </div>`;
 

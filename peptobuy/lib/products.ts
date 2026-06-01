@@ -131,7 +131,7 @@ export const products: Product[] = [
     description:
       "Bacteriostatic Water (0.9% benzyl alcohol in sterile water). Research-grade solvent used for peptide reconstitution and preparation of solutions in controlled laboratory settings. For research use only.",
     category: "Essentials",
-    inStock: true,
+    inStock: false,
     image: "/products/Bac_Water_New.png",
     doses: [
       { size: "10ml", price: 17.99 },

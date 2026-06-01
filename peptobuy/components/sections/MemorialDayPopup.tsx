@@ -109,18 +109,16 @@ export default function MemorialDayPopup() {
 
         {/* Promo cards */}
         <div className="grid gap-3 p-5 sm:grid-cols-2">
-          {/* Card 1 — Free BAC Water + Syringes */}
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <p className="text-xl">🎁</p>
-            <p className="mt-1.5 text-sm font-black text-emerald-800">
-              FREE BAC Water + Syringes
+          {/* Card 1 — Stock alert */}
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-xl">🚨</p>
+            <p className="mt-1.5 text-sm font-black text-red-800">
+              STOCK ALERT
             </p>
-            <p className="mt-1 text-[12px] leading-relaxed text-emerald-700">
-              Included free with every order during the Memorial Day weekend sale.
-            </p>
-            <p className="mt-2 text-[12px] font-bold" style={{ color: "#cc0000" }}>
-              ⚠️ Only 3 more free GHK-Cu vials available — orders $250+
-            </p>
+            <p className="mt-1 text-[12px] font-bold text-red-700">❌ BAC Water kits — SOLD OUT</p>
+            <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ Syringes — extremely limited</p>
+            <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ RTGLP3 (Reta 🐀) — Only 6 left</p>
+            <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ Free GHK-Cu vials — Only 3 remaining</p>
           </div>
 
           {/* Card 2 — Free GHK-Cu on $250+ */}
