@@ -19,12 +19,13 @@ export const RECONSTITUTION_PRICE = 29.99;
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CartItem {
-  /** Unique key: "${productId}::${doseSize}::${r|n}" */
+  /** Unique key: "${productId}::${doseSize}::${r|n}[::sub]" */
   itemKey: string;
   product: Product;
   quantity: number;
   selectedDose: DoseOption;
   reconstitution: boolean;
+  isSubscription?: boolean;
 }
 
 interface StoredItem {
@@ -32,12 +33,14 @@ interface StoredItem {
   doseSize: string;
   quantity: number;
   reconstitution: boolean;
+  isSubscription?: boolean;
 }
 
 export interface CartContextValue {
   items: CartItem[];
   totalCount: number;
   subtotal: number;
+  subscriptionDiscount: number;
   discountAmount: number;
   promoCode: string | null;
   hydrated: boolean;
@@ -45,7 +48,8 @@ export interface CartContextValue {
     product: Product,
     dose: DoseOption,
     quantity?: number,
-    reconstitution?: boolean
+    reconstitution?: boolean,
+    isSubscription?: boolean
   ) => void;
   removeItem: (itemKey: string) => void;
   updateQuantity: (itemKey: string, quantity: number) => void;
@@ -59,10 +63,13 @@ export interface CartContextValue {
 export function makeItemKey(
   productId: string,
   doseSize: string,
-  recon: boolean
+  recon: boolean,
+  isSubscription = false
 ): string {
-  return `${productId}::${doseSize}::${recon ? "r" : "n"}`;
+  return `${productId}::${doseSize}::${recon ? "r" : "n"}${isSubscription ? "::sub" : ""}`;
 }
+
+export const SUBSCRIPTION_DISCOUNT = 0.1; // 10% off
 
 /** Unit price for a single cart item (dose price + optional reconstitution fee). */
 export function lineUnitPrice(item: CartItem): number {
@@ -72,7 +79,7 @@ export function lineUnitPrice(item: CartItem): number {
 // ─── Reducer ─────────────────────────────────────────────────────────────────
 
 type CartAction =
-  | { type: "ADD"; product: Product; dose: DoseOption; recon: boolean; qty: number }
+  | { type: "ADD"; product: Product; dose: DoseOption; recon: boolean; qty: number; isSubscription?: boolean }
   | { type: "REMOVE"; itemKey: string }
   | { type: "UPDATE"; itemKey: string; qty: number }
   | { type: "CLEAR" }
@@ -81,7 +88,7 @@ type CartAction =
 function reducer(state: CartItem[], action: CartAction): CartItem[] {
   switch (action.type) {
     case "ADD": {
-      const key = makeItemKey(action.product.id, action.dose.size, action.recon);
+      const key = makeItemKey(action.product.id, action.dose.size, action.recon, action.isSubscription);
       const idx = state.findIndex((i) => i.itemKey === key);
       if (idx !== -1) {
         return state.map((item, i) =>
@@ -98,6 +105,7 @@ function reducer(state: CartItem[], action: CartAction): CartItem[] {
           quantity: action.qty,
           selectedDose: action.dose,
           reconstitution: action.recon,
+          isSubscription: action.isSubscription,
         },
       ];
     }
@@ -140,17 +148,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const stored: StoredItem[] = JSON.parse(raw);
         const hydratedItems: CartItem[] = stored
-          .map(({ productId, doseSize, quantity, reconstitution }) => {
+          .map(({ productId, doseSize, quantity, reconstitution, isSubscription }) => {
             const product = allProducts.find((p) => p.id === productId);
             if (!product) return null;
             const dose = product.doses.find((d) => d.size === doseSize);
             if (!dose) return null;
             return {
-              itemKey: makeItemKey(productId, doseSize, reconstitution),
+              itemKey: makeItemKey(productId, doseSize, reconstitution, isSubscription),
               product,
               quantity,
               selectedDose: dose,
               reconstitution,
+              isSubscription,
             } as CartItem;
           })
           .filter(Boolean) as CartItem[];
@@ -172,6 +181,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       doseSize: i.selectedDose.size,
       quantity: i.quantity,
       reconstitution: i.reconstitution,
+      isSubscription: i.isSubscription,
     }));
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
@@ -181,8 +191,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, hydrated]);
 
   const addItem = useCallback(
-    (product: Product, dose: DoseOption, qty = 1, recon = false) => {
-      dispatch({ type: "ADD", product, dose, recon, qty });
+    (product: Product, dose: DoseOption, qty = 1, recon = false, isSubscription = false) => {
+      dispatch({ type: "ADD", product, dose, recon, qty, isSubscription });
     },
     []
   );
@@ -203,6 +213,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Subtotal uses the actual unit price per item (dose price + reconstitution)
   const subtotal = items.reduce((sum, i) => sum + lineUnitPrice(i) * i.quantity, 0);
+
+  // 10% discount on subscription items shown as a separate line item
+  const subscriptionDiscount = Math.round(
+    items
+      .filter((i) => i.isSubscription)
+      .reduce((sum, i) => sum + lineUnitPrice(i) * i.quantity * SUBSCRIPTION_DISCOUNT, 0)
+    * 100
+  ) / 100;
 
   // Discount: FIRST20 = 20% off subtotal | RETURN10 = 10% off subtotal (secret, unlimited)
   const discountAmount =
@@ -252,6 +270,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         items,
         totalCount,
         subtotal,
+        subscriptionDiscount,
         discountAmount,
         promoCode,
         hydrated,

@@ -292,6 +292,7 @@ function StickyMobileCheckoutBar() {
 
 export default function CartClient() {
   const { items, totalCount, subtotal, hydrated, clearCart } = useCart();
+  const hasSubscriptionItems = items.some((i) => i.isSubscription);
   const [promoActive, setPromoActive] = useState(() => isPromoActive());
 
   // null = not checked yet (avoid gate flash for returning users)
@@ -442,6 +443,19 @@ export default function CartClient() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Subscription commitment notice ─────────────────── */}
+      {hasSubscriptionItems && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-[13px] font-bold text-amber-800">
+            🔄 Subscription items require a 3 month minimum commitment.
+          </p>
+          <p className="mt-1 text-[12px] text-amber-700">
+            You will be charged monthly for at least 3 months. Cancel anytime after by emailing{" "}
+            <a href="mailto:peptobuy@gmail.com" className="font-semibold underline">peptobuy@gmail.com</a>
+          </p>
         </div>
       )}
 

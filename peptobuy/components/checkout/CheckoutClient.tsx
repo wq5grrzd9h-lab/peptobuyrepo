@@ -609,7 +609,10 @@ function ZellePaymentForm({ onBack, onPay, submitting, error, total }: {
 // ─── Main checkout orchestrator ───────────────────────────────────────────────
 
 export default function CheckoutClient() {
-  const { items, subtotal, discountAmount, promoCode, hydrated, clearCart } = useCart();
+  const { items, subtotal, subscriptionDiscount, discountAmount, promoCode, hydrated, clearCart } = useCart();
+  const subscriptionItems = items.filter((i) => i.isSubscription);
+  const oneTimeItems = items.filter((i) => !i.isSubscription);
+  const hasSubscription = subscriptionItems.length > 0;
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
@@ -705,7 +708,7 @@ export default function CheckoutClient() {
     : subtotal >= 250
     ? 0
     : 9.99;
-  const discountedSubtotal = subtotal - discountAmount;
+  const discountedSubtotal = subtotal - subscriptionDiscount - discountAmount;
   // preTaxTotal is sent to Stripe; Stripe adds tax and returns totalWithTax
   const preTaxTotal = discountedSubtotal + shippingCost;
   // total = what the customer actually pays (includes tax once computed)
@@ -775,24 +778,50 @@ export default function CheckoutClient() {
       );
     }, 10_000);
 
-    fetch("/api/create-payment-intent", {
+    const customerName = `${shipping.firstName} ${shipping.lastName}`.trim();
+
+    // Subscription items → create-subscription; one-time only → create-payment-intent
+    const apiUrl = hasSubscription ? "/api/create-subscription" : "/api/create-payment-intent";
+
+    const apiBody = hasSubscription
+      ? {
+          customerEmail: contact.email,
+          customerName,
+          subscriptionItems: subscriptionItems.map((i) => ({
+            name: i.product.name,
+            dose: i.selectedDose.size,
+            quantity: i.quantity,
+            price: lineUnitPrice(i),
+          })),
+          oneTimeItems: oneTimeItems.map((i) => ({
+            name: i.product.name,
+            dose: i.selectedDose.size,
+            quantity: i.quantity,
+            price: lineUnitPrice(i),
+          })),
+          shippingAddress: shipping,
+          shippingCost,
+        }
+      : {
+          amount: preTaxTotal,
+          customerEmail: contact.email,
+          customerName,
+          cartItems: items.map((i) => ({
+            n: i.product.name,
+            d: i.selectedDose.size,
+            q: i.quantity,
+            p: lineUnitPrice(i),
+            r: i.reconstitution ? 1 : 0,
+          })),
+          subtotal,
+          shipping: shippingCost,
+          shippingAddress: shipping,
+        };
+
+    fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount: preTaxTotal,
-        customerEmail: contact.email,
-        customerName: `${shipping.firstName} ${shipping.lastName}`.trim(),
-        cartItems: items.map((i) => ({
-          n: i.product.name,
-          d: i.selectedDose.size,
-          q: i.quantity,
-          p: lineUnitPrice(i),
-          r: i.reconstitution ? 1 : 0,
-        })),
-        subtotal,
-        shipping: shippingCost,
-        shippingAddress: shipping,
-      }),
+      body: JSON.stringify(apiBody),
     })
       .then((r) => r.json())
       .then((data) => {

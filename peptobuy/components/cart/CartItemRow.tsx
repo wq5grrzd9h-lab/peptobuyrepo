@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export default function CartItemRow({ item }: { item: CartItem }) {
   const { updateQuantity, removeItem } = useCart();
-  const { product, quantity, selectedDose, reconstitution, itemKey } = item;
+  const { product, quantity, selectedDose, reconstitution, itemKey, isSubscription } = item;
 
   const unitPrice = lineUnitPrice(item);
   const lineTotal = unitPrice * quantity;
@@ -45,6 +45,11 @@ export default function CartItemRow({ item }: { item: CartItem }) {
                 <span className="flex items-center gap-1 rounded-full bg-accent/8 px-2 py-0.5 text-[11px] font-semibold text-accent">
                   <FlaskConical size={10} />
                   Pre-mixed +$19.99
+                </span>
+              )}
+              {isSubscription && (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                  🔄 Monthly · 10% off
                 </span>
               )}
             </div>

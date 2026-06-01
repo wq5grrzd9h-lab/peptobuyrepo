@@ -20,6 +20,7 @@ interface OrderData {
   orderNumber: string; email: string; placedAt: string;
   paymentMethod?: "card" | "crypto" | "zelle";
   paymentStatus?: string;
+  isSubscription?: boolean;
   items: OrderItem[];
   subtotal: number; shippingCost: number; total: number;
   shippingAddress: OrderAddress; shippingMethod: "standard" | "express";
@@ -205,6 +206,11 @@ export default function OrderConfirmationPage() {
             <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50" style={{ animation: "check-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both" }}>
               <CheckCircle2 size={44} className="text-emerald-600" />
             </div>
+            {order.isSubscription && (
+              <div className="mb-4 flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2">
+                <span className="text-sm font-bold text-emerald-700">🔄 Subscription Active</span>
+              </div>
+            )}
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-600">Order Confirmed</p>
             <h1 className="mb-3 text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">
               Thank you, {order.shippingAddress.firstName}!
@@ -215,6 +221,24 @@ export default function OrderConfirmationPage() {
           </>
         )}
       </div>
+
+      {/* ── Subscription renewal info ── */}
+      {order.isSubscription && (
+        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6" style={{ animation: "fade-up 0.5s ease-out 0.1s both" }}>
+          <p className="mb-2 text-sm font-bold text-emerald-800">🔄 Your subscription is now active</p>
+          <p className="mb-1 text-sm text-emerald-700">
+            <strong>Next charge:</strong>{" "}
+            {new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+          </p>
+          <p className="mb-1 text-sm text-emerald-700">
+            Your subscription will automatically renew for at least 3 months.
+          </p>
+          <p className="text-sm text-emerald-600">
+            To cancel after 3 months: email{" "}
+            <a href="mailto:peptobuy@gmail.com" className="font-semibold underline">peptobuy@gmail.com</a>
+          </p>
+        </div>
+      )}
 
       {/* ── Zelle payment instructions ── */}
       {isZelle && (

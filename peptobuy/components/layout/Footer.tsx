@@ -6,6 +6,7 @@ const COLUMNS = [
     heading: "Shop",
     links: [
       { label: "All Products", href: "/shop" },
+      { label: "Subscribe & Save 🔄", href: "/subscribe" },
       { label: "Weight Loss", href: "/shop?category=Weight+Loss" },
       { label: "Recovery & Healing", href: "/shop?category=Recovery+%26+Healing" },
       { label: "Muscle Growth", href: "/shop?category=Muscle+Growth" },

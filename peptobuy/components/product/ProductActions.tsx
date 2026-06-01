@@ -42,6 +42,7 @@ export default function ProductActions({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
   const [urgencyText, setUrgencyText] = useState(() => getUrgencyText());
   const [retaStock, setRetaStock] = useState<number | null>(null);
+  const [isSubscription, setIsSubscription] = useState(false);
 
   // Sticky bar visibility — show when main CTA buttons scroll off screen
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -75,14 +76,15 @@ export default function ProductActions({ product }: { product: Product }) {
   }, [product.id]);
 
   const isEssentials = product.category === "Essentials";
-  const unitPrice = selectedDose.price + (recon && !isEssentials ? RECONSTITUTION_PRICE : 0);
+  const basePrice = selectedDose.price + (recon && !isEssentials ? RECONSTITUTION_PRICE : 0);
+  const unitPrice = isSubscription ? Math.round(basePrice * 0.9 * 100) / 100 : basePrice;
   // For RTGLP3: treat stock=0 as out of stock; stock=null means still loading (assume in-stock)
   const effectiveInStock =
     product.id === "rtglp3" && retaStock !== null ? retaStock > 0 : product.inStock;
 
   const handleAddToCart = () => {
     if (!effectiveInStock || added) return;
-    addItem(product, selectedDose, qty, !isEssentials && recon);
+    addItem(product, selectedDose, qty, !isEssentials && recon, isSubscription);
     toast.cart("Added to cart", `${product.name} · ${selectedDose.size}${recon && !isEssentials ? " · Pre-mixed" : ""}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== "undefined" && (window as any).fbq) {
@@ -129,6 +131,49 @@ export default function ProductActions({ product }: { product: Product }) {
             );
           })}
         </div>
+      </div>
+
+      {/* ── Purchase type selector ──────────────────────────── */}
+      <div>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-zinc-500">Purchase Type</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setIsSubscription(false)}
+            className={[
+              "rounded-xl border p-3 text-left transition-all",
+              !isSubscription ? "border-accent bg-accent/5 shadow-[0_0_0_1px_rgba(255,45,120,0.25)]" : "border-zinc-200 bg-white hover:border-zinc-300",
+            ].join(" ")}
+          >
+            <p className={`text-sm font-bold ${!isSubscription ? "text-accent" : "text-zinc-700"}`}>One-Time Purchase</p>
+            <p className="mt-0.5 text-[11px] text-zinc-400">${basePrice.toFixed(2)}</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsSubscription(true)}
+            className={[
+              "rounded-xl border p-3 text-left transition-all",
+              isSubscription ? "border-accent bg-accent/5 shadow-[0_0_0_1px_rgba(255,45,120,0.25)]" : "border-zinc-200 bg-white hover:border-zinc-300",
+            ].join(" ")}
+          >
+            <div className="flex items-center gap-1.5">
+              <p className={`text-sm font-bold ${isSubscription ? "text-accent" : "text-zinc-700"}`}>Subscribe & Save 10% 🔄</p>
+            </div>
+            <p className="mt-0.5 text-[11px] text-zinc-400">Only ${(basePrice * 0.9).toFixed(2)}/month</p>
+            <p className="mt-0.5 text-[10px] text-zinc-400">3 month minimum</p>
+          </button>
+        </div>
+        {isSubscription && (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-amber-700">📋 Subscription Commitment</p>
+            <p className="text-[12px] leading-relaxed text-amber-800">
+              By subscribing you agree to a minimum 3 month commitment. Your card will be charged{" "}
+              <strong>${(basePrice * 0.9).toFixed(2)}</strong> today and on the same date each month for at least 3 months.
+              After 3 months you may cancel anytime by emailing{" "}
+              <a href="mailto:peptobuy@gmail.com" className="font-semibold underline">peptobuy@gmail.com</a>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── Reconstitution add-on (hidden for Essentials / BAC Water) ─── */}
@@ -236,7 +281,7 @@ export default function ProductActions({ product }: { product: Product }) {
               : "bg-accent text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] hover:bg-accent-hover hover:shadow-[0_0_28px_rgba(255,45,120,0.35)] disabled:bg-zinc-200 disabled:text-zinc-400",
           ].join(" ")}
         >
-          {added ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> {effectiveInStock ? "Add to Cart" : "Out of Stock"}</>}
+          {added ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> {!effectiveInStock ? "Out of Stock" : isSubscription ? "Subscribe & Save →" : "Add to Cart"}</>}
         </button>
         <button
           onClick={handleBuyNow}

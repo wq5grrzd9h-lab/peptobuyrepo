@@ -29,7 +29,7 @@ function Row({ label, value, sub, accent, discount }: {
 }
 
 export default function OrderSummary() {
-  const { subtotal, discountAmount, promoCode, applyPromo, removePromo } = useCart();
+  const { subtotal, subscriptionDiscount, discountAmount, promoCode, applyPromo, removePromo } = useCart();
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState(false);
@@ -45,7 +45,7 @@ export default function OrderSummary() {
     } catch { /* ignore */ }
   }, []);
 
-  const discountedSubtotal = subtotal - discountAmount;
+  const discountedSubtotal = subtotal - subscriptionDiscount - discountAmount;
   const isFreeShipping = discountedSubtotal >= FREE_SHIPPING_THRESHOLD;
   const shipping = isFreeShipping ? 0 : 9.99;
   const total = discountedSubtotal + shipping;
@@ -79,6 +79,9 @@ export default function OrderSummary() {
         {/* Totals */}
         <div className="space-y-3">
           <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+          {subscriptionDiscount > 0 && (
+            <Row label="Subscription discount (10%)" value={`-$${subscriptionDiscount.toFixed(2)}`} discount />
+          )}
           {discountAmount > 0 && (
             <Row
               label={`Discount (${promoCode})`}
