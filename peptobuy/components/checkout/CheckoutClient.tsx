@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -361,6 +361,73 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
   );
 }
 
+// ─── Express checkout wrapper — must be inside <Elements> for hook access ─────
+
+function ExpressCheckoutWrapper({
+  onPrepare,
+  onSuccess,
+}: {
+  onPrepare: () => Promise<string>;
+  onSuccess: (orderNumber: string) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [eceReady, setEceReady] = useState(false);
+
+  return (
+    <div style={{ marginBottom: "16px", minHeight: "44px", border: "1px solid red" }}>
+      <p style={{ fontSize: "12px", color: "red", margin: "0 0 4px 0" }}>Express checkout area</p>
+      <ExpressCheckoutElement
+        onReady={(e) => {
+          console.log("[ECE] onReady event:", JSON.stringify(e));
+          console.log("[ECE] stripe ready:", !!stripe, "elements ready:", !!elements);
+          setEceReady(true);
+        }}
+        onConfirm={async (event) => {
+          if (!stripe || !elements) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (event as any).paymentFailed?.({ reason: "fail" });
+            return;
+          }
+
+          let orderNumber: string;
+          try {
+            orderNumber = await onPrepare();
+          } catch (err) {
+            console.error("[ECE] onPrepare failed:", err);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (event as any).paymentFailed?.({ reason: "fail" });
+            return;
+          }
+
+          const { error } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+              return_url: `${window.location.origin}/order-confirmation`,
+            },
+          });
+
+          if (error) {
+            console.error("[ECE] confirmPayment error:", error);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (event as any).paymentFailed?.({ reason: "fail" });
+            return;
+          }
+
+          onSuccess(orderNumber);
+        }}
+        options={{
+          buttonType:  { applePay: "buy",   googlePay: "buy" },
+          buttonTheme: { applePay: "black", googlePay: "black" },
+        }}
+      />
+      {eceReady && (
+        <p style={{ fontSize: "11px", color: "green", margin: "4px 0 0 0" }}>ECE mounted ✓</p>
+      )}
+    </div>
+  );
+}
+
 // ─── Step 3 inner — lives inside <Elements>, renders express checkout + tabs ──
 
 interface StepThreeInnerProps {
@@ -376,7 +443,6 @@ interface StepThreeInnerProps {
   zelleSubmitting: boolean;
   zelleError: string | null;
   total: number;
-  cartLineItems: Array<{ name: string; amount: number }>;
 }
 
 function StepThreeInner({
@@ -384,76 +450,19 @@ function StepThreeInner({
   onBack, onPrepare, onSuccess,
   onCryptoPay, cryptoSubmitting, cryptoError,
   onZellePay, zelleSubmitting, zelleError,
-  total, cartLineItems,
+  total,
 }: StepThreeInnerProps) {
-  const stripe = useStripe();
-  const elements = useElements();
-
-  // onClick: populate the Apple Pay / Google Pay sheet with line items
-  const handleExpressClick = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ({ resolve }: any) => {
-      resolve({
-        lineItems: cartLineItems,
-        emailRequired: true,
-      });
-    },
-    [cartLineItems]
-  );
-
-  // onConfirm: user authorized — pre-save order then confirm payment
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleExpressConfirm = useCallback(async (event: any) => {
-    if (!stripe || !elements) {
-      event.paymentFailed?.({ reason: "fail" });
-      return;
-    }
-
-    let orderNumber: string;
-    try {
-      orderNumber = await onPrepare();
-    } catch (err) {
-      console.error("[ExpressCheckout] onPrepare failed:", err);
-      event.paymentFailed?.({ reason: "fail" });
-      return;
-    }
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: `${window.location.origin}/order-confirmation` },
-      redirect: "if_required",
-    });
-
-    if (error) {
-      console.error("[ExpressCheckout] confirmPayment error:", error.message);
-      event.paymentFailed?.({ reason: "fail" });
-      return;
-    }
-
-    onSuccess(orderNumber);
-  }, [stripe, elements, onPrepare, onSuccess]);
-
   return (
     <>
-      {/* Express checkout — Apple Pay / Google Pay.
-          Only shown when card tab is active (buttons auto-hide on unsupported browsers). */}
+      {/* ExpressCheckoutWrapper handles its own useStripe/useElements hooks.
+          Only render when card tab is active — ECE auto-hides on unsupported browsers. */}
       {paymentMethod === "card" && (
         <>
-          <div style={{ marginBottom: "16px" }}>
-            <ExpressCheckoutElement
-              onClick={handleExpressClick}
-              onConfirm={handleExpressConfirm}
-              options={{
-                buttonType:  { applePay: "buy",   googlePay: "buy" },
-                buttonTheme: { applePay: "black", googlePay: "black" },
-                layout:      { maxColumns: 1, maxRows: 2 },
-              }}
-            />
-          </div>
+          <ExpressCheckoutWrapper onPrepare={onPrepare} onSuccess={onSuccess} />
           <div style={{ display: "flex", alignItems: "center", margin: "16px 0" }}>
-            <hr style={{ flex: 1, borderColor: "#e0e0e0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+            <hr style={{ flex: 1, border: "none", borderTop: "1px solid #e0e0e0" }} />
             <span style={{ padding: "0 12px", color: "#666", fontSize: "14px" }}>or pay with card</span>
-            <hr style={{ flex: 1, borderColor: "#e0e0e0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+            <hr style={{ flex: 1, border: "none", borderTop: "1px solid #e0e0e0" }} />
           </div>
         </>
       )}
@@ -1163,10 +1172,6 @@ export default function CheckoutClient() {
                     zelleSubmitting={zelleSubmitting}
                     zelleError={zelleError}
                     total={total}
-                    cartLineItems={items.map((i) => ({
-                      name: `${i.product.name} (${i.selectedDose.size})`,
-                      amount: Math.round(lineUnitPrice(i) * i.quantity * 100),
-                    }))}
                   />
                 </Elements>
               )}
