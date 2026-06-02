@@ -78,6 +78,21 @@ export const products: Product[] = [
     ],
   },
   {
+    id: "bpc-tb-blend",
+    name: "BPC-157 / TB-500 Blend",
+    slug: "bpc-tb-blend",
+    price: 149.99,
+    description:
+      "Research-grade BPC-157 and TB-500 peptide blend. Supplied as lyophilized powder for in vitro and preclinical research applications. For research use only — not for human consumption.",
+    category: "Recovery & Healing",
+    inStock: true,
+    image: "/products/Peptobuy BPC-TB Blend.png",
+    badge: "New",
+    doses: [
+      { size: "20mg", price: 149.99 },
+    ],
+  },
+  {
     id: "ghk-cu",
     name: "GHK-Cu",
     slug: "ghk-cu",
