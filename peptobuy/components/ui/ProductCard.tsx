@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ShoppingCart, CheckCircle2, XCircle, Check, ChevronDown } from "lucide-react";
 import { Product } from "@/lib/products";
 import Badge, { resolveBadgeVariant } from "@/components/ui/Badge";
@@ -12,6 +13,7 @@ import Image from "next/image";
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [doseIdx, setDoseIdx] = useState(0);
   const [recon, setRecon] = useState(false);
@@ -47,7 +49,10 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:border-accent/40 hover:shadow-[0_4px_24px_rgba(255,45,120,0.10)]">
+    <article
+      onClick={() => router.push(`/shop/${product.id}`)}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 cursor-pointer hover:border-accent/40 hover:shadow-[0_8px_32px_rgba(255,45,120,0.14)] hover:-translate-y-0.5"
+    >
 
       {/* ── Full-card link overlay ──────────────────────────
           Catches taps on image / price / any dead zone.
@@ -57,10 +62,11 @@ export default function ProductCard({ product }: { product: Product }) {
         className="absolute inset-0 z-0 rounded-2xl"
         aria-label={`View ${product.name}`}
         tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
       />
 
       {/* ── Image ─────────────────────────────────────────── */}
-      <div className="relative aspect-[4/3] overflow-hidden sm:aspect-square">
+      <div className="relative aspect-square overflow-hidden bg-white">
         <Image
           src={product.image}
           alt={product.name}
@@ -89,7 +95,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* Name — larger on mobile */}
-        <Link href={`/shop/${product.id}`} className="z-[1]">
+        <Link href={`/shop/${product.id}`} className="z-[1]" onClick={(e) => e.stopPropagation()}>
           <h3 className="text-base font-bold leading-snug text-zinc-900 transition-colors hover:text-accent sm:text-sm sm:font-semibold">
             {product.name}
           </h3>
