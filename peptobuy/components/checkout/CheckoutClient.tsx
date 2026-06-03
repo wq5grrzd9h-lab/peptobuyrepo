@@ -617,7 +617,7 @@ function ZellePaymentForm({ onBack, onPay, submitting, error, total }: {
 // ─── Main checkout orchestrator ───────────────────────────────────────────────
 
 export default function CheckoutClient() {
-  const { items, subtotal, subscriptionDiscount, discountAmount, promoCode, hydrated, clearCart } = useCart();
+  const { items, subtotal, subscriptionDiscount, discountAmount, promoCode, freeBacApplied, hydrated, clearCart, removePromo } = useCart();
   const subscriptionItems = items.filter((i) => i.isSubscription);
   const oneTimeItems = items.filter((i) => !i.isSubscription);
   const hasSubscription = subscriptionItems.length > 0;
@@ -767,6 +767,24 @@ export default function CheckoutClient() {
     };
   }, [contact.email, items, shipping.firstName, shipping.lastName, subtotal, discountAmount]);
 
+  // FREEBAC: when email is entered, verify code not already used in Redis
+  useEffect(() => {
+    if (!freeBacApplied || !contact.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) return;
+    fetch("/api/check-freebac", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: contact.email }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.used) {
+          removePromo();
+          console.warn("[FREEBAC] code already used for", contact.email, "— removed");
+        }
+      })
+      .catch(() => {});
+  }, [contact.email, freeBacApplied]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Fetch Stripe PaymentIntent when card is selected at step 3.
   // – retryCount in deps lets the user retry after an error
   // – piAttemptRef prevents stale async callbacks from a previous attempt
@@ -906,14 +924,20 @@ export default function CheckoutClient() {
   };
 
   const markPromoUsed = () => {
-    if (!promoCode) return;
     try {
       const used: string[] = JSON.parse(localStorage.getItem("usedDiscountCodes") || "[]");
-      if (!used.includes(promoCode)) {
-        used.push(promoCode);
-        localStorage.setItem("usedDiscountCodes", JSON.stringify(used));
-      }
+      if (promoCode && !used.includes(promoCode)) used.push(promoCode);
+      if (freeBacApplied && !used.includes("FREEBAC")) used.push("FREEBAC");
+      localStorage.setItem("usedDiscountCodes", JSON.stringify(used));
     } catch { /* ignore */ }
+    // Mark FREEBAC as used in Redis (tied to email for cross-device dedup)
+    if (freeBacApplied && contact.email) {
+      fetch("/api/mark-freebac-used", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: contact.email }),
+      }).catch((err) => console.error("[markFreebacUsed]", err));
+    }
   };
 
   // Fire-and-forget — never blocks navigation
@@ -927,13 +951,22 @@ export default function CheckoutClient() {
           orderNumber,
           customerEmail: contact.email,
           customerName: `${shipping.firstName} ${shipping.lastName}`,
-          items: items.map(i => ({
-            name: i.product.name,
-            dose: i.selectedDose.size,
-            quantity: i.quantity,
-            price: lineUnitPrice(i),
-            reconstitution: i.reconstitution ?? false,
-          })),
+          items: [
+            ...items.map(i => ({
+              name: i.product.name,
+              dose: i.selectedDose.size,
+              quantity: i.quantity,
+              price: lineUnitPrice(i),
+              reconstitution: i.reconstitution ?? false,
+            })),
+            ...(freeBacApplied ? [{
+              name: "BAC Water 3ml (FREEBAC Gift)",
+              dose: "3ml",
+              quantity: 1,
+              price: 0,
+              reconstitution: false,
+            }] : []),
+          ],
           subtotal,
           discountCode: promoCode ?? undefined,
           discountAmount: discountAmount > 0 ? discountAmount : undefined,

@@ -298,6 +298,12 @@ export default function ProductActions({ product }: { product: Product }) {
         </p>
       )}
 
+      {product.id === "bac-water" && (
+        <p className="text-center text-[11px] leading-relaxed text-zinc-400">
+          Orders placed after we run out of BAC water will receive a code for free BAC water on a future order instead.
+        </p>
+      )}
+
       {/* Flash Sale urgency banner */}
       {effectiveInStock && isPromoActive() && (
         <div

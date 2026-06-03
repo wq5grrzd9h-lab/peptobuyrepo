@@ -29,7 +29,7 @@ function Row({ label, value, sub, accent, discount }: {
 }
 
 export default function OrderSummary() {
-  const { subtotal, subscriptionDiscount, discountAmount, promoCode, applyPromo, removePromo } = useCart();
+  const { subtotal, subscriptionDiscount, discountAmount, promoCode, freeBacApplied, applyPromo, removePromo } = useCart();
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState(false);
@@ -79,6 +79,9 @@ export default function OrderSummary() {
         {/* Totals */}
         <div className="space-y-3">
           <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+          {freeBacApplied && (
+            <Row label="BAC Water 3ml (FREEBAC)" value="$0.00" discount />
+          )}
           {subscriptionDiscount > 0 && (
             <Row label="Subscription discount (10%)" value={`-$${subscriptionDiscount.toFixed(2)}`} discount />
           )}
@@ -115,19 +118,34 @@ export default function OrderSummary() {
 
         {/* Promo code input */}
         <div className="mt-4">
-          {promoCode ? (
-            <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
-              <div className="flex items-center gap-2">
-                <Check size={14} className="text-emerald-600" />
-                <span className="text-sm font-semibold text-emerald-700">
-                  {promoCode === "RETURN10"
-                    ? "10% discount applied ✓"
-                    : "Code applied — 20% off your first order!"}
-                </span>
-              </div>
-              <button onClick={handleRemovePromo} className="rounded p-0.5 text-emerald-500 hover:text-emerald-700">
-                <X size={14} />
-              </button>
+          {(promoCode || freeBacApplied) ? (
+            <div className="space-y-1.5">
+              {promoCode && (
+                <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600" />
+                    <span className="text-sm font-semibold text-emerald-700">
+                      {promoCode === "RETURN10"
+                        ? "10% discount applied ✓"
+                        : "Code applied — 20% off your first order!"}
+                    </span>
+                  </div>
+                  <button onClick={handleRemovePromo} className="rounded p-0.5 text-emerald-500 hover:text-emerald-700">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+              {freeBacApplied && (
+                <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600" />
+                    <span className="text-sm font-semibold text-emerald-700">✓ Free BAC Water (3ml) added to your order!</span>
+                  </div>
+                  <button onClick={handleRemovePromo} className="rounded p-0.5 text-emerald-500 hover:text-emerald-700">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex gap-2">
@@ -156,8 +174,8 @@ export default function OrderSummary() {
           )}
         </div>
 
-        {/* FIRST20 nudge — only show if code not applied + never used */}
-        {!promoCode && !codeAlreadyUsed && (
+        {/* FIRST20 nudge — only show if no code applied + never used */}
+        {!promoCode && !freeBacApplied && !codeAlreadyUsed && (
           <div className="mt-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
             <p className="text-[13px] leading-snug text-zinc-700">
               🧪 First order? Use code{" "}

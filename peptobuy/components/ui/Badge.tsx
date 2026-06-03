@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react";
 
-type BadgeVariant = "accent" | "neutral" | "success" | "warning";
+type BadgeVariant = "accent" | "neutral" | "success" | "warning" | "urgent";
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
@@ -12,12 +12,14 @@ const variantClasses: Record<BadgeVariant, string> = {
   neutral: "bg-zinc-100 text-zinc-600 border-zinc-200",
   success: "bg-emerald-50 text-emerald-700 border-emerald-200",
   warning: "bg-amber-50 text-amber-700 border-amber-200",
+  urgent: "bg-red-50 text-red-700 border-red-300",
 };
 
 const badgeVariantMap: Record<string, BadgeVariant> = {
   "Best Seller": "accent",
   Sale: "warning",
   New: "success",
+  "Running Out Fast": "urgent",
 };
 
 export function resolveBadgeVariant(label: string): BadgeVariant {

@@ -291,7 +291,7 @@ function StickyMobileCheckoutBar() {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function CartClient() {
-  const { items, totalCount, subtotal, hydrated, clearCart } = useCart();
+  const { items, totalCount, subtotal, hydrated, clearCart, freeBacApplied } = useCart();
   const hasSubscriptionItems = items.some((i) => i.isSubscription);
   const [promoActive, setPromoActive] = useState(() => isPromoActive());
 
@@ -471,6 +471,7 @@ export default function CartClient() {
               />
             )}
             {promoActive && hasGhkCu && <FreeGiftRow label="GHK-Cu (100mg)" />}
+            {freeBacApplied && <FreeGiftRow label="BAC Water 3ml — FREEBAC Gift" />}
           </div>
           <div className="mt-4 flex items-center justify-between">
             <Link href="/shop" className="text-sm text-zinc-400 transition-colors hover:text-zinc-600">

@@ -43,6 +43,7 @@ export interface CartContextValue {
   subscriptionDiscount: number;
   discountAmount: number;
   promoCode: string | null;
+  freeBacApplied: boolean;
   hydrated: boolean;
   addItem: (
     product: Product,
@@ -138,6 +139,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, dispatch] = useReducer(reducer, []);
   const [hydrated, setHydrated] = useState(false);
   const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [freeBacApplied, setFreeBacApplied] = useState(false);
   const isMounted = useRef(false);
 
   // Hydrate from localStorage on mount
@@ -257,11 +259,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     }
 
+    if (normalized === "FREEBAC") {
+      try {
+        const used: string[] = JSON.parse(localStorage.getItem("usedDiscountCodes") || "[]");
+        if (used.includes("FREEBAC")) {
+          return { success: false, error: "This code has already been used." };
+        }
+      } catch { /* ignore */ }
+      setFreeBacApplied(true);
+      return { success: true };
+    }
+
     return { success: false, error: "Invalid discount code." };
-  }, [promoCode]);
+  }, [promoCode, freeBacApplied]);
 
   const removePromo = useCallback(() => {
     setPromoCode(null);
+    setFreeBacApplied(false);
   }, []);
 
   return (
@@ -273,6 +287,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         subscriptionDiscount,
         discountAmount,
         promoCode,
+        freeBacApplied,
         hydrated,
         addItem,
         removeItem,
