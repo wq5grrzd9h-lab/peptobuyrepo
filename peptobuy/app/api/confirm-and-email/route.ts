@@ -77,9 +77,9 @@ export async function POST(request: Request) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" as any });
     const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
-      expand: ["payment_method"],
+      expand: ["payment_method", "latest_charge"],
     });
-    console.log("[confirm-and-email] pi.status:", pi.status, "| order:", pi.metadata?.orderNumber);
+    console.log("[confirm-and-email] pi.status:", pi.status, "| order:", pi.metadata?.orderNumber, "| receipt_email:", pi.receipt_email);
 
     if (pi.status !== "succeeded") {
       return NextResponse.json({ error: "Payment not succeeded", status: pi.status }, { status: 400 });
@@ -120,14 +120,34 @@ export async function POST(request: Request) {
       }
     }
 
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     // ── 3. Build order data — pending-order (Redis) takes priority over Stripe metadata ──
-    const orderNumber = pendingOrder?.orderNumber || meta.orderNumber || paymentIntentId;
-    const customerEmail = pendingOrder?.customerEmail || meta.customerEmail || "";
-    const customerName  = pendingOrder?.customerName  || meta.customerName  || "";
+    // For Apple Pay / Express Checkout: customer email lives in charge billing_details
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const charge = pi.latest_charge as any;
+    const chargeEmail    = charge?.billing_details?.email  || charge?.receipt_email  || pi.receipt_email  || "";
+    const chargeName     = charge?.billing_details?.name   || charge?.shipping?.name || "";
+    const chargeTotal    = charge ? (charge.amount / 100)  : (pi.amount / 100);
+
+    const orderNumber   = pendingOrder?.orderNumber   || meta.orderNumber   || paymentIntentId.slice(-8).toUpperCase();
+    const customerEmail = pendingOrder?.customerEmail || meta.customerEmail || chargeEmail;
+    const customerName  = pendingOrder?.customerName  || meta.customerName  || chargeName || "Valued Customer";
+
+    console.log("[confirm-and-email] resolved email:", customerEmail, "| name:", customerName, "| orderNumber:", orderNumber);
 
     if (!customerEmail) {
-      console.error("[confirm-and-email] No customerEmail — not in pending-order or metadata");
-      return NextResponse.json({ error: "No customer email found" }, { status: 400 });
+      // Last resort — send internal alert so we can follow up manually
+      console.error("[confirm-and-email] No customerEmail found anywhere for PI:", paymentIntentId);
+      if (resend && redis) {
+        await resend.emails.send({
+          from: RESEND_FROM,
+          to: INTERNAL_EMAIL,
+          subject: `⚠️ Order placed — no email found — PI: ${paymentIntentId}`,
+          html: `<p>Order completed but no customer email found.<br>PI: <code>${paymentIntentId}</code><br>Amount: $${chargeTotal.toFixed(2)}<br>Check Stripe dashboard.</p>`,
+        }).catch(() => {});
+      }
+      return NextResponse.json({ error: "No customer email found", paymentIntentId }, { status: 400 });
     }
 
     // Items — prefer full pending-order record; fall back to compact Stripe metadata
@@ -147,23 +167,24 @@ export async function POST(request: Request) {
       reconstitution: i.r === 1,
     }));
 
-    const subtotal = pendingOrder?.subtotal  ?? parseFloat(meta.subtotal  || "0");
+    const subtotal = pendingOrder?.subtotal    ?? (parseFloat(meta.subtotal  || "0") || chargeTotal);
     const shipping = pendingOrder?.shippingCost ?? parseFloat(meta.shipping || "0");
-    const total    = pendingOrder?.total     ?? parseFloat(meta.total     || "0");
+    const total    = pendingOrder?.total       ?? (parseFloat(meta.total    || "0") || chargeTotal);
 
+    // For Apple Pay: shipping address comes from charge.shipping
     const pa = pendingOrder?.shippingAddress;
+    const chargeShipping = charge?.shipping?.address;
     const shippingAddress = {
-      firstName: pa?.firstName || meta.shippingFirstName || "",
-      lastName:  pa?.lastName  || meta.shippingLastName  || "",
-      address:   pa?.address   || meta.shippingStreet    || "",
-      city:      pa?.city      || meta.shippingCity      || "",
-      state:     pa?.state     || meta.shippingState     || "",
-      zip:       pa?.zip       || meta.shippingZip       || "",
-      country:   pa?.country   || meta.shippingCountry   || "",
+      firstName: pa?.firstName || meta.shippingFirstName || chargeName.split(" ")[0] || "",
+      lastName:  pa?.lastName  || meta.shippingLastName  || chargeName.split(" ").slice(1).join(" ") || "",
+      address:   pa?.address   || meta.shippingStreet    || chargeShipping?.line1 || "",
+      city:      pa?.city      || meta.shippingCity      || chargeShipping?.city  || "",
+      state:     pa?.state     || meta.shippingState     || chargeShipping?.state || "",
+      zip:       pa?.zip       || meta.shippingZip       || chargeShipping?.postal_code || "",
+      country:   pa?.country   || meta.shippingCountry   || chargeShipping?.country || "",
     };
 
     // ── 4. Send emails ────────────────────────────────────────────────────────
-    const resend = new Resend(process.env.RESEND_API_KEY);
     const timestamp = new Date().toLocaleString("en-US", {
       timeZone: "America/New_York",
       dateStyle: "medium",

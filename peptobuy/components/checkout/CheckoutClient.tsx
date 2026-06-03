@@ -401,20 +401,28 @@ function ExpressCheckoutWrapper({
               return;
             }
 
+            // redirect: "if_required" → Apple Pay / Google Pay complete in-page
+            // (user approves synchronously in the browser wallet, no redirect needed).
+            // If the payment method DOES require a redirect (Affirm, 3DS, etc.),
+            // Stripe will still redirect — order-confirmation handles email as fallback.
             const { error } = await stripe.confirmPayment({
               elements,
               confirmParams: {
                 return_url: `${window.location.origin}/order-confirmation`,
               },
+              redirect: "if_required",
             });
 
             if (error) {
-              console.error("[ECE] confirmPayment error:", error);
+              console.error("[ECE] confirmPayment error:", error.message, error.type);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (event as any).paymentFailed?.({ reason: "fail" });
               return;
             }
 
+            // Payment completed in-page — fire the normal success handler
+            // (sends confirmation email, clears cart, navigates to order-confirmation)
+            console.log("[ECE] payment succeeded in-page for orderNumber:", orderNumber);
             onSuccess(orderNumber);
           }}
           options={{

@@ -59,46 +59,46 @@ export default function OrderConfirmationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("Order confirmation page loaded", window.location.search);
+    console.log("[order-confirmation] page loaded — search:", window.location.search);
     let email = "";
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectStatus = urlParams.get("redirect_status");
+      const paymentIntent  = urlParams.get("payment_intent");
+
+      // ── Always fire confirm-and-email for Stripe redirect payments ────────────
+      // Redis dedup prevents double-sends on page refresh.
+      // Covers: Apple Pay, Google Pay, Affirm, Klarna, 3DS, regular card redirect.
+      if (redirectStatus === "succeeded" && paymentIntent) {
+        console.log("[order-confirmation] Stripe redirect detected — PI:", paymentIntent, "| calling confirm-and-email");
+        fetch("/api/confirm-and-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentIntentId: paymentIntent }),
+        })
+          .then(r => r.json())
+          .then(d => console.log("[order-confirmation] confirm-and-email result:", d))
+          .catch(err => console.error("[order-confirmation] confirm-and-email failed:", err));
+      }
+
       const raw = localStorage.getItem("peptobuy-last-order");
 
       if (!raw) {
-        // Check if this is a Stripe redirect (3DS / bank auth)
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirectStatus = urlParams.get("redirect_status");
-        const paymentIntent = urlParams.get("payment_intent");
-
         if (redirectStatus === "succeeded" && paymentIntent) {
-          // ── Server-side email (primary): confirm-and-email retrieves order
-          // data from Stripe metadata and sends both emails with Redis dedup.
-          // This works even if localStorage was cleared.
-          console.log("Stripe redirect — calling confirm-and-email for", paymentIntent);
-          fetch("/api/confirm-and-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ paymentIntentId: paymentIntent }),
-          })
-            .then(r => r.json())
-            .then(d => console.log("confirm-and-email result:", d))
-            .catch(err => console.error("[order-confirm confirm-and-email]", err));
-
-          // ── Client-side restore (for UI): read pending order from localStorage
+          // ── Client-side restore (for UI): read pending order from localStorage ──
           const pendingRaw = localStorage.getItem("peptobuy-pending-stripe-order");
           if (pendingRaw) {
             const pending = JSON.parse(pendingRaw) as OrderData & { promoCode?: string; discountAmount?: number };
             const orderData: OrderData = { ...pending, paymentMethod: "card" };
-
             localStorage.setItem("peptobuy-last-order", JSON.stringify(orderData));
             localStorage.removeItem("peptobuy-pending-stripe-order");
-            localStorage.removeItem("peptobuy-cart-v2"); // clear cart
+            localStorage.removeItem("peptobuy-cart-v2");
             setOrder(orderData);
             email = orderData.email ?? "";
           } else {
-            // No pending order in localStorage (user switched device / cleared storage).
-            // confirm-and-email already handled the email. Show a generic success page.
-            console.warn("No pending order in localStorage — order email sent via Stripe metadata");
+            // No pending order (user switched device / Express Checkout cleared storage).
+            // Email already handled by confirm-and-email above. Show generic success.
+            console.warn("[order-confirmation] No pending order in localStorage — showing generic success page");
             const fallbackOrder: OrderData = {
               orderNumber: paymentIntent.slice(-8).toUpperCase(),
               email: "",
