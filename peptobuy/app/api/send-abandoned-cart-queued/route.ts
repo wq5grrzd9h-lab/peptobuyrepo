@@ -101,7 +101,7 @@ function buildHtml(email: string, items: CartItem[], cartTotal: number): string 
           ⚡ Memorial Day Sale Still Active
         </p>
         <p style="margin:6px 0 0;font-size:12px;color:#9a3412;line-height:1.5;">
-          🚨 STOCK UPDATE: ⚠️ BAC Water — Only 2 left! · ⚠️ Syringes almost gone · ⚠️ Reta only 6 left · ⚠️ Free GHK-Cu only 3 left (orders $250+). Offer expires tonight at midnight EST.
+          🚨 STOCK UPDATE: ⚠️ BAC Water — Low Quantity — Act Fast! · ⚠️ Syringes almost gone · ⚠️ Reta only 6 left · ⚠️ Free GHK-Cu only 3 left (orders $250+). Offer expires tonight at midnight EST.
         </p>
       </div>`
           : ""

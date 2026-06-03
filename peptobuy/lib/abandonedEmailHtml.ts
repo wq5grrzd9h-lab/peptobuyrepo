@@ -63,7 +63,7 @@ function memorialBlock(): string {
 <div style="background:#8B0000;border-radius:10px;padding:14px 18px;margin-bottom:20px;text-align:center;">
   <p style="margin:0;font-size:13px;font-weight:800;color:#fff;">🇺🇸 Memorial Day Sale — Ends Monday Midnight</p>
   <p style="margin:6px 0 0;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.5;">
-    🚨 STOCK UPDATE: ⚠️ BAC Water — Only 2 left · ⚠️ Syringes almost gone<br/>
+    🚨 STOCK UPDATE: ⚠️ BAC Water — Low Quantity — Act Fast! · ⚠️ Syringes almost gone<br/>
     ⚠️ RTGLP3 (Reta) — Only 6 left · ⚠️ Free GHK-Cu — Only 3 left (orders $250+)
   </p>
 </div>`;

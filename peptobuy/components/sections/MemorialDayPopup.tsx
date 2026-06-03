@@ -115,7 +115,7 @@ export default function MemorialDayPopup() {
             <p className="mt-1.5 text-sm font-black text-red-800">
               STOCK ALERT
             </p>
-            <p className="mt-1 text-[12px] font-bold text-red-700">⚠️ BAC Water — Only 2 left — grab it now!</p>
+            <p className="mt-1 text-[12px] font-bold text-red-700">⚠️ BAC Water — Low Quantity — Act Fast!</p>
             <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ Syringes — extremely limited</p>
             <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ RTGLP3 (Reta 🐀) — Only 6 left</p>
             <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ Free GHK-Cu vials — Only 3 remaining</p>

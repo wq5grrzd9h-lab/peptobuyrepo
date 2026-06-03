@@ -299,9 +299,12 @@ export default function ProductActions({ product }: { product: Product }) {
       )}
 
       {product.id === "bac-water" && (
-        <p className="text-center text-[11px] leading-relaxed text-zinc-400">
-          Orders placed after we run out of BAC water will receive a code for free BAC water on a future order instead.
-        </p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="mb-1 text-[12px] font-bold text-amber-800">⚠️ Low stock — order while supplies last.</p>
+          <p className="text-[11px] leading-relaxed text-amber-700">
+            Orders placed after we run out of BAC Water will receive a code for free BAC Water on a future order instead.
+          </p>
+        </div>
       )}
 
       {/* Flash Sale urgency banner */}
@@ -317,7 +320,7 @@ export default function ProductActions({ product }: { product: Product }) {
             🚨 STOCK ALERT:
           </p>
           <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ⚠️ BAC Water — Only 2 left — grab it now!
+            ⚠️ BAC Water — Low Quantity — Act Fast!
           </p>
           <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
             ⚠️ Syringes — last few remaining

@@ -384,6 +384,16 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
 
+      {/* ── BAC Water fulfillment notice ── */}
+      {order.items.some((i) => i.name.toLowerCase().includes("bac") || i.productId === "bac-water") && (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5" style={{ animation: "fade-up 0.5s ease-out 0.3s both" }}>
+          <p className="mb-1.5 text-sm font-bold text-amber-800">📦 BAC Water Notice</p>
+          <p className="text-sm leading-relaxed text-amber-700">
+            If your BAC Water is out of stock at time of fulfillment, you will receive a discount code for a free BAC Water on your next order instead. We will notify you by email if this applies to your order.
+          </p>
+        </div>
+      )}
+
       {/* ── CTAs ── */}
       <div className="flex flex-col items-center gap-3 sm:flex-row" style={{ animation: "fade-up 0.5s ease-out 0.35s both" }}>
         <Link href="/shop" className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(255,45,120,0.2)] transition-all hover:bg-accent-hover sm:flex-none sm:px-8">

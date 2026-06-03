@@ -55,7 +55,7 @@ const PROMO_BOX = `
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff5f5;border:2px solid #cc0000;border-radius:12px;margin:24px 0;">
     <tr><td style="padding:20px 24px;">
       <p style="margin:0 0 6px;font-size:14px;font-weight:800;color:#cc0000;">🚨 STOCK ALERT</p>
-      <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Only 2 left — grab it now!</p>
+      <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Low Quantity — Act Fast!</p>
       <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Syringes — last few remaining</p>
       <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ RTGLP3 (Reta) — Only 6 left</p>
       <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Free GHK-Cu — Only 3 left (orders $250+)</p>

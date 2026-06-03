@@ -159,6 +159,13 @@ export function buildCustomerHtml(d: OrderEmailData, zelleBlock = ""): string {
           <td style="padding:10px 0 0;font-size:17px;font-weight:800;text-align:right;color:#ff2d78;">$${d.total.toFixed(2)}</td>
         </tr>
       </table>
+      ${d.items.some((i) => i.name.toLowerCase().includes("bac"))
+        ? `<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:24px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#92400e;">📦 BAC Water Notice</p>
+        <p style="margin:0;font-size:12px;color:#78350f;line-height:1.6;">
+          If BAC Water is out of stock at time of fulfillment, you will receive a code for free BAC Water on your next order. We will reach out by email if this applies.
+        </p>
+      </div>` : ""}
       <div style="background:#fafafa;border:1px solid #e5e5e5;border-radius:10px;padding:14px 18px;margin-bottom:24px;">
         <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a1a1aa;">Ships To</p>
         <p style="margin:0;font-size:13px;color:#18181b;line-height:1.7;">
@@ -185,7 +192,7 @@ export function buildCustomerHtml(d: OrderEmailData, zelleBlock = ""): string {
 
 /** Derive free gifts from order totals (flash sale always on). */
 export function deriveFreeGifts(discountedSubtotal: number): string[] {
-  const gifts = ["BAC Water + Syringes (⚠️ Only 2 left!)"];
+  const gifts = ["BAC Water + Syringes (⚠️ Low Quantity — Act Fast!)"];
   if (discountedSubtotal >= FREE_GHKCU_THRESHOLD) gifts.push("GHK-Cu 100mg");
   return gifts;
 }

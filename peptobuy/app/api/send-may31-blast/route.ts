@@ -49,7 +49,7 @@ const HTML = `<!DOCTYPE html>
       <!-- Promo box -->
       <div style="border:2px solid #ff2d78;border-radius:14px;padding:20px 24px;margin-bottom:24px;background:#fff8fb;">
         <p style="margin:0 0 6px;font-size:14px;font-weight:800;color:#cc0000;">🚨 STOCK ALERT:</p>
-        <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Only 2 left — grab it now!</p>
+        <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Low Quantity — Act Fast!</p>
         <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Syringes — last few remaining</p>
         <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ RTGLP3 (Reta) — Only 6 left in stock</p>
         <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Free GHK-Cu — Only 3 left (orders $250+)</p>
@@ -62,7 +62,7 @@ const HTML = `<!DOCTYPE html>
       <!-- What ends at midnight -->
       <div style="background:#18181b;border-radius:12px;padding:20px 24px;margin-bottom:28px;">
         <p style="margin:0 0 12px;font-size:13px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.06em;">What ends at midnight tonight:</p>
-        <p style="margin:0 0 7px;font-size:13px;color:#fca5a5;">⚠️ BAC Water — Only 2 left (almost gone)</p>
+        <p style="margin:0 0 7px;font-size:13px;color:#fca5a5;">⚠️ BAC Water — Low Quantity — Act Fast!</p>
         <p style="margin:0 0 7px;font-size:13px;color:#fca5a5;">❌ Free GHK-Cu offer — GONE</p>
         <p style="margin:0 0 7px;font-size:13px;color:#fca5a5;">❌ Free shipping on $250+ — GONE</p>
         <p style="margin:0 0 12px;font-size:13px;color:#fca5a5;">❌ Sale pricing — BACK TO NORMAL</p>

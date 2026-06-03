@@ -48,7 +48,7 @@ function buildHtml(): string {
       <div style="border:3px solid #18181b;border-radius:12px;padding:20px 24px;margin-bottom:28px;background:#fafafa;">
         <div style="margin-bottom:14px;">
           <p style="margin:0;font-size:14px;font-weight:800;color:#cc0000;">🚨 STOCK ALERT</p>
-          <p style="margin:4px 0;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Only 2 left — grab it now!</p>
+          <p style="margin:4px 0;font-size:13px;font-weight:700;color:#cc0000;">⚠️ BAC Water — Low Quantity — Act Fast!</p>
           <p style="margin:4px 0;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Syringes — last few remaining</p>
           <p style="margin:4px 0;font-size:13px;font-weight:700;color:#cc5500;">⚠️ RTGLP3 (Reta) — Only 6 left in stock</p>
           <p style="margin:4px 0;font-size:13px;font-weight:700;color:#cc5500;">⚠️ Free GHK-Cu — Only 3 left (orders $250+)</p>
@@ -71,7 +71,7 @@ function buildHtml(): string {
       <div style="background:#fff5f5;border:2px solid #fca5a5;border-radius:12px;padding:18px 22px;margin-bottom:28px;">
         <p style="margin:0 0 10px;font-size:15px;font-weight:800;color:#7f1d1d;">⏰ After midnight tonight:</p>
         <p style="margin:5px 0;font-size:13px;color:#991b1b;">✗&nbsp; Free shipping ends</p>
-        <p style="margin:5px 0;font-size:13px;color:#991b1b;">✗&nbsp; BAC Water — Only 2 left (grab it now)</p>
+        <p style="margin:5px 0;font-size:13px;color:#991b1b;">✗&nbsp; BAC Water — Low Quantity — Act Fast! (grab it now)</p>
         <p style="margin:5px 0;font-size:13px;color:#991b1b;">✗&nbsp; Free GHK-Cu offer ends</p>
         <p style="margin:5px 0;font-size:13px;color:#991b1b;">✗&nbsp; Prices return to normal</p>
       </div>
