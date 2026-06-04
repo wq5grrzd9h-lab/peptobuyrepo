@@ -160,23 +160,10 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="text-xs text-zinc-400">/ {selectedDose.size}</span>
         </div>
 
-        {/* ── RETA live stock badge ─────────────────────────── */}
-        {product.id === "rtglp3" && retaStock !== null && (
-          <div
-            className={[
-              "rounded-lg px-3 py-1.5 text-center text-[11px] font-bold",
-              retaStock === 0
-                ? "bg-zinc-100 text-zinc-500"
-                : retaStock <= 5
-                  ? "animate-pulse bg-red-50 text-red-700"
-                  : "bg-orange-50 text-orange-700",
-            ].join(" ")}
-          >
-            {retaStock === 0
-              ? "Out of Stock"
-              : retaStock <= 5
-                ? `🚨 Only ${retaStock} left — selling fast!`
-                : `⚠️ Only ${retaStock} left in stock!`}
+        {/* ── RTGLP3 backorder badge ───────────────────────────── */}
+        {product.id === "rtglp3" && (
+          <div className="animate-pulse rounded-lg bg-orange-100 px-3 py-1.5 text-center text-[11px] font-bold text-orange-800">
+            ⚠️ Very Low Stock — Back Order
           </div>
         )}
 

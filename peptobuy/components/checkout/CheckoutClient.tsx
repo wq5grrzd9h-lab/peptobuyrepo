@@ -357,6 +357,7 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
           {submitting ? <><Loader2 size={16} className="animate-spin" />Processing…</> : <>Place Order <ChevronLeft size={15} className="rotate-180" /></>}
         </button>
       </div>
+      <p className="mt-3 text-center text-[11px] text-zinc-400">All sales final. No returns or refunds.</p>
     </div>
   );
 }

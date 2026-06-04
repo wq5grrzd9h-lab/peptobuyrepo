@@ -39,7 +39,7 @@ export const products: Product[] = [
     category: "Weight Loss",
     inStock: true,
     image: "/products/RTGLP3_New_Pic.png",
-    badge: "Best Seller",
+    badge: "Back Order",
     doses: [
       { size: "10mg", price: 103.99 },
       { size: "20mg", price: 183.99 },
@@ -146,8 +146,8 @@ export const products: Product[] = [
     description:
       "Bacteriostatic Water (0.9% benzyl alcohol in sterile water). Research-grade solvent used for peptide reconstitution and preparation of solutions in controlled laboratory settings. For research use only.",
     category: "Essentials",
-    inStock: true,
-    badge: "Running Out Fast",
+    inStock: false,
+    badge: "Sold Out",
     image: "/products/Bac_Water_New.png",
     doses: [
       { size: "10ml", price: 17.99 },

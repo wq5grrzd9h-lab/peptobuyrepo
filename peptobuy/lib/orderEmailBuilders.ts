@@ -109,6 +109,12 @@ export function buildInternalHtml(d: OrderEmailData, timestamp: string): string 
           <td style="padding:10px 0 4px;font-size:16px;font-weight:800;text-align:right;color:#ff2d78;">$${d.total.toFixed(2)}</td>
         </tr>
       </table>
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 16px;margin-top:16px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#92400e;">📦 Shipping Notice</p>
+        <p style="margin:0 0 4px;font-size:11px;color:#78350f;line-height:1.5;">⚠️ RTGLP3 (Reta) orders may experience additional delays due to very low stock. Working to replenish ASAP.</p>
+        <p style="margin:0;font-size:11px;color:#78350f;line-height:1.5;">🎁 BAC Water Voucher: Send a free BAC Water code to the customer separately.</p>
+      </div>
+      <p style="margin:12px 0 0;font-size:11px;color:#a1a1aa;text-align:center;">All sales final. No returns or refunds.</p>
     </div>
   </div>
 </body></html>`;
@@ -174,15 +180,29 @@ export function buildCustomerHtml(d: OrderEmailData, zelleBlock = ""): string {
           ${addr.city}, ${addr.state} ${addr.zip}
         </p>
       </div>
+      <!-- Shipping notice -->
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#92400e;">📦 Shipping Notice</p>
+        <p style="margin:0 0 6px;font-size:12px;color:#78350f;line-height:1.5;">
+          We are currently experiencing shipping delays due to high demand. Your order will ship as soon as possible and you will be notified when it does.
+        </p>
+        <p style="margin:0 0 6px;font-size:12px;color:#78350f;line-height:1.5;">
+          ⚠️ <strong>RTGLP3 (Reta) Note:</strong> Due to very low stock, Reta orders may experience additional delays. We appreciate your patience.
+        </p>
+        <p style="margin:0;font-size:12px;color:#78350f;line-height:1.5;">
+          🎁 <strong>BAC Water Voucher:</strong> A code for free BAC Water will be sent to you separately, redeemable on your next order.
+        </p>
+      </div>
       <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">
         Questions? Email us at
         <a href="mailto:peptobuy@gmail.com" style="color:#ff2d78;text-decoration:none;font-weight:600;">peptobuy@gmail.com</a>
       </p>
     </div>
     <div style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e5e5;">
-      <p style="margin:0;font-size:11px;color:#a1a1aa;line-height:1.6;text-align:center;">
+      <p style="margin:0 0 4px;font-size:11px;color:#a1a1aa;line-height:1.6;text-align:center;">
         ⚠ All products are for in vitro research use only. Not intended for human consumption.
       </p>
+      <p style="margin:0;font-size:11px;color:#a1a1aa;text-align:center;font-weight:600;">All sales final. No returns or refunds.</p>
     </div>
   </div>
 </body></html>`;
@@ -192,7 +212,7 @@ export function buildCustomerHtml(d: OrderEmailData, zelleBlock = ""): string {
 
 /** Derive free gifts from order totals (flash sale always on). */
 export function deriveFreeGifts(discountedSubtotal: number): string[] {
-  const gifts = ["BAC Water + Syringes (⚠️ Low Quantity — Act Fast!)"];
+  const gifts = ["BAC Water Voucher (redeemable on next order)"];
   if (discountedSubtotal >= FREE_GHKCU_THRESHOLD) gifts.push("GHK-Cu 100mg");
   return gifts;
 }

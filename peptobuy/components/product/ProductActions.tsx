@@ -249,23 +249,10 @@ export default function ProductActions({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* ── RETA live stock badge ───────────────────────────── */}
-      {product.id === "rtglp3" && retaStock !== null && (
-        <div
-          className={[
-            "rounded-xl border px-4 py-2.5 text-center text-sm font-bold",
-            retaStock === 0
-              ? "border-zinc-300 bg-zinc-100 text-zinc-500"
-              : retaStock <= 5
-                ? "animate-pulse border-red-300 bg-red-50 text-red-700"
-                : "border-orange-200 bg-orange-50 text-orange-700",
-          ].join(" ")}
-        >
-          {retaStock === 0
-            ? "Out of Stock"
-            : retaStock <= 5
-              ? `🚨 Only ${retaStock} left — selling fast!`
-              : `⚠️ Only ${retaStock} left in stock!`}
+      {/* ── RTGLP3 backorder notice ──────────────────────────── */}
+      {product.id === "rtglp3" && (
+        <div className="animate-pulse rounded-xl border border-orange-300 bg-orange-50 px-4 py-2.5 text-center text-sm font-bold text-orange-800">
+          ⚠️ Very Low Stock — Back Order
         </div>
       )}
 
@@ -298,14 +285,29 @@ export default function ProductActions({ product }: { product: Product }) {
         </p>
       )}
 
-      {product.id === "bac-water" && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="mb-1 text-[12px] font-bold text-amber-800">⚠️ Low stock — order while supplies last.</p>
-          <p className="text-[11px] leading-relaxed text-amber-700">
-            Orders placed after we run out of BAC Water will receive a code for free BAC Water on a future order instead.
+      {product.id === "rtglp3" && (
+        <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+          <p className="text-[12px] leading-relaxed text-orange-800">
+            <strong>Due to extremely high demand, RTGLP3 is currently on backorder.</strong> Orders will ship as soon as stock is replenished. Thank you for your patience.
           </p>
         </div>
       )}
+
+      {product.id === "bac-water" && (
+        <div className="space-y-2">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="mb-1 text-[12px] font-bold text-red-800">❌ BAC Water is currently sold out.</p>
+            <p className="text-[11px] leading-relaxed text-red-700">
+              Every purchase automatically includes a voucher for free BAC Water on your next order.
+            </p>
+          </div>
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <p className="text-[12px] font-bold text-emerald-800">🎁 FREE BAC Water Voucher — included with every order while sold out.</p>
+          </div>
+        </div>
+      )}
+
+      <p className="text-center text-[11px] text-zinc-400">All sales final. No returns or refunds.</p>
 
       {/* Flash Sale urgency banner */}
       {effectiveInStock && isPromoActive() && (
@@ -316,20 +318,14 @@ export default function ProductActions({ product }: { product: Product }) {
           <p className="text-[12px] font-bold text-red-800">
             ⚡ Flash Sale Active — 🚚 Free Shipping on $250+
           </p>
-          <p className="mt-1 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            🚨 STOCK ALERT:
+          <p className="mt-1 text-[11px] font-bold text-emerald-700">
+            🎁 Free BAC Water Voucher — included with every order
+          </p>
+          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
+            🎁 Free GHK-Cu (100mg) — orders $250+ · Only 3 remaining
           </p>
           <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ⚠️ BAC Water — Low Quantity — Act Fast!
-          </p>
-          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
-            ⚠️ Syringes — last few remaining
-          </p>
-          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
-            ⚠️ RTGLP3 (Reta 🐀) — Only 6 left in stock
-          </p>
-          <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc5500" }}>
-            ⚠️ Free GHK-Cu vials — Only 3 remaining (orders $250+)
+            ⚠️ RTGLP3 (Reta 🐀) — On backorder · High demand
           </p>
           {urgencyText && (
             <p className="mt-0.5 text-[11px] font-bold text-red-700">

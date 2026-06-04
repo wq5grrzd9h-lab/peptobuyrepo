@@ -98,6 +98,7 @@ export default function Footer() {
           <p className="text-[11px] leading-relaxed text-zinc-400">
             <span className="font-semibold text-zinc-500">Research Use Only Disclaimer:</span> All products sold by PeptoBuy are strictly intended for in vitro laboratory and scientific research purposes. They are not approved by the FDA, are not intended for human consumption, diagnosis, or treatment, and must not be used on humans or animals. By purchasing from PeptoBuy, you confirm that you are a qualified researcher acting in full compliance with all applicable local, state, and federal laws.
           </p>
+          <p className="mt-2 text-center text-[11px] text-zinc-400">All sales final. No returns or refunds.</p>
         </div>
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-5 sm:flex-row sm:px-6 lg:px-8">
           <p className="text-xs text-zinc-400">© {year} PeptoBuy. All rights reserved.</p>

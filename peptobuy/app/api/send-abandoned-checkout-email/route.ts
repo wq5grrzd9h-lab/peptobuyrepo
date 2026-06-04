@@ -1,22 +1,65 @@
 import { NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
 import { Resend } from "resend";
-import { MEMORIAL_DAY_END } from "@/lib/memorialDay";
 
 const REDIS_KEY_PREFIX = "checkout-abandoned:";
 const RESEND_FROM = process.env.RESEND_FROM_EMAIL ?? "PeptoBuy <noreply@peptobuy.com>";
 
 interface CartItem { name: string; dose: string; price: number; quantity: number; }
-interface Payload { email: string; cartItems: CartItem[]; cartTotal: number; }
+interface Payload { email: string; cartItems: CartItem[]; cartTotal: number; sequence?: number; }
 
 export interface CheckoutAbandonedRecord {
   email: string;
   cartItems: CartItem[];
   cartTotal: number;
   registeredAt: string;
+  capturedAt?: number;
   status: "pending" | "sent" | "cancelled";
-  qstashMessageId?: string;
+  qstashMessageId1?: string;
+  qstashMessageId2?: string;
 }
+
+// ─── Shared HTML blocks ───────────────────────────────────────────────────────
+
+const HEADER = `
+<div style="background:#ff2d78;padding:28px 32px;text-align:center;">
+  <p style="margin:0;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.03em;">PeptoBuy</p>
+  <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.75);font-weight:500;">Research-Grade Peptides</p>
+</div>`;
+
+const FOOTER = `
+<div style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e5e5;">
+  <p style="margin:0 0 8px;font-size:11px;color:#a1a1aa;line-height:1.6;text-align:center;">
+    ⚠ All products are for in vitro research use only. Not intended for human or animal consumption.
+    Not approved by the FDA. By purchasing, you confirm compliance with all applicable laws.
+  </p>
+  <p style="margin:0;font-size:11px;color:#a1a1aa;text-align:center;">
+    You received this because you started a checkout at peptobuy.com. &nbsp;
+    <a href="mailto:peptobuy@gmail.com?subject=Unsubscribe" style="color:#a1a1aa;">Unsubscribe</a>
+  </p>
+</div>`;
+
+const TRUST_BADGES = `
+<div style="display:flex;gap:12px;margin-bottom:24px;justify-content:center;flex-wrap:wrap;">
+  <div style="background:#f4f4f5;border-radius:8px;padding:10px 16px;font-size:12px;color:#52525b;font-weight:600;">🔒 Secure Checkout</div>
+  <div style="background:#f4f4f5;border-radius:8px;padding:10px 16px;font-size:12px;color:#52525b;font-weight:600;">🏅 ISO 9001 Tested</div>
+  <div style="background:#f4f4f5;border-radius:8px;padding:10px 16px;font-size:12px;color:#52525b;font-weight:600;">📋 COA On Request</div>
+</div>`;
+
+const PROMO_BOX = `
+<div style="border:3px solid #18181b;border-radius:12px;padding:18px 22px;margin-bottom:24px;background:#fafafa;">
+  <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#18181b;">🚚 FREE SHIPPING — Orders $250+</p>
+  <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:8px;">🎁 FREE GHK-Cu (100mg — $91.99 value) — Orders $250+ <span style="color:#cc0000;">(Only 3 left!)</span></p>
+  <p style="margin:0;font-size:13px;font-weight:700;color:#18181b;border-top:1px solid #e5e5e5;padding-top:8px;">🧪 20% OFF FIRST ORDER — Code: <span style="font-family:monospace;font-size:14px;letter-spacing:.06em;color:#ff2d78;">FIRST20</span></p>
+</div>`;
+
+const STOCK_URGENCY = `
+<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
+  <p style="margin:0;font-size:12px;font-weight:700;color:#cc0000;">🚨 Stock Alert:</p>
+  <p style="margin:4px 0 0;font-size:12px;color:#991b1b;">⚠️ RTGLP3 (Reta 🐀) — Only 6 left in stock</p>
+  <p style="margin:4px 0 0;font-size:12px;color:#991b1b;">⚠️ Free GHK-Cu vials — Only 3 remaining (orders $250+)</p>
+  <p style="margin:4px 0 0;font-size:12px;color:#991b1b;">⚠️ BAC Water — Low Quantity — Act Fast!</p>
+</div>`;
 
 function itemRows(items: CartItem[]): string {
   return items.map((i) => `
@@ -28,26 +71,8 @@ function itemRows(items: CartItem[]): string {
     </tr>`).join("");
 }
 
-function buildHtml(items: CartItem[], cartTotal: number): string {
-  const memorialActive = Date.now() < MEMORIAL_DAY_END.getTime();
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Complete your order</title></head>
-<body style="margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif;background:#f4f4f5;">
-<div style="max-width:580px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-
-  <div style="background:#ff2d78;padding:28px 32px;text-align:center;">
-    <p style="margin:0;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.03em;">PeptoBuy</p>
-    <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.75);font-weight:500;">Research-Grade Peptides</p>
-  </div>
-
-  <div style="padding:32px;">
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#18181b;letter-spacing:-0.02em;">
-      You left something behind 🧪
-    </h1>
-    <p style="margin:0 0 24px;font-size:14px;color:#71717a;line-height:1.6;">
-      Hey! You started your order at PeptoBuy but didn&apos;t complete it. Your cart is saved and ready — pick up exactly where you left off.
-    </p>
-
+function itemTable(items: CartItem[], cartTotal: number): string {
+  return `
     <table style="width:100%;border-collapse:collapse;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden;margin-bottom:20px;">
       <thead>
         <tr style="background:#f4f4f5;">
@@ -59,68 +84,106 @@ function buildHtml(items: CartItem[], cartTotal: number): string {
       </thead>
       <tbody>${itemRows(items)}</tbody>
     </table>
-
     <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:2px solid #e5e5e5;margin-bottom:24px;">
       <span style="font-size:15px;font-weight:700;color:#18181b;">Cart Total</span>
       <span style="font-size:18px;font-weight:800;color:#ff2d78;">$${cartTotal.toFixed(2)}</span>
-    </div>
+    </div>`;
+}
 
-    <div style="text-align:center;margin-bottom:24px;">
-      <a href="https://peptobuy.com/checkout"
-        style="display:inline-block;background:#ff2d78;color:#fff;font-size:15px;font-weight:800;text-decoration:none;padding:14px 36px;border-radius:12px;letter-spacing:-0.01em;box-shadow:0 0 24px rgba(255,45,120,0.25);">
-        Complete My Order →
-      </a>
-    </div>
+// ─── Sequence 1 — 2 minute "you were so close" ───────────────────────────────
 
-    <!-- Zelle reminder -->
-    <div style="background:#f5f3ff;border:2px solid #c4b5fd;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
-      <p style="margin:0;font-size:13px;font-weight:700;color:#4c1d95;">
-        💜 Prefer Zelle?
-      </p>
-      <p style="margin:6px 0 0;font-size:12px;color:#5b21b6;line-height:1.5;">
-        Send payment to <strong style="font-family:monospace;">peptobuy@gmail.com</strong> with your order number in the memo. We&apos;ll confirm your order immediately.
-      </p>
-    </div>
-
-    ${memorialActive ? `
-    <div style="background:#8B0000;border-radius:10px;padding:14px 18px;margin-bottom:20px;text-align:center;">
-      <p style="margin:0;font-size:13px;font-weight:800;color:#fff;">🇺🇸 Memorial Day Sale — Ends Monday Midnight</p>
-      <p style="margin:6px 0 0;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.5;">
-        🚨 STOCK UPDATE: ⚠️ BAC Water — Low Quantity — Act Fast! · ⚠️ Syringes almost gone · ⚠️ Reta only 6 left · ⚠️ Free GHK-Cu only 3 left (orders $250+)
-      </p>
-    </div>` : ""}
-
-    <div style="background:#fff5f8;border:2px solid #ffb3cb;border-radius:10px;padding:14px 18px;margin-bottom:24px;text-align:center;">
-      <p style="margin:0;font-size:13px;color:#cc1155;font-weight:600;">
-        🧪 First order? Use code <strong style="font-family:monospace;font-size:15px;letter-spacing:.06em;">FIRST20</strong> for 20% off
-      </p>
-      <p style="margin:4px 0 0;font-size:12px;color:#cc1155;opacity:.8;">Apply at checkout before completing your order.</p>
-    </div>
-
-    <div style="display:flex;gap:12px;margin-bottom:24px;justify-content:center;flex-wrap:wrap;">
-      <div style="background:#f4f4f5;border-radius:8px;padding:10px 16px;font-size:12px;color:#52525b;font-weight:600;">🔒 Secure Checkout</div>
-      <div style="background:#f4f4f5;border-radius:8px;padding:10px 16px;font-size:12px;color:#52525b;font-weight:600;">🏅 ISO 9001 Tested</div>
-      <div style="background:#f4f4f5;border-radius:8px;padding:10px 16px;font-size:12px;color:#52525b;font-weight:600;">📋 COA On Request</div>
-    </div>
-
-    <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">
-      Questions? <a href="mailto:peptobuy@gmail.com" style="color:#ff2d78;text-decoration:none;font-weight:600;">peptobuy@gmail.com</a>
+function buildSeq1Html(items: CartItem[], cartTotal: number): string {
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Complete your order</title></head>
+<body style="margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif;background:#f4f4f5;">
+<div style="max-width:580px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+${HEADER}
+<div style="padding:32px;">
+  <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#18181b;letter-spacing:-0.02em;">
+    You were so close! 🧪
+  </h1>
+  <p style="margin:0 0 24px;font-size:14px;color:#71717a;line-height:1.6;">
+    You started checkout at PeptoBuy but didn&apos;t complete your order. Your cart is saved — pick up exactly where you left off.
+  </p>
+  ${itemTable(items, cartTotal)}
+  <div style="text-align:center;margin-bottom:24px;">
+    <a href="https://peptobuy.com/checkout"
+      style="display:inline-block;background:#ff2d78;color:#fff;font-size:15px;font-weight:800;text-decoration:none;padding:14px 36px;border-radius:12px;letter-spacing:-0.01em;box-shadow:0 0 24px rgba(255,45,120,0.25);">
+      Complete My Order →
+    </a>
+  </div>
+  <div style="background:#f5f3ff;border:2px solid #c4b5fd;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+    <p style="margin:0;font-size:13px;font-weight:700;color:#4c1d95;">💳 Payment Methods Accepted</p>
+    <p style="margin:6px 0 0;font-size:12px;color:#5b21b6;line-height:1.5;">
+      Card · Apple Pay · Google Pay · Crypto (Plisio) · Zelle
     </p>
   </div>
-
-  <div style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e5e5;">
-    <p style="margin:0 0 8px;font-size:11px;color:#a1a1aa;line-height:1.6;text-align:center;">
-      ⚠ All products are for in vitro research use only. Not intended for human or animal consumption.
-      Not approved by the FDA. By purchasing, you confirm compliance with all applicable laws.
-    </p>
-    <p style="margin:0;font-size:11px;color:#a1a1aa;text-align:center;">
-      You received this because you started a checkout at peptobuy.com. &nbsp;
-      <a href="mailto:peptobuy@gmail.com?subject=Unsubscribe" style="color:#a1a1aa;">Unsubscribe</a>
+  <div style="background:#8B0000;border-radius:10px;padding:14px 18px;margin-bottom:20px;text-align:center;">
+    <p style="margin:0;font-size:13px;font-weight:800;color:#fff;">⚡ Flash Sale — Free gifts + free shipping on $250+</p>
+    <p style="margin:6px 0 0;font-size:12px;color:rgba(255,255,255,0.85);">
+      ⚠️ BAC Water — Low Quantity — Act Fast! · ⚠️ Reta only 6 left · ⚠️ Free GHK-Cu only 3 left
     </p>
   </div>
+  <div style="background:#fff5f8;border:2px solid #ffb3cb;border-radius:10px;padding:14px 18px;margin-bottom:24px;text-align:center;">
+    <p style="margin:0;font-size:13px;color:#cc1155;font-weight:600;">
+      🧪 First order? Use code <strong style="font-family:monospace;font-size:15px;letter-spacing:.06em;">FIRST20</strong> for 20% off
+    </p>
+    <p style="margin:4px 0 0;font-size:12px;color:#cc1155;opacity:.8;">Apply at checkout before completing your order.</p>
+  </div>
+  ${TRUST_BADGES}
+  <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">
+    Questions? <a href="mailto:peptobuy@gmail.com" style="color:#ff2d78;text-decoration:none;font-weight:600;">peptobuy@gmail.com</a>
+  </p>
+</div>
+${FOOTER}
 </div>
 </body></html>`;
 }
+
+// ─── Sequence 2 — 15 minute final reminder ───────────────────────────────────
+
+function buildSeq2Html(items: CartItem[], cartTotal: number): string {
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Your order is about to expire</title></head>
+<body style="margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif;background:#f4f4f5;">
+<div style="max-width:580px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+${HEADER}
+<div style="background:#7f1d1d;padding:16px 32px;text-align:center;">
+  <p style="margin:0;font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.06em;">🚨 FINAL REMINDER — COMPLETE YOUR ORDER</p>
+</div>
+<div style="padding:32px;">
+  <h1 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#18181b;letter-spacing:-0.02em;">
+    This is your final reminder 🚨
+  </h1>
+  <p style="margin:0 0 8px;font-size:14px;color:#71717a;line-height:1.6;">
+    Your cart is still saved but flash sale pricing won&apos;t last. Complete your order now to lock in free gifts and discounts.
+  </p>
+  ${itemTable(items, cartTotal)}
+  <div style="text-align:center;margin-bottom:24px;">
+    <a href="https://peptobuy.com/checkout"
+      style="display:inline-block;background:#ff2d78;color:#fff;font-size:16px;font-weight:900;text-decoration:none;padding:16px 40px;border-radius:14px;letter-spacing:-0.01em;box-shadow:0 0 28px rgba(255,45,120,0.35);">
+      Finish My Order →
+    </a>
+  </div>
+  ${STOCK_URGENCY}
+  ${PROMO_BOX}
+  <div style="background:#f5f3ff;border:2px solid #c4b5fd;border-radius:10px;padding:14px 18px;margin-bottom:24px;">
+    <p style="margin:0;font-size:13px;font-weight:700;color:#4c1d95;">💜 Prefer Zelle?</p>
+    <p style="margin:6px 0 0;font-size:12px;color:#5b21b6;line-height:1.5;">
+      Send payment to <strong style="font-family:monospace;">peptobuy@gmail.com</strong> — use your order number as memo. We&apos;ll confirm immediately.
+    </p>
+  </div>
+  ${TRUST_BADGES}
+  <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">
+    Questions? <a href="mailto:peptobuy@gmail.com" style="color:#ff2d78;text-decoration:none;font-weight:600;">peptobuy@gmail.com</a>
+  </p>
+</div>
+${FOOTER}
+</div>
+</body></html>`;
+}
+
+// ─── Route handler ─────────────────────────────────────────────────────────────
 
 async function getRedis() {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
@@ -136,37 +199,44 @@ export async function POST(request: Request) {
   try { payload = await request.json(); }
   catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
 
-  const { email, cartItems, cartTotal } = payload;
+  const { email, cartItems, cartTotal, sequence = 1 } = payload;
   if (!email || !cartItems?.length) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
   const redis = await getRedis();
-  const key = `${REDIS_KEY_PREFIX}${email.toLowerCase()}`;
+  const norm  = email.toLowerCase();
+  const key   = `${REDIS_KEY_PREFIX}${norm}`;
+  const dedupKey = `checkout-abandoned-sent-${sequence}:${norm}`;
 
   if (redis) {
-    const record = await redis.get<CheckoutAbandonedRecord>(key);
+    const [record, alreadySent] = await Promise.all([
+      redis.get<CheckoutAbandonedRecord>(key),
+      redis.exists(dedupKey),
+    ]);
+
     if (!record) return NextResponse.json({ ok: true, skipped: true, reason: "no-record" });
     if (record.status === "cancelled") return NextResponse.json({ ok: true, skipped: true, reason: "cancelled" });
-    if (record.status === "sent") return NextResponse.json({ ok: true, skipped: true, reason: "already-sent" });
-    await redis.set(key, { ...record, status: "sent" }, { ex: 86400 });
+    if (alreadySent) return NextResponse.json({ ok: true, skipped: true, reason: `seq-${sequence}-already-sent` });
+
+    await redis.set(dedupKey, "1", { ex: 6 * 3600 });
   }
+
+  const subject = sequence === 1
+    ? "⚡ Complete your PeptoBuy order — your cart is saved"
+    : "🚨 Your order is about to expire — complete it now";
+
+  const html = sequence === 1
+    ? buildSeq1Html(cartItems, cartTotal)
+    : buildSeq2Html(cartItems, cartTotal);
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: RESEND_FROM,
-      to: email,
-      subject: "You left something behind — complete your order 🧪",
-      html: buildHtml(cartItems, cartTotal),
-    });
-    return NextResponse.json({ ok: true });
+    await resend.emails.send({ from: RESEND_FROM, to: email, subject, html });
+    return NextResponse.json({ ok: true, sequence });
   } catch (err) {
     console.error("[send-abandoned-checkout-email]", err);
-    if (redis) {
-      const record = await redis.get<CheckoutAbandonedRecord>(key);
-      if (record?.status === "sent") await redis.set(key, { ...record, status: "pending" }, { ex: 86400 });
-    }
+    if (redis) await redis.del(dedupKey).catch(() => {});
     return NextResponse.json({ error: "Send failed" }, { status: 500 });
   }
 }

@@ -3,24 +3,20 @@ import { Redis } from "@upstash/redis";
 import { Client as QStash } from "@upstash/qstash";
 
 const REDIS_KEY_PREFIX = "cart-abandoned:";
-const DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000;
-const DELAY_SECONDS = 30 * 60; // 30 minutes
+const DEDUP_WINDOW_MS  = 24 * 60 * 60 * 1000;
 
 export interface CartAbandonedRecord {
   email: string;
   cartItems: CartItem[];
   cartTotal: number;
   registeredAt: string;
+  capturedAt?: number;
   status: "pending" | "sent" | "cancelled";
-  qstashMessageId?: string;
+  qstashMessageId1?: string;
+  qstashMessageId2?: string;
 }
 
-interface CartItem {
-  name: string;
-  dose: string;
-  price: number;
-  quantity: number;
-}
+interface CartItem { name: string; dose: string; price: number; quantity: number; }
 
 export async function POST(request: Request) {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
@@ -28,11 +24,8 @@ export async function POST(request: Request) {
   }
 
   let payload: { email: string; cartItems: CartItem[]; cartTotal: number };
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  try { payload = await request.json(); }
+  catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
 
   const { email, cartItems, cartTotal } = payload;
   if (!email || !cartItems?.length) {
@@ -63,7 +56,8 @@ export async function POST(request: Request) {
       }
     }
 
-    let qstashMessageId: string | undefined;
+    let qstashMessageId1: string | undefined;
+    let qstashMessageId2: string | undefined;
 
     if (process.env.QSTASH_TOKEN) {
       try {
@@ -71,33 +65,44 @@ export async function POST(request: Request) {
         const siteUrl =
           process.env.NEXT_PUBLIC_SITE_URL?.replace("http://localhost:3000", "https://peptobuy.com") ??
           "https://peptobuy.com";
+        const url = `${siteUrl}/api/send-abandoned-cart-email`;
 
-        const msg = await qstash.publishJSON({
-          url: `${siteUrl}/api/send-abandoned-cart-email`,
-          body: { email: email.toLowerCase(), cartItems, cartTotal },
-          delay: DELAY_SECONDS,
-        });
-        qstashMessageId = msg.messageId;
+        const [msg1, msg2] = await Promise.all([
+          qstash.publishJSON({
+            url,
+            body: { email: email.toLowerCase(), cartItems, cartTotal, sequence: 1 },
+            delay: 120,    // 2 minutes
+          }),
+          qstash.publishJSON({
+            url,
+            body: { email: email.toLowerCase(), cartItems, cartTotal, sequence: 2 },
+            delay: 900,    // 15 minutes
+          }),
+        ]);
+        qstashMessageId1 = msg1.messageId;
+        qstashMessageId2 = msg2.messageId;
       } catch (err) {
         console.error("[register-cart-abandonment] QStash schedule failed:", err);
       }
     }
 
     const capturedAt = Date.now();
-
     const record: CartAbandonedRecord = {
       email: email.toLowerCase(),
       cartItems,
       cartTotal,
       registeredAt: new Date().toISOString(),
+      capturedAt,
       status: "pending",
-      ...(qstashMessageId ? { qstashMessageId } : {}),
+      ...(qstashMessageId1 ? { qstashMessageId1 } : {}),
+      ...(qstashMessageId2 ? { qstashMessageId2 } : {}),
     };
 
-    await redis.set(key, { ...record, capturedAt }, { ex: 86400 });
-    // Add to time-indexed sorted set for daily-blast window queries (score = Unix ms)
+    await redis.set(key, record, { ex: 86400 });
+    // Time-indexed sorted set for daily-blast queries
     await redis.zadd("captured-emails", { score: capturedAt, member: email.toLowerCase() });
-    return NextResponse.json({ ok: true, action: "registered", scheduled: !!qstashMessageId });
+
+    return NextResponse.json({ ok: true, action: "registered", scheduled: !!(qstashMessageId1 && qstashMessageId2) });
   } catch (err) {
     console.error("[register-cart-abandonment]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

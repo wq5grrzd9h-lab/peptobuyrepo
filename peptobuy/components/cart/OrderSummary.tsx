@@ -217,6 +217,7 @@ export default function OrderSummary() {
           <Link href="/shop" className="flex items-center justify-center gap-1.5 py-1 text-sm text-zinc-400 transition-colors hover:text-zinc-700">
             <ArrowLeft size={14} /> Continue Shopping
           </Link>
+          <p className="text-center text-[11px] text-zinc-400">All sales final. No returns or refunds.</p>
         </div>
 
         {/* Email capture popup */}

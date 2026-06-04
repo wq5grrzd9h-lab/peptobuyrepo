@@ -384,15 +384,28 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
 
-      {/* ── BAC Water fulfillment notice ── */}
-      {order.items.some((i) => i.name.toLowerCase().includes("bac") || i.productId === "bac-water") && (
-        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5" style={{ animation: "fade-up 0.5s ease-out 0.3s both" }}>
-          <p className="mb-1.5 text-sm font-bold text-amber-800">📦 BAC Water Notice</p>
+      {/* ── Shipping + backorder + BAC Water notice ── */}
+      <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 space-y-3" style={{ animation: "fade-up 0.5s ease-out 0.3s both" }}>
+        <div>
+          <p className="mb-1 text-sm font-bold text-amber-800">📦 Shipping Update</p>
           <p className="text-sm leading-relaxed text-amber-700">
-            If your BAC Water is out of stock at time of fulfillment, you will receive a discount code for a free BAC Water on your next order instead. We will notify you by email if this applies to your order.
+            Please note we are currently experiencing shipping delays due to high demand. We appreciate your patience and will notify you by email when your order ships.
           </p>
         </div>
-      )}
+        <div>
+          <p className="text-sm font-bold text-amber-800">⚠️ RTGLP3 (Reta) Note</p>
+          <p className="text-sm leading-relaxed text-amber-700">
+            RTGLP3 orders may take additional time due to very low stock. We are working to replenish as quickly as possible.
+          </p>
+        </div>
+        <div>
+          <p className="text-sm font-bold text-amber-800">🎁 BAC Water Voucher</p>
+          <p className="text-sm leading-relaxed text-amber-700">
+            A code for free BAC Water will be included with your shipment or sent to your email, redeemable on your next order.
+          </p>
+        </div>
+        <p className="text-[11px] text-amber-600 font-medium">All sales are final. No returns or refunds.</p>
+      </div>
 
       {/* ── CTAs ── */}
       <div className="flex flex-col items-center gap-3 sm:flex-row" style={{ animation: "fade-up 0.5s ease-out 0.35s both" }}>

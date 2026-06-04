@@ -199,7 +199,7 @@ const PROMO_BLOCK = `
       <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#18181b;text-transform:uppercase;letter-spacing:.07em;">What's included — every order:</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         <tr><td style="padding:8px 0;border-bottom:1px solid #fde8ef;">
-          <p style="margin:0;font-size:14px;font-weight:800;color:#18181b;">🎁 FREE BAC Water + Syringes</p>
+          <p style="margin:0;font-size:14px;font-weight:800;color:#18181b;">🎁 Free BAC Water Voucher</p>
           <p style="margin:3px 0 0;font-size:12px;color:#52525b;">Every single order. Automatically added.</p>
           <p style="margin:4px 0 0;font-size:12px;font-weight:700;color:#cc0000;">⚠️ Only 3 more free GHK-Cu vials — orders $250+</p>
         </td></tr>

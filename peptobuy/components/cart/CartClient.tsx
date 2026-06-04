@@ -386,7 +386,7 @@ export default function CartClient() {
       {/* ── Compact gift strip (mobile) ────────────────────── */}
       {promoActive && (
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 lg:hidden">
-          <span className="text-sm font-bold text-red-700">⚠️ BAC Water — Low Quantity — Act Fast! · ⚠️ Syringes low stock</span>
+          <span className="text-sm font-bold text-emerald-700">🎁 Free BAC Water Voucher — included with your order · ⚠️ RTGLP3 on backorder</span>
           {hasGhkCu ? (
             <span className="text-sm font-bold text-amber-700">🎁 Free GHK-Cu (100mg) unlocked!</span>
           ) : (
@@ -416,8 +416,8 @@ export default function CartClient() {
             <div className="flex items-start gap-2.5">
               <span className="text-lg">🎁</span>
               <div>
-                <p className="text-sm font-bold text-red-700">⚠️ BAC Water — Low Quantity — Act Fast! · ⚠️ Syringes low stock</p>
-                <p className="text-[12px]" style={{ color: "#cc0000", fontWeight: 700 }}>⚠️ Reta: Only 6 left · ⚠️ GHK-Cu: Only 3 left</p>
+                <p className="text-sm font-bold text-emerald-700">🎁 Free BAC Water Voucher — included with your order</p>
+                <p className="text-[12px]" style={{ color: "#cc5500", fontWeight: 700 }}>🎁 Free GHK-Cu (orders $250+) · ⚠️ RTGLP3 on backorder</p>
               </div>
             </div>
             {hasGhkCu ? (
@@ -466,8 +466,8 @@ export default function CartClient() {
             {items.map((item) => <CartItemRow key={item.product.id} item={item} />)}
             {promoActive && (
               <FreeGiftRow
-                label="BAC Water + Syringes — Flash Sale Gift (⚠️ Low Quantity — Act Fast!)"
-                urgency="⚠️ Low Quantity — Act Fast!"
+                label="BAC Water Voucher — included with every order (redeemable on next order)"
+                urgency=""
               />
             )}
             {promoActive && hasGhkCu && <FreeGiftRow label="GHK-Cu (100mg)" />}
