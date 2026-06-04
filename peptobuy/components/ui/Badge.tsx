@@ -23,6 +23,7 @@ const badgeVariantMap: Record<string, BadgeVariant> = {
   New: "success",
   "Running Out Fast": "urgent",
   "Back Order":       "backorder",
+  "🔥 Very Low Stock": "urgent",
   "Sold Out":         "soldout",
 };
 

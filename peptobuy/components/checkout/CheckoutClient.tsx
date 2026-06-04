@@ -348,6 +348,9 @@ function StripePaymentForm({ onBack, onPrepare, onSuccess }: {
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{stripeError}</div>
       )}
       <ResearchConfirm confirmed={confirmed} error={confirmError} onChange={(v) => { setConfirmed(v); setConfirmError(false); }} />
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-800">
+        <strong>⚠️ Please note:</strong> RTGLP3 (Reta) is currently experiencing shipping delays due to very high demand and low stock. Your order will be fulfilled as soon as stock is available. All sales are final.
+      </div>
       <div className="mt-5 flex items-center justify-between gap-3">
         <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">
           <ChevronLeft size={15} /> Back
@@ -601,6 +604,10 @@ function ZellePaymentForm({ onBack, onPay, submitting, error, total }: {
       {error && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
 
       <ResearchConfirm confirmed={confirmed} error={confirmError} onChange={(v) => { setConfirmed(v); setConfirmError(false); }} />
+
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-800">
+        <strong>⚠️ Please note:</strong> RTGLP3 (Reta) is currently experiencing shipping delays due to very high demand and low stock. Your order will be fulfilled as soon as stock is available. All sales are final.
+      </div>
 
       <div className="mt-5 flex items-center justify-between gap-3">
         <button onClick={onBack} type="button" className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900">

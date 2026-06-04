@@ -39,7 +39,7 @@ export const products: Product[] = [
     category: "Weight Loss",
     inStock: true,
     image: "/products/RTGLP3_New_Pic.png",
-    badge: "Back Order",
+    badge: "🔥 Very Low Stock",
     doses: [
       { size: "10mg", price: 103.99 },
       { size: "20mg", price: 183.99 },

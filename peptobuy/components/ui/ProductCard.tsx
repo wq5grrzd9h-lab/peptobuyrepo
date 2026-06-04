@@ -163,7 +163,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* ── RTGLP3 backorder badge ───────────────────────────── */}
         {product.id === "rtglp3" && (
           <div className="animate-pulse rounded-lg bg-orange-100 px-3 py-1.5 text-center text-[11px] font-bold text-orange-800">
-            ⚠️ Very Low Stock — Back Order
+            🔥 VERY LOW STOCK — Act Fast
           </div>
         )}
 

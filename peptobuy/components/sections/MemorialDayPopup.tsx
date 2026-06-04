@@ -117,7 +117,7 @@ export default function MemorialDayPopup() {
             </p>
             <p className="mt-1 text-[12px] font-bold text-emerald-700">🎁 Free BAC Water Voucher — included with every order</p>
             <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ Syringes — extremely limited</p>
-            <p className="mt-1 text-[12px] font-bold text-orange-700">⚠️ RTGLP3 (Reta 🐀) — On backorder · High demand</p>
+            <p className="mt-1 text-[12px] font-bold text-red-700">🔥 RTGLP3 (Reta 🐀) — Very Low Stock · Act Fast</p>
             <p className="mt-1 text-[12px] font-bold" style={{ color: "#cc5500" }}>⚠️ Free GHK-Cu vials — Only 3 remaining</p>
           </div>
 

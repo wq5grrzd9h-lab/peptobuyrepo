@@ -386,7 +386,7 @@ export default function CartClient() {
       {/* ── Compact gift strip (mobile) ────────────────────── */}
       {promoActive && (
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 lg:hidden">
-          <span className="text-sm font-bold text-emerald-700">🎁 Free BAC Water Voucher — included with your order · ⚠️ RTGLP3 on backorder</span>
+          <span className="text-sm font-bold text-emerald-700">🎁 Free BAC Water Voucher — included with your order · 🔥 RTGLP3 — Very Low Stock</span>
           {hasGhkCu ? (
             <span className="text-sm font-bold text-amber-700">🎁 Free GHK-Cu (100mg) unlocked!</span>
           ) : (
@@ -417,7 +417,7 @@ export default function CartClient() {
               <span className="text-lg">🎁</span>
               <div>
                 <p className="text-sm font-bold text-emerald-700">🎁 Free BAC Water Voucher — included with your order</p>
-                <p className="text-[12px]" style={{ color: "#cc5500", fontWeight: 700 }}>🎁 Free GHK-Cu (orders $250+) · ⚠️ RTGLP3 on backorder</p>
+                <p className="text-[12px]" style={{ color: "#cc5500", fontWeight: 700 }}>🎁 Free GHK-Cu (orders $250+) · 🔥 RTGLP3 — Very Low Stock</p>
               </div>
             </div>
             {hasGhkCu ? (

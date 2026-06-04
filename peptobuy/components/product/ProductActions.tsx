@@ -249,10 +249,10 @@ export default function ProductActions({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* ── RTGLP3 backorder notice ──────────────────────────── */}
+      {/* ── RTGLP3 stock urgency badge ───────────────────────── */}
       {product.id === "rtglp3" && (
-        <div className="animate-pulse rounded-xl border border-orange-300 bg-orange-50 px-4 py-2.5 text-center text-sm font-bold text-orange-800">
-          ⚠️ Very Low Stock — Back Order
+        <div className="animate-pulse rounded-xl border border-red-300 bg-red-50 px-4 py-2.5 text-center text-sm font-bold text-red-800">
+          🔥 VERY LOW STOCK — Order Now Before We Sell Out
         </div>
       )}
 
@@ -286,9 +286,9 @@ export default function ProductActions({ product }: { product: Product }) {
       )}
 
       {product.id === "rtglp3" && (
-        <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
-          <p className="text-[12px] leading-relaxed text-orange-800">
-            <strong>Due to extremely high demand, RTGLP3 is currently on backorder.</strong> Orders will ship as soon as stock is replenished. Thank you for your patience.
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-[12px] leading-relaxed text-red-800">
+            <strong>⚠️ Extremely limited quantity remaining</strong> — order now before we sell out.
           </p>
         </div>
       )}
@@ -325,7 +325,7 @@ export default function ProductActions({ product }: { product: Product }) {
             🎁 Free GHK-Cu (100mg) — orders $250+ · Only 3 remaining
           </p>
           <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#cc0000" }}>
-            ⚠️ RTGLP3 (Reta 🐀) — On backorder · High demand
+            🔥 RTGLP3 (Reta 🐀) — Very Low Stock · Act Fast
           </p>
           {urgencyText && (
             <p className="mt-0.5 text-[11px] font-bold text-red-700">
