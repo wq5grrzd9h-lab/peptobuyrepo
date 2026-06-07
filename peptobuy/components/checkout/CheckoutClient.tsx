@@ -15,6 +15,8 @@ import { isFreeShippingWeekend } from "@/lib/memorialDay";
 
 const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null;
+// Toggle to re-enable Card / Apple Pay / Google Pay / Affirm / Klarna
+const STRIPE_ENABLED = false;
 
 type PaymentMethod = "card" | "crypto" | "zelle";
 
@@ -218,7 +220,7 @@ function MethodStep({ method, setMethod, subtotal }: { method: ShippingMethod; s
 // ─── Payment method toggle (3 tabs) ──────────────────────────────────────────
 
 function PaymentMethodToggle({ active, onChange }: { active: PaymentMethod; onChange: (m: PaymentMethod) => void }) {
-  const tabs: { id: PaymentMethod; label: string; icon: React.ReactNode }[] = [
+  const allTabs: { id: PaymentMethod; label: string; icon: React.ReactNode }[] = [
     {
       id: "card",
       label: "Card",
@@ -240,9 +242,10 @@ function PaymentMethodToggle({ active, onChange }: { active: PaymentMethod; onCh
       ),
     },
   ];
+  const tabs = STRIPE_ENABLED ? allTabs : allTabs.filter((t) => t.id !== "card");
 
   return (
-    <div className="mb-6 grid grid-cols-3 gap-1.5 rounded-2xl border border-zinc-200 bg-zinc-50 p-1.5">
+    <div className={["mb-6 grid gap-1.5 rounded-2xl border border-zinc-200 bg-zinc-50 p-1.5", tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"].join(" ")}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -477,14 +480,14 @@ function StepThreeInner({
     <>
       {/* ExpressCheckoutWrapper handles its own useStripe/useElements hooks.
           Only render when card tab is active — ECE auto-hides on unsupported browsers. */}
-      {paymentMethod === "card" && (
+      {STRIPE_ENABLED && paymentMethod === "card" && (
         <ExpressCheckoutWrapper onPrepare={onPrepare} onSuccess={onSuccess} />
       )}
 
       {/* Card / Crypto / Zelle tabs */}
       <PaymentMethodToggle active={paymentMethod} onChange={setPaymentMethod} />
 
-      {paymentMethod === "card" && (
+      {STRIPE_ENABLED && paymentMethod === "card" && (
         <StripePaymentForm onBack={onBack} onPrepare={onPrepare} onSuccess={onSuccess} />
       )}
       {paymentMethod === "crypto" && (
@@ -636,7 +639,7 @@ export default function CheckoutClient() {
   const [contact, setContact] = useState<ContactForm>({ email: "" });
   const [shipping, setShipping] = useState<ShippingForm>({ firstName: "", lastName: "", address: "", city: "", state: "", zip: "", country: "US" });
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(STRIPE_ENABLED ? "card" : "crypto");
 
   // Prefill email from cart capture localStorage + cancel cart abandonment job
   useEffect(() => {
@@ -1197,8 +1200,15 @@ export default function CheckoutClient() {
           {/* Step 3: Payment */}
           {step === 3 && (
             <>
+              {/* Stripe disabled notice */}
+              {!STRIPE_ENABLED && (
+                <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-800">
+                  ⚠️ Card payments are temporarily unavailable. Please use Crypto or Zelle to complete your order — we apologize for any inconvenience.
+                </div>
+              )}
+
               {/* Missing publishable key — show immediately above everything */}
-              {!STRIPE_PK && !intentLoading && !intentError && (
+              {STRIPE_ENABLED && !STRIPE_PK && !intentLoading && !intentError && (
                 <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
                   <p className="font-semibold">⚠️ Payment configuration error</p>
                   <p className="mt-1 text-xs">
@@ -1209,7 +1219,7 @@ export default function CheckoutClient() {
               )}
 
               {/* Loading Stripe PI — show spinner; tabs still accessible below */}
-              {intentLoading && !clientSecret && (
+              {STRIPE_ENABLED && intentLoading && !clientSecret && (
                 <div className="mb-4 flex h-16 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm">
                   <Loader2 size={20} className="animate-spin text-accent" />
                   <span className="ml-2 text-sm text-zinc-400">Loading payment options…</span>
@@ -1217,7 +1227,7 @@ export default function CheckoutClient() {
               )}
 
               {/* PI fetch error */}
-              {intentError && !clientSecret && (
+              {STRIPE_ENABLED && intentError && !clientSecret && (
                 <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
                   <p className="font-semibold">⚠️ Payment failed to load</p>
                   <p className="mt-1 text-xs text-red-500">{intentError}</p>
@@ -1237,7 +1247,7 @@ export default function CheckoutClient() {
 
               {/* clientSecret ready — wrap everything in Elements so
                   ExpressCheckoutElement appears ABOVE the tabs */}
-              {clientSecret && !intentLoading && stripePromise && (
+              {STRIPE_ENABLED && clientSecret && !intentLoading && stripePromise && (
                 <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance, loader: "auto" }}>
                   <StepThreeInner
                     paymentMethod={paymentMethod}

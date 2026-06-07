@@ -109,7 +109,7 @@ export default function Navbar() {
               <span className="opacity-60">·</span>
               <span>COA On Request</span>
               <span className="opacity-60">·</span>
-              <span className="font-black">⚡ FLASH SALE — 🚚 FREE SHIPPING on orders $250+ · Free GHK-Cu on $250+ · 🎁 Free BAC Water Voucher every order · 🔥 RTGLP3 — Very Low Stock · Act Fast</span>
+              <span className="font-black">⚡ FLASH SALE — 🚚 FREE SHIPPING on orders $250+ · Free GHK-Cu on $250+ · 🎁 Free BAC Water Voucher every order · 🔥 RTGLP3 — Very Low Stock · Act Fast · 💳 Card payments temporarily unavailable — Crypto &amp; Zelle accepted</span>
               <span className="opacity-60">·</span>
             </span>
           ))}

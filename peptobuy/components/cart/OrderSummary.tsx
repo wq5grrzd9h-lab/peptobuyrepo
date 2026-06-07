@@ -205,6 +205,9 @@ export default function OrderSummary() {
 
         {/* Checkout CTA */}
         <div className="mt-4 flex flex-col gap-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-800">
+            💳 Note: Card payments are currently unavailable. Crypto and Zelle accepted at checkout.
+          </div>
           {/* Express checkout (Apple Pay / Google Pay) — shows only when browser supports it */}
           <ExpressCheckout />
 
